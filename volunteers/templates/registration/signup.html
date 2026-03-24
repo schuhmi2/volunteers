@@ -1,12 +1,44 @@
 {% extends "base.html" %}
-
+{% load i18n %}
+{% block title %}Sign Up — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<h1>Sign Up</h1>
-
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Sign up</button>
-</form>
+<div class="max-w-lg mx-auto">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Sign Up</h1>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg p-3 text-sm">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+      {% for field in form %}
+      <div>
+        {% if field.name == 'privacy_policy' %}
+        <label class="flex items-start gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+          {{ field }}
+          <span>I have read and agree to the <a href="{% url 'privacy_policy' %}" target="_blank" class="text-fosdem underline">Privacy Policy</a></span>
+        </label>
+        {% else %}
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}
+        </label>
+        {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-gray-600 [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-gray-700 [&_input]:text-gray-900 [&_input]:dark:text-white [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem [&_select]:w-full [&_select]:border [&_select]:border-gray-300 [&_select]:dark:border-gray-600 [&_select]:rounded-lg [&_select]:px-3 [&_select]:py-2 [&_select]:bg-white [&_select]:dark:bg-gray-700">
+          {{ field }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit"
+              class="w-full bg-fosdem hover:bg-fosdem-dark text-white font-semibold py-2.5 rounded-lg transition-colors mt-2">
+        Sign Up
+      </button>
+    </form>
+    <p class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      Already have an account? <a href="{% url 'login' %}" class="text-fosdem hover:underline">Sign in</a>
+    </p>
+  </div>
+</div>
 {% endblock %}
-

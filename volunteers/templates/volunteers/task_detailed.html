@@ -1,54 +1,52 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
 {% load volunteer_extras %}
 
-{% block content_title %}<h2 class="content-title">{% trans 'Task' %}</h2>{% endblock %}
+{% block title %}{% trans "Task" %} — FOSDEM Volunteers{% endblock %}
 
 {% block content %}
-<form class="task_list">{% csrf_token %}
-    <fieldset>
-        <legend class="task_list">{% trans 'Task' %}</legend>
-        <table class="task_list">
-            <tr>
-                <th nowrap>{% trans 'When' %}</th>
-                <th>{% trans 'Title' %}</th>
-                <th>{% trans 'Attending' %}</th>
-                <th>{% trans 'Talk' %}</th>
-                {% if task.location %}
-                <th>{% trans 'Location' %}</th>
-                {% endif %}
-            </tr>
-            <tr>
-                <td nowrap>{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }} - {{ task.end_time|time:"H:i" }}</td>
-                <td>{{ task.name }}</td>
-                <td>
-                    {% if user.is_authenticated %}
-                    {% for volunteer in task.volunteer_set.all %}
-                        <a href="{% url 'userena_profile_detail' volunteer.user.username %}">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }},</a>
-                    {% endfor %}
-                    {% else %}
-                        {{ task.volunteer_set.count}}/{{ task.nbr_volunteers }}
-                    {% endif%}</td>
-                <td>
-                    {% if task.fosdem_url %}
-                    <a href="{{task.fosdem_url}}">{{ task.talk }}</a>
-                    {% else %}
-                    {{task.talk}}
-                    {% endif %}</td>
-                {% if task.location %}
-                <td>{{task.location}}</td>
-                {% endif %}
-            </tr>
-            <tr>
-                <th colspan="{{ task.location|yesno:'5,4' }}" style="border-bottom: none;">&nbsp;</th>
-            </tr>
-            <tr>
-                <td colspan="{{ task.location|yesno:'5,4' }}">{{ task.description|linebreaksbr|urlize }}</td>
-            </tr>
-        </table>
-        <br>
-    </fieldset>
-</form>
+<div class="max-w-3xl mx-auto space-y-6">
+  <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Task Details" %}</h1>
 
-<div id="dialog" title="Task"></div>
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">{% trans "When" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Title" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Volunteers" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Talk" %}</th>
+            {% if task.location %}<th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Location" %}</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tr>
+            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-300">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ task.name }}</td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+              {% if user.is_authenticated %}
+              {% for volunteer in task.volunteer_set.all %}
+              <a href="{% url 'userena_profile_detail' volunteer.user.username %}" class="text-fosdem hover:underline">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+              {% else %}
+              {{ task.volunteer_set.count }}/{{ task.nbr_volunteers }}
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+              {% if task.fosdem_url %}<a href="{{ task.fosdem_url }}" class="text-fosdem hover:underline">{{ task.talk }}</a>
+              {% else %}{{ task.talk }}{% endif %}
+            </td>
+            {% if task.location %}<td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ task.location }}</td>{% endif %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% if task.description %}
+    <div class="px-4 py-4 border-t border-gray-100 dark:border-gray-700">
+      <p class="text-gray-700 dark:text-gray-300 text-sm">{{ task.description|linebreaksbr|urlize }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

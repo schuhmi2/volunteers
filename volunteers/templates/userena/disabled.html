@@ -1,9 +1,10 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
-
-{% block title %}{% trans "Disabled account" %}{% endblock %}
-{% block content_title %}<h2 class="huge-font">{% trans "Your account is not enabled" %}</h2>{% endblock %}
+{% block title %}Account Disabled — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<p class="huge-font">{% trans "Your account is not yet enabled. You should have received a signup link via email to enable your account." %}</p>
-<p class="huge-font">{% trans "If you can not retrieve the link, get in touch with the administrators at volunteer-admin AT lists.fosdem.org" %}</p>
-{% endblock %} 
+<div class="max-w-md mx-auto text-center py-16">
+  <div class="text-5xl mb-4">🚫</div>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{% trans "Account Disabled" %}</h1>
+  <p class="text-gray-600 dark:text-gray-300">Your account has been disabled. Please contact the volunteer coordinators if you believe this is an error.</p>
+</div>
+{% endblock %}

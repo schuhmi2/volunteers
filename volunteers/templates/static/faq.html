@@ -1,14 +1,16 @@
 {% extends "base.html" %}
-
-{% block content_title %}<h2 class="content-title">Frequently asked questions</h2>{% endblock %}
-
+{% block title %}FAQ — FOSDEM Volunteers{% endblock %}
 {% block content %}
-
-<div class="faq">
-
-    <h3>This page has been retired</h3>
-    <p>You can now find the new volunteer documentation at <a href="https://doc.volunteers.fosdem.org">https://doc.volunteers.fosdem.org</a></p>
-
+<div class="max-w-3xl mx-auto">
+  <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h1>
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-8">
+    <h2 class="text-xl font-semibold text-fosdem dark:text-fosdem-light mb-3">This page has been retired</h2>
+    <p class="text-gray-600 dark:text-gray-300">
+      You can now find the new volunteer documentation at
+      <a href="https://doc.volunteers.fosdem.org" class="text-fosdem underline hover:text-fosdem-dark">
+        doc.volunteers.fosdem.org
+      </a>.
+    </p>
+  </div>
 </div>
-
 {% endblock %}

@@ -1,82 +1,82 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
 {% load volunteer_extras %}
 
-{% block content_title %}<h2 class="content-title">{% trans 'Tasks' %}</h2>{% endblock %}
+{% block title %}{% trans "My Schedule" %} — FOSDEM Volunteers{% endblock %}
 
 {% block content %}
+<div class="space-y-6">
 
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Schedule" %}</h1>
+    <div class="flex items-center gap-3">
+      {% if profile_user %}
+      <img src="{{ volunteer.get_mugshot_url }}" alt="" class="w-10 h-10 rounded-full ring-2 ring-fosdem" />
+      <span class="font-semibold text-gray-900 dark:text-white">{{ profile_user.first_name }} {{ profile_user.last_name }}</span>
+      {% else %}
+      <span class="font-semibold text-gray-900 dark:text-white">{{ user.first_name }} {{ user.last_name }}</span>
+      {% endif %}
+    </div>
+  </div>
 
-{% if profile_user %}
-<form class="task_list" action="{% url 'task_list_detailed' profile_user.username %}" method="post">{% csrf_token %}
-{% else %}
-<form class="task_list" action="{% url 'task_list_detailed' user.username %}" method="post">{% csrf_token %}
-{% endif %}
+  {% if profile_user %}
+  <form action="{% url 'task_list_detailed' profile_user.username %}" method="post">
+  {% else %}
+  <form action="{% url 'task_list_detailed' user.username %}" method="post">
+  {% endif %}
+  {% csrf_token %}
 
-    <fieldset>
-        <legend class="task_list">{% trans 'schedule for ' %}
-            {% if profile_user %}
-                {{ profile_user.first_name }} {{ profile_user.last_name }}
-                <img src="{{ volunteer.get_mugshot_url }}" class="avatar_large"/>
-            {% else %}
-                {{ user.first_name }} {{ user.last_name }}
-            {% endif %}
-        </legend>
-        <table class="task_list">
-            <thead>
-                <tr>
-                    <th width="10%">{% trans 'When' %}</th>
-                    <th width="40%">{% trans 'Title' %}</th>
-                    <th width="20%">{% trans 'Attending' %}</th>
-                    <th width="20%">{% trans 'Talk' %}</th>
-                    <th width="10%">{% trans 'Location' %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for task in tasks %}
-                <tr>
-                    <td data-title="{% trans 'When' %}">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }} - {{ task.end_time|time:"H:i" }}</td>
-                    <td data-title="{% trans 'Title' %}"><a href="{% url 'task_detailed' task.id %}">{{ task.name }}</a></td>
-                    <td data-title="{% trans 'Attending' %}">
-                    {% for volunteer in task.volunteer_set.all %}
-                        {{ volunteer.user.first_name }} {{ volunteer.user.last_name }}
-                        {% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                    <td data-title="{% trans 'Talk' %}">{{ task.talk }}</td>
-                    <td data-title="{% trans 'Location' %}">{{ task.location }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <br>
-        <h1>Task Descriptions</h1><br/>
-        {% for task in tasks %}
-        <h2>{{ task.name }}</h2>
-        <p>{{ task.description|linebreaksbr }}</p><br/>
-        {% endfor%}
-    </fieldset>
-    {% if user == profile_user or user.is_staff %}
-    <input type="submit" name="mail_schedule" value="{% trans "Mail schedule" %}" />
-    {% endif %}
-</form>
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">{% trans "When" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Task" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Attending" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Talk" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Location" %}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for task in tasks %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-300">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
+            <td class="px-4 py-3 font-medium"><a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a></td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+              {% for volunteer in task.volunteer_set.all %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ task.talk }}</td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ task.location }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No tasks scheduled yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<div id="dialog" title="Task"></div>
+  {% if tasks %}
+  <div class="space-y-4 mt-6">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Task Descriptions</h2>
+    {% for task in tasks %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+      <h3 class="text-lg font-semibold text-fosdem dark:text-fosdem-light mb-2">{{ task.name }}</h3>
+      <p class="text-gray-700 dark:text-gray-300 text-sm">{{ task.description|linebreaksbr }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-{% if is_paginated %}
-<div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-        <a href="{% url 'userena_profile_list_paginated' page_obj.previous_page_number %}">{% trans 'previous' %}</a>
-        {% endif %}
-
-        <span class="current">
-            {% trans 'Page' %} {{ page_obj.number }} {% trans 'of' %} {{ page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-        <a href="{% url 'userena_profile_list_paginated'  page_obj.next_page_number %}">{% trans 'next' %}</a>
-        {% endif %}
-    </span>
+  {% if user == profile_user or user.is_staff %}
+  <div class="flex justify-end">
+    <button type="submit" name="mail_schedule"
+            class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">
+      {% trans "Mail schedule" %}
+    </button>
+  </div>
+  {% endif %}
+  </form>
 </div>
-{% endif %}
 {% endblock %}

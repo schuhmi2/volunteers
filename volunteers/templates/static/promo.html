@@ -1,45 +1,85 @@
 {% extends "base.html" %}
+{% block title %}FOSDEM Volunteers — Conquer the chaos!{% endblock %}
 {% block content %}
-<div id="intro">
-    <h2 class="intro"><span>FOSDEM</span><br/>Volunteering</h2>
+<div class="space-y-12">
 
-    <p class="intro">This is a site that brings all the volunteers together.
-    Find all the cool tasks that you are interested in.</p>
+  <!-- Hero -->
+  <div class="text-center py-16 px-4">
+    <h1 class="text-5xl font-extrabold text-fosdem dark:text-fosdem-light mb-4">
+      FOSDEM <span class="text-gray-900 dark:text-white">Volunteering</span>
+    </h1>
+    <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+      This is a site that brings all the volunteers together.
+      Find all the cool tasks that you are interested in.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4">
+      <a href="{% url 'task_list' %}"
+         class="bg-fosdem hover:bg-fosdem-dark text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow">
+        View Tasks
+      </a>
+      {% if not user.is_authenticated %}
+      <a href="{% url 'signup' %}"
+         class="bg-white dark:bg-gray-700 border border-fosdem text-fosdem dark:text-fosdem-light hover:bg-pink-50 dark:hover:bg-gray-600 px-6 py-3 rounded-lg font-semibold transition-colors shadow">
+        Sign Up to Volunteer
+      </a>
+      {% endif %}
+    </div>
+  </div>
 
-    <p id="xtra-info">Problems? For bugs you can report an issue at
-    <a href="https://github.com/FOSDEM/volunteers/issues">Github</a>.</p>
-</div><!-- /intro-->
+  <!-- Feature grid -->
+  <div class="grid md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 class="text-lg font-bold text-fosdem dark:text-fosdem-light mb-2">FOSDEM</h3>
+      <p class="text-gray-600 dark:text-gray-300 text-sm">
+        <a href="https://www.fosdem.org" class="underline hover:text-fosdem">FOSDEM</a> is a free and
+        non-commercial two-day event organised by volunteers to promote the widespread use of free and
+        open source software.
+      </p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 class="text-lg font-bold text-fosdem dark:text-fosdem-light mb-2">Documentation</h3>
+      <p class="text-gray-600 dark:text-gray-300 text-sm">
+        Task documentation for Volunteers can be found on
+        <a href="https://doc.volunteers.fosdem.org" class="underline hover:text-fosdem">doc.volunteers.fosdem.org</a>.
+      </p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 class="text-lg font-bold text-fosdem dark:text-fosdem-light mb-2">Volunteering</h3>
+      <p class="text-gray-600 dark:text-gray-300 text-sm">
+        FOSDEM needs you! Every year, the FOSDEM team is assisted by an enthusiastic team of volunteers
+        to help out with various tasks and make the event a fun and safe place for all visitors.
+      </p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 class="text-lg font-bold text-fosdem dark:text-fosdem-light mb-2">Location</h3>
+      <p class="text-gray-600 dark:text-gray-300 text-sm">
+        FOSDEM 2026 will take place at the
+        <a href="https://fosdem.org/2026/practical/transportation/" class="underline hover:text-fosdem">ULB in Brussels, Belgium</a>,
+        within many of the buildings on the Solbosch campus.
+      </p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 class="text-lg font-bold text-fosdem dark:text-fosdem-light mb-2">Stay Informed</h3>
+      <p class="text-gray-600 dark:text-gray-300 text-sm">
+        Join the Volunteering chat on Matrix:
+        <a href="https://matrix.to/#/#volunteers:fosdem.org" class="underline hover:text-fosdem">#fosdem-volunteers</a>
+        (<a href="https://chat.fosdem.org/#/room/#volunteers:fosdem.org" class="underline hover:text-fosdem">webchat</a>).
+        Subscribe to the <a href="https://lists.fosdem.org/listinfo/volunteers" class="underline hover:text-fosdem">mailing list</a>.
+      </p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 class="text-lg font-bold text-fosdem dark:text-fosdem-light mb-2">Real People</h3>
+      <p class="text-gray-600 dark:text-gray-300 text-sm">
+        Please only reach out directly to volunteer coordinators in case of a real emergency!
+        Find their contact information
+        <a href="https://doc.volunteers.fosdem.org/general/communication/#contacting-coordinators" class="underline hover:text-fosdem">here</a>.
+      </p>
+    </div>
+  </div>
 
-<ul class="features">
-    <li><h3>FOSDEM</h3>
-        <p><a href="https://www.fosdem.org">FOSDEM</a> is a free and non-commercial two-day event organised by volunteers 
-            to promote the widespread use of free and open source software. The goal is to provide free and open source software developers and communities a place to meet.</p>
-    </li>
-
-    <li><h3>Documentation</h3>
-        <p>Task documentation for Volunteers can be found on <a href="https://doc.volunteers.fosdem.org">doc.volunteers.fosdem.org</a>.</p>
-    </li>
-
-    <li><h3>Volunteering</h3>
-        <p>FOSDEM needs you! Every year, the FOSDEM team is assisted by an enthusiastic team of volunteers
-        to help out with various tasks and make the event a fun and safe place for all our visitors.</p>
-    </li>
-</ul>
-
-<ul class="features">
-    <li><h3>Location</h3>
-        <p>FOSDEM 2026 will take place at the <a href='https://fosdem.org/2026/practical/transportation/'>ULB in Brussels, Belgium</a>, within many of the buildings on the Solbosch campus.</p>
-    </li>
-
-    <li><h3>Stay Informed</h3>
-	    <p>Join the Volunteering chat channel on Matrix: <a href='https://matrix.to/#/#volunteers:fosdem.org'>#fosdem-volunteers</a> on matrix (<a href='https://chat.fosdem.org/#/room/#volunteers:fosdem.org'>webchat</a>).</p>
-        <p>You can also subscribe to receive updates from the <a href="https://lists.fosdem.org/listinfo/volunteers">mailing list</a>.</p>
-
-    </li>
-
-    <li><h3>Real People</h3>
-        <p>While you may have questions, please only reach out directly to the volunteer coordinators in case of a real emergency!</p>
-        <p>You can find their contact information <a href="https://doc.volunteers.fosdem.org/general/communication/#contacting-coordinators">here on doc.volunteers.fosdem.org.</a></p>
-    </li>
-</ul>
+  <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+    Problems? Report bugs at
+    <a href="https://github.com/FOSDEM/volunteers/issues" class="underline hover:text-fosdem">GitHub Issues</a>.
+  </p>
+</div>
 {% endblock %}

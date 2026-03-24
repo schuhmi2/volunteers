@@ -1,46 +1,49 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
 {% load volunteer_extras %}
 
-{% block content_title %}<h2 class="content-title">{{ template.name }} {% trans 'Schedule' %}</h2>{% endblock %}
+{% block title %}{{ template.name }} {% trans "Schedule" %} — FOSDEM Volunteers{% endblock %}
 
 {% block content %}
-    <form action="{% url 'task_schedule_csv' template.id %}" class="button">
-        <input type="submit" value="Export CSV"/>
+<div class="space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ template.name }} {% trans "Schedule" %}</h1>
+    <form action="{% url 'task_schedule_csv' template.id %}">
+      <button type="submit" class="bg-fosdem hover:bg-fosdem-dark text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
+        ⬇ Export CSV
+      </button>
     </form>
-    {% for task, volunteers in tasks.items %}
-    <h2 class="task-title">
-        {{ task.name }} ({{task.assigned_volunteers}}/{{task.nbr_volunteers}})<br/>
-        {{ task.date|date:"l" }}, {{ task.start_time|time:"H:i" }} - {{ task.end_time|time:"H:i" }}<br/>
-        {{ task.location }}
-    </h2><br/>
-    <table width="98%" class="task_schedule">
-        {% for volunteer in volunteers %}
-        <tr>
-            <td class="task_schedule_head" width="20%">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</td>
-            <td class="task_schedule_head" width="50%">
-                {{ task.date|date:"l" }}, {{ task.start_time|time:"H:i" }} - {{ task.end_time|time:"H:i" }}
-            </td>
-            <td class="task_schedule_head">Present?</td>
-            <td class="task_schedule_head_avatar">&nbsp;</td>
-        </tr>
-        <tr>
-            <td class="task_schedule">
-                Nick:<br/>
-                Email:<br/>
-                Mobile:<br/>
-            </td>
-            <td class="task_schedule">
-                {{ volunteer.user.username }}<br/>
-                {{ volunteer.user.email }}<br/>
-                {{ volunteer.mobile_nbr }}
-            </td>
-            <td>&nbsp;</td>
-            <td class="task_schedule">
-                <img src="{{ volunteer.get_mugshot_url }}" class="avatar_center"/>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% endfor %}
+  </div>
+
+  {% for task, volunteers in tasks.items %}
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        {{ task.name }}
+        <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">({{ task.assigned_volunteers }}/{{ task.nbr_volunteers }})</span>
+      </h2>
+      <p class="text-sm text-gray-600 dark:text-gray-300">{{ task.date|date:"l" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }} · {{ task.location }}</p>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+      {% for volunteer in volunteers %}
+      <div class="flex items-center gap-4 px-6 py-4">
+        <img src="{{ volunteer.get_mugshot_url }}" alt="" class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600" />
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-gray-900 dark:text-white">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            @{{ volunteer.user.username }} · {{ volunteer.user.email }}
+            {% if volunteer.mobile_nbr %} · {{ volunteer.mobile_nbr }}{% endif %}
+          </p>
+        </div>
+        <div class="text-right">
+          <span class="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">Present? <input type="checkbox" class="accent-fosdem"></span>
+        </div>
+      </div>
+      {% empty %}
+      <p class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">No volunteers assigned.</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
 {% endblock %}

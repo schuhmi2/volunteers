@@ -1,10 +1,12 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
-
-{% block title %}{% trans "Account activation failed." %}{% endblock %}
-{% block content_title %}<h2 class="huge-font">{% trans "Your account could not be activated..." %}</h2>{% endblock %}
-
+{% block title %}{% trans "Activation Failed" %} — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<p class="huge-font">{% trans "Your account could not be activated. This could be because your activation link has aged." %}</p>
-<p class="huge-font">{% trans "Please try signing up again or contact us if you think something went wrong." %}</p>
+<div class="max-w-md mx-auto text-center py-16">
+  <div class="text-5xl mb-4">❌</div>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{% trans "Account could not be activated" %}</h1>
+  <p class="text-gray-600 dark:text-gray-300 mb-6">{% trans "Your account could not be activated. This could be because your activation link has aged." %}</p>
+  <p class="text-gray-600 dark:text-gray-300">{% trans "Please try signing up again or contact us if you think something went wrong." %}</p>
+  <a href="{% url 'signup' %}" class="mt-6 inline-block bg-fosdem hover:bg-fosdem-dark text-white px-6 py-2.5 rounded-lg font-semibold transition-colors">Sign Up Again</a>
+</div>
 {% endblock %}

@@ -1,18 +1,27 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
 {% load volunteer_extras %}
 
-{% block content_title %}<h2 class="content-title">{% trans 'Categories' %}</h2>{% endblock %}
+{% block title %}{% trans "Categories" %} — FOSDEM Volunteers{% endblock %}
 
 {% block content %}
-    {% for category, templates in categories.items %}
-    <h2>Category: {{ category.name }}</h2>
-    <ul>
-        {% for template in templates %}
+<div class="space-y-6">
+  <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Task Categories" %}</h1>
 
-        <li><a href="{% url 'task_schedule' template.id %}" title="View Schedule">{{ template.name }}</a></li>
-        {% endfor %}
+  {% for category, templates in categories.items %}
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">{{ category.name }}</h2>
+    <ul class="space-y-2">
+      {% for template in templates %}
+      <li>
+        <a href="{% url 'task_schedule' template.id %}"
+           class="flex items-center gap-2 text-fosdem hover:underline font-medium">
+          <span>→</span> {{ template.name }}
+        </a>
+      </li>
+      {% endfor %}
     </ul>
-    <br/>
-    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
 {% endblock %}

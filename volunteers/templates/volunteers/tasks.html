@@ -1,157 +1,168 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
 {% load volunteer_extras %}
 
-{% block content_title %}<h2 class="content-title">{% trans 'Tasks' %}</h2>{% endblock %}
+{% block title %}{% trans "Tasks" %} — FOSDEM Volunteers{% endblock %}
 
 {% block content %}
+<div class="space-y-6">
 
-{% if user.is_authenticated %}<a class="larger-font" href="{% url 'task_list_detailed' user.username %}" title="View schedule">View your schedule</a>{% endif %}
-
-<form class="task_list" action="{% url 'task_list' %}" method="post">{% csrf_token %}
-    {% if is_dr_manhattan %}
-    <fieldset>
-        <legend class="task_list">We seem to have a bit of a problem here...</legend><br/>
-        <table>
-            <tr>
-                <td><img src="/static/img/dr_manhattan.png"/></td>
-                <td width="20px;">&nbsp;</td>
-                <td style="vertical-align: top;">
-                    Unless you look like the guy on the left, odds are you're not actually capable
-                    of being in two different locations at the same time. So it might be wise to take
-                    action on the tasks below...
-                </td>
-                <td width="50%">&nbsp;</td>
-            </tr>
-        </table><br/>
-        <table class="task_list">
-            <thead>
-                <tr class="table_top_alert">
-                    <th>{% trans "I'm in" %}!</th>
-                    <th>{% trans 'Task' %}</th>
-                    <th nowrap>{% trans 'When' %}</th>
-                    <th>{% trans 'Volunteers' %}</th>
-                    <th>{% trans 'Location' %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for task_set in dr_manhattan_task_sets %}
-                    <tr class="task_set_alert">
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">Problematic tasks #{{ forloop.counter }}:</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                    </tr>
-                    {% for task in task_set %}
-                    <tr>
-                        <td {% if user.is_authenticated %}data-title="{% trans 'I am in' %}!"{% endif %}><input type="checkbox" name="task" value="{{ task.id }}" {{ checked|get_item:task.id }} /></td>
-                        {% if attending|get_item:task.id == True %}
-                        <td class="task-name special-task">{{ task.name }} <span class="small_note">(Hey, you're attending this!)</span></td>
-                        {% else %}
-                        <td data-title="{% trans 'Task' %}" class="task-name"><a href="{% url 'task_detailed' task.id %}">{{ task.name }}</a></td>
-                        {% endif %}
-                        <td nowrap data-title="{% trans 'When' %}" >{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }} - {{ task.end_time|time:"H:i" }}</td>
-                        <td data-title="{% trans 'Volunteers' %}" class="task-volunteers {{ task.status_color }}" title="<strong>{% trans task.status %}</strong>{% if user.is_authenticated %}<br/><br/>Signed up:<br/>{% for volunteer in task.volunteers.all %}* {{ volunteer.user.first_name }} {{ volunteer.user.last_name}} ({{ volunteer.user }})<br/>{% endfor %}{% endif %}">{{ task.assigned_volunteers }}/{{ task.nbr_volunteers }}</td>
-                        <td data-title="{% trans 'Location' %}">{{task.location}}</td>
-                    </tr>
-                    {% endfor %}
-                {% endfor %}
-            </tbody>
-        </table>
-    </fieldset>
-    {% endif %}
-    {% if not setup_for_current_year_complete %}
-        <legend class="task_list">All tasks are now published - we look forward to seeing you at the ULB</legend><br/>
-        <table>
-            <tr>
-                <td><img style="height: 100px;" src="/static/img/octicon-alert.svg"/></td>
-                <td width="20px;">&nbsp;</td>
-                <td style="vertical-align: middle;">
-                  We're still in the middle of getting all the tasks populated for this year's FOSDEM. <strong>Please check back before the event</strong> - there will be (a lot) more to do than what is listed below, including heralding for talks! Please sign up to the <a href="https://lists.fosdem.org/listinfo/volunteers">volunteers mailing list</a> to get timely updates.
-                </td>
-            </tr>
-        </table>
-    {% endif %}
-    {% for title, days in tasks.items %}
-    <fieldset>
-        <legend class="task_list">{% trans title %} <span style="font-size: small; font-weight: normal;">
-        </span></legend>
-        <table class="task_list">
-            <thead>
-                <tr class="table_top">
-                    <th>{% trans "I'm in" %}!</th>
-                    <th>{% trans 'Task' %}</th>
-                    <th nowrap>{% trans 'When' %}</th>
-                    <th>{% trans 'Volunteers' %}</th>
-                    <th>{% trans 'Location' %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for day, categories in days.items %}
-                {% if categories.items %}
-                {% ifchanged %}
-                {% else %}
-                <tr class="row-hide">
-                    <th class="no_vert_border">&nbsp;</th>
-                    <th class="no_vert_border">&nbsp;</th>
-                    <th class="no_vert_border">&nbsp;</th>
-                    <th class="no_vert_border">&nbsp;</th>
-                    <th class="no_vert_border">&nbsp;</th>
-                </tr>
-                {% endifchanged %}
-                <tr class="day">
-                    <th class="no_vert_border" colspan="5">{{ day|date:"l" }}</th>
-                </tr>
-                    {% for category, category_tasks in categories.items %}
-                    {% if category_tasks %}
-                    {% ifchanged %}
-                    {% else %}
-                    <tr class="row-hide">
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                    </tr>
-                    {% endifchanged %}
-                    <tr class="category">
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">{{ category.name }}</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                        <th class="no_vert_border">&nbsp;</th>
-                    </tr>
-                        {% for task in category_tasks %}
-                        <tr>
-                            <td {% if user.is_authenticated %}data-title="{% trans 'I am in' %}!"{% endif %}>
-                                <input type="checkbox" name="task" value="{{ task.id }}" {% if task.status == "FULL" %}title="task FULL" {% endif %}{% if task.status == "FULL" and not checked|get_item:task.id %} disabled{% endif %}  {{ checked|get_item:task.id }} />
-
-                            </td>
-                            {% if attending|get_item:task.id == True %}
-                            <td class="task-name special-task">{{ task.name }} <span class="small_note">(Hey, you're attending this!)</span></td>
-                            {% else %}
-                            <td data-title="{% trans 'Task' %}" class="task-name"><a href="{% url 'task_detailed' task.id %}">{{ task.name }}</a></td>
-                            {% endif %}
-                            <td nowrap data-title="{% trans 'When' %}">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }} - {{ task.end_time|time:"H:i" }}</td>
-                            <td data-title="{% trans 'Volunteers' %}" class="task-volunteers {{ task.status_color }}" title="<strong>{% trans task.status %}</strong>{% if user.is_authenticated %}<br/><br/>Signed up:<br/>{% for volunteer in task.volunteers.all %}* {{ volunteer.user.first_name }} {{ volunteer.user.last_name}} ({{ volunteer.user }})<br/>{% endfor %}{% endif %}">{{ task.assigned_volunteers }}/{{ task.nbr_volunteers }}</td>
-                            <td data-title="{% trans 'Location' %}">{{task.location}}</td>
-                        </tr>
-                        {% endfor %}
-                    {% endif %}
-                    {% endfor %}
-                {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
-        <br>
-    </fieldset>
-    {% endfor %}
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Tasks" %}</h1>
     {% if user.is_authenticated %}
-    <input type="submit" value="{% trans "Save changes" %}" />
+    <a href="{% url 'task_list_detailed' user.username %}"
+       class="text-fosdem hover:underline text-sm font-medium">View your schedule →</a>
     {% endif %}
-</form>
+  </div>
 
-<div id="dialog" title="Task"></div>
+  <form action="{% url 'task_list' %}" method="post" id="tasks-form">
+    {% csrf_token %}
 
+    {% if is_dr_manhattan %}
+    <div class="bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-xl p-4 mb-6">
+      <h2 class="text-red-800 dark:text-red-300 font-bold text-lg mb-2">⚠️ Scheduling Conflict</h2>
+      <p class="text-red-700 dark:text-red-400 text-sm mb-4">
+        Unless you look like Dr. Manhattan, you probably can't be in two places at once. Please resolve the conflicts below.
+      </p>
+      {% for task_set in dr_manhattan_task_sets %}
+      <div class="mb-4">
+        <p class="text-xs font-semibold uppercase text-red-600 dark:text-red-400 mb-2">Conflicting group #{{ forloop.counter }}</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-red-100 dark:bg-red-900/50">
+              <tr>
+                <th class="px-3 py-2 text-left font-medium text-red-800 dark:text-red-300 w-10">{% trans "In" %}</th>
+                <th class="px-3 py-2 text-left font-medium text-red-800 dark:text-red-300">{% trans "Task" %}</th>
+                <th class="px-3 py-2 text-left font-medium text-red-800 dark:text-red-300 whitespace-nowrap">{% trans "When" %}</th>
+                <th class="px-3 py-2 text-left font-medium text-red-800 dark:text-red-300">{% trans "Slots" %}</th>
+                <th class="px-3 py-2 text-left font-medium text-red-800 dark:text-red-300">{% trans "Location" %}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-red-200 dark:divide-red-800">
+              {% for task in task_set %}
+              <tr class="bg-white dark:bg-gray-800">
+                <td class="px-3 py-2"><input type="checkbox" name="task" value="{{ task.id }}" {{ checked|get_item:task.id }} class="accent-fosdem"></td>
+                <td class="px-3 py-2 font-medium">
+                  {% if attending|get_item:task.id == True %}
+                  {{ task.name }} <span class="text-xs text-fosdem">(attending)</span>
+                  {% else %}
+                  <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>
+                  {% endif %}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-gray-600 dark:text-gray-300">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
+                <td class="px-3 py-2">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                    {% if task.status == 'OK' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                    {% elif task.status == 'FULL' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                    {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                    {{ task.assigned_volunteers }}/{{ task.nbr_volunteers }}
+                  </span>
+                </td>
+                <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ task.location }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not setup_for_current_year_complete %}
+    <div class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-xl p-4 mb-6 flex gap-3">
+      <span class="text-2xl">⚠️</span>
+      <div class="text-sm text-yellow-800 dark:text-yellow-300">
+        We're still populating tasks for this year's FOSDEM. <strong>Please check back before the event</strong> —
+        there will be more tasks including heralding for talks! Subscribe to the
+        <a href="https://lists.fosdem.org/listinfo/volunteers" class="underline hover:text-yellow-900">volunteers mailing list</a>
+        for updates.
+      </div>
+    </div>
+    {% endif %}
+
+    {% for title, days in tasks.items %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden mb-6">
+      <button type="button"
+              data-collapse-toggle="section-{{ forloop.counter }}"
+              class="w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-lg text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        <span>{% trans title %}</span>
+        <span data-collapse-icon class="text-gray-400 text-sm">▼</span>
+      </button>
+      <div id="section-{{ forloop.counter }}">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300 w-10">{% trans "In" %}!</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Task" %}</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">{% trans "When" %}</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Slots" %}</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Location" %}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              {% for day, categories in days.items %}
+              {% if categories.items %}
+              <tr class="bg-gray-100 dark:bg-gray-600">
+                <td colspan="5" class="px-4 py-2 font-semibold text-gray-700 dark:text-gray-200">{{ day|date:"l" }}</td>
+              </tr>
+              {% for category, category_tasks in categories.items %}
+              {% if category_tasks %}
+              <tr class="bg-fosdem/5 dark:bg-fosdem/10">
+                <td colspan="5" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-fosdem dark:text-fosdem-light">{{ category.name }}</td>
+              </tr>
+              {% for task in category_tasks %}
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                <td class="px-4 py-2.5">
+                  <input type="checkbox" name="task" value="{{ task.id }}"
+                         {% if task.status == 'FULL' %}title="Task FULL" {% endif %}
+                         {% if task.status == 'FULL' and not checked|get_item:task.id %}disabled{% endif %}
+                         {{ checked|get_item:task.id }}
+                         class="accent-fosdem w-4 h-4 cursor-pointer">
+                </td>
+                <td class="px-4 py-2.5 font-medium">
+                  {% if attending|get_item:task.id == True %}
+                  <span class="text-fosdem">{{ task.name }}</span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">(attending)</span>
+                  {% else %}
+                  <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                  {{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}
+                </td>
+                <td class="px-4 py-2.5">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                    {% if task.status_color == 'green' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                    {% elif task.status_color == 'blue' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                    {% elif task.status_color == 'red' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                    {% else %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200{% endif %}">
+                    {{ task.assigned_volunteers }}/{{ task.nbr_volunteers }}
+                  </span>
+                </td>
+                <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ task.location }}</td>
+              </tr>
+              {% endfor %}
+              {% endif %}
+              {% endfor %}
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if user.is_authenticated %}
+    <div class="flex justify-end pt-2">
+      <button type="submit"
+              class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-8 py-2.5 rounded-lg transition-colors shadow">
+        {% trans "Save changes" %}
+      </button>
+    </div>
+    {% endif %}
+  </form>
+</div>
 {% endblock %}

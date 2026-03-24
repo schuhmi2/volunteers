@@ -1,12 +1,11 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
-
-
-{% block title %}{% trans "Account re-activation succeeded." %}{% endblock %}
-{% block content_title %}<h2 class="huge-font">{% trans "Account re-activation" %}</h2>{% endblock %}
-
+{% block title %}Activation Email Sent — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<p class="huge-font">{% blocktrans %}You requested a new activation of your account..{% endblocktrans %}</p>
-<p class="huge-font">{% blocktrans %}You have been sent an e-mail with an activation link to the supplied email.{% endblocktrans %}</p>
-<p class="huge-font">{% blocktrans %}We will store your signup information for {{ userena_activation_days }} days on our server. {% endblocktrans %}</p>
+<div class="max-w-md mx-auto text-center py-16">
+  <div class="text-5xl mb-4">📧</div>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Activation Email Sent</h1>
+  <p class="text-gray-600 dark:text-gray-300">A new activation link has been sent to your email address. Please check your inbox.</p>
+  <a href="{% url 'login' %}" class="mt-6 inline-block text-fosdem hover:underline text-sm">Back to Sign In</a>
+</div>
 {% endblock %}

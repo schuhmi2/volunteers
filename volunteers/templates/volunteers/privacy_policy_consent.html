@@ -1,28 +1,25 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
-
-{% block title %}Privacy Policy Agreement{% endblock %}
-{% block content_title %}<h2>Privacy Policy Agreement</h2>{% endblock %}
-
+{% block title %}Privacy Policy Agreement — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<p>You must accept our updated Privacy Policy to continue.</p>
-<p><a href="{% url 'privacy_policy' %}" target="_blank">Read Privacy Policy</a></p>
+<div class="max-w-md mx-auto">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Privacy Policy Agreement</h1>
+    <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">You must accept our updated Privacy Policy to continue.</p>
+    <a href="{% url 'privacy_policy' %}" target="_blank"
+       class="text-fosdem hover:underline text-sm font-medium">Read Privacy Policy ↗</a>
 
-<form method="post">
-    {% csrf_token %}
-    <label>
-        <input type="checkbox" id="privacy_agree" required>
-        I have read and agree to the Privacy Policy
-    </label>
-    <br><br>
-    <button type="submit" name="agree" value="yes" id="agree_btn" disabled>
+    <form method="post" class="mt-6 space-y-4">
+      {% csrf_token %}
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" id="privacy_agree" required class="mt-0.5 accent-fosdem w-4 h-4">
+        <span class="text-sm text-gray-700 dark:text-gray-300">I have read and agree to the Privacy Policy</span>
+      </label>
+      <button type="submit" name="agree" value="yes" id="agree_btn" disabled
+              class="w-full bg-fosdem hover:bg-fosdem-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-colors">
         I Agree
-    </button>
-</form>
-
-<script>
-document.getElementById('privacy_agree').addEventListener('change', function() {
-    document.getElementById('agree_btn').disabled = !this.checked;
-});
-</script>
+      </button>
+    </form>
+  </div>
+</div>
 {% endblock %}

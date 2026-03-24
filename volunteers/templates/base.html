@@ -1,171 +1,165 @@
 {% load i18n static %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-    <head>
-        <title>{% block title %}FOSDEM Volunteers - Conquer the chaos!{% endblock %}</title>
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}FOSDEM Volunteers — Conquer the chaos!{% endblock %}</title>
+  <link rel="shortcut icon" type="image/ico" href="{% static 'favicon.ico' %}" />
 
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Apply saved theme before paint to avoid flash -->
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'dark') document.documentElement.classList.add('dark');
+      } catch(e){}
+    })();
+  </script>
 
-        <!-- Apply saved theme immediately to avoid flash of incorrect theme during navigation -->
-        <script>
-            (function() {
-                try {
-                    // Temporarily disable transitions to avoid flashes
-                    document.documentElement.classList.add('disable-theme-transitions');
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            fosdem: {
+              DEFAULT: '#af2c93',
+              dark:    '#8f1c73',
+              light:   '#c94dab',
+            }
+          }
+        }
+      }
+    }
+  </script>
 
-                    var theme = localStorage.getItem('theme');
-                    if (theme) {
-                        document.documentElement.setAttribute('data-theme', theme);
-                    }
+  <script src="{% static 'js/app.js' %}" defer></script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
 
-                    // Remove the suppressing class shortly after DOM is ready to re-enable transitions
-                    function enableTransitions() {
-                        // Use a small timeout to ensure the style has been applied
-                        setTimeout(function() {
-                            document.documentElement.classList.remove('disable-theme-transitions');
-                        }, 50);
-                    }
+  <!-- Navigation -->
+  <nav class="bg-fosdem dark:bg-fosdem-dark shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
 
-                    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                        enableTransitions();
-                    } else {
-                        document.addEventListener('DOMContentLoaded', enableTransitions);
-                    }
-                } catch (e) {
-                    /* ignore */
-                }
-            })();
-        </script>
-
-    <!-- Updated to use local jQuery 3.7.1 -> file volunteers/static/js/jquery-3.7.1.min.js -->
-    <script type="text/javascript" src="{% static "js/jquery-3.7.1.min.js" %}"></script>
-        <script type="text/javascript" src="{% static "js/jquery-ui-1.12.1.min.js" %}"></script>
-        <script type="text/javascript" src="{% static "js/main.js" %}"></script>
-
-        <link rel="stylesheet" type="text/css" media="screen" href="{% static "css/master.css" %}" />
-    <link rel="stylesheet" href="{% static "css/jquery-ui-1.12.1.min.css" %}">
-        <link rel="shortcut icon" type="image/ico" href="{% static "favicon.ico" %}" />
-        
-        <script>
-            // Dark mode toggle functionality
-            document.addEventListener('DOMContentLoaded', function() {
-                // Check for saved theme preference or default to light mode
-                const currentTheme = localStorage.getItem('theme') || 'light';
-                document.documentElement.setAttribute('data-theme', currentTheme);
-                updateToggleIcon(currentTheme);
-                
-                // Toggle theme when button is clicked
-                document.getElementById('theme-toggle').addEventListener('click', function() {
-                    const theme = document.documentElement.getAttribute('data-theme');
-                    const newTheme = theme === 'dark' ? 'light' : 'dark';
-                    
-                    document.documentElement.setAttribute('data-theme', newTheme);
-                    localStorage.setItem('theme', newTheme);
-                    updateToggleIcon(newTheme);
-                });
-                
-                function updateToggleIcon(theme) {
-                    const toggleBtn = document.getElementById('theme-toggle');
-                    toggleBtn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
-                    toggleBtn.setAttribute('title', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-                }
-            });
-        </script>
-    </head>
-    <body{% if messages %} class="has-messages"{% endif %}>
-        <!-- Dark Mode Toggle Button -->
-        <button id="theme-toggle" class="theme-toggle" title="Switch to dark mode">🌙</button>
-        
-        {% if messages %}
-        <div id="top">
-          <ul class="messages">
-            {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
-                <span class="message-icon">
-                    {% if message.tags == "warning" %}⚠️
-                    {% elif message.tags == "error" %}❌
-                    {% elif message.tags == "success" %}✅
-                    {% elif message.tags == "info" %}ℹ️
-                    {% else %}📢{% endif %}
-                </span>
-                <span class="message-text">{{ message }}</span>
-                <button class="message-close" onclick="this.parentElement.style.display='none'">&times;</button>
-            </li>
-            {% endfor %}
-          </ul>
+        <!-- Logo -->
+        <div class="flex-shrink-0">
+          <a href="{% url 'promo' %}" class="text-white font-bold text-xl tracking-wide hover:text-pink-200 transition-colors">
+            FOSDEM <span class="font-light">Volunteers</span>
+          </a>
         </div>
+
+        <!-- Desktop nav links -->
+        <div class="hidden md:flex items-center space-x-1">
+          <a href="{% url 'promo' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Home' %}</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'userena_profile_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Volunteers' %}</a>
+          {% endif %}
+          <a href="{% url 'task_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Tasks' %}</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'talk_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Talks' %}</a>
+            {% if user.is_staff %}
+              <a href="{% url 'category_schedule_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Schedules' %}</a>
+              <a href="{% url 'admin:index' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Admin' %}</a>
+            {% endif %}
+            <a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Docs' %} ↗</a>
+            <a href="{% url 'userena_profile_detail' user.username %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{{ user.username }}</a>
+            <a href="{% url 'logout' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Sign out' %}</a>
+          {% else %}
+            <a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Docs' %} ↗</a>
+            <a href="{% url 'login' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Sign in' %}</a>
+            <a href="{% url 'signup' %}" class="bg-white text-fosdem hover:bg-pink-50 px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Sign up' %}</a>
+          {% endif %}
+          <!-- Dark mode toggle -->
+          <button id="theme-toggle" class="ml-2 text-white hover:bg-fosdem-dark p-2 rounded-md text-lg transition-colors" title="Toggle dark mode">🌙</button>
+        </div>
+
+        <!-- Mobile: hamburger + theme toggle -->
+        <div class="md:hidden flex items-center space-x-2">
+          <button id="theme-toggle" class="text-white hover:bg-fosdem-dark p-2 rounded-md text-lg" title="Toggle dark mode">🌙</button>
+          <button id="mobile-menu-btn" aria-expanded="false" aria-controls="mobile-menu"
+                  class="text-white hover:bg-fosdem-dark p-2 rounded-md">
+            <span class="sr-only">Open menu</span>
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-fosdem-dark">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        <a href="{% url 'promo' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Home' %}</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'userena_profile_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Volunteers' %}</a>
         {% endif %}
-        <div id="container">
-            <div id="header">
-                <h2 class="intro mobile-intro"><a href="{% url 'promo' %}"><span>FOSDEM</span></a></h2>
-                <span class="menu-button">&#9776;</span>
-                <nav class="list" id="nav1">
-                    <ul class="nav">
-                        <li><a href="{% url 'promo' %}"><span>{% trans 'Home' %}</span></a></li>
-                        {% if user.is_authenticated %}
-                            <li><a href="{% url 'userena_profile_list' %}"><span>{% trans 'Volunteers' %}</span></a></li>
-                        {% endif %}
-                        <li><a href="{% url 'task_list' %}"><span>{% trans 'Tasks' %}</span></a></li>
-                        {% if user.is_authenticated %}
-                            <li><a href="{% url 'talk_list' %}"><span>{% trans 'Talks' %}</span></a></li>
-                            {% if user.is_staff %}
-                                <li><a href="{% url 'category_schedule_list' %}"><span>{% trans 'Schedules' %}</span></a></li>
-                                <li><a href="{% url 'admin:index' %}"><span>{% trans 'Admin Area' %}</span></a></li>
-                            {% endif %}
-                            <li><a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener"><span>{% trans 'Docs↗' %}</span></a></li>
-                            <li><a href="{% url 'userena_profile_detail' user.username %}"><span>{% trans 'Account' %} ({{ user.username }})</span></a></li>
-                            <li><a href="{% url 'logout' %}"><span>{% trans 'Signout' %}</span></a></li>
-                        {% else %}
-                            <li><a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener"><span>{% trans 'Docs↗' %}</span></a></li>
-                            <li><a href="{% url 'login' %}"><span>{% trans 'Signin' %}</span></a></li>
-                            <li><a href="{% url 'signup' %}"><span>{% trans 'Signup' %}</span></a></li>
-                        {% endif %}
-                    </ul>
-                </nav>
+        <a href="{% url 'task_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Tasks' %}</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'talk_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Talks' %}</a>
+          {% if user.is_staff %}
+            <a href="{% url 'category_schedule_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Schedules' %}</a>
+            <a href="{% url 'admin:index' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Admin' %}</a>
+          {% endif %}
+          <a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Docs' %} ↗</a>
+          <a href="{% url 'userena_profile_detail' user.username %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{{ user.username }}</a>
+          <a href="{% url 'logout' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Sign out' %}</a>
+        {% else %}
+          <a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Docs' %} ↗</a>
+          <a href="{% url 'login' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Sign in' %}</a>
+          <a href="{% url 'signup' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Sign up' %}</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
 
-                {% block nav %}
-                <ul id="nav">
-                    <li><a href="{% url 'promo' %}"><span>{% trans 'Home' %}</span></a></li>
-                    {% if user.is_authenticated %}
-                        <li><a href="{% url 'userena_profile_list' %}"><span>{% trans 'Volunteers' %}</span></a></li>
-                    {% endif %}
-                    <li><a href="{% url 'task_list' %}"><span>{% trans 'Tasks' %}</span></a></li>
-                    {% if user.is_authenticated %}
-                        <li><a href="{% url 'talk_list' %}"><span>{% trans 'Talks' %}</span></a></li>
-                        {% if user.is_staff %}
-                            <li><a href="{% url 'category_schedule_list' %}"><span>{% trans 'Schedules' %}</span></a></li>
-                            <li><a href="{% url 'admin:index' %}"><span>{% trans 'Admin Area' %}</span></a></li>
-                        {% endif %}
-                        <li><a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener"><span>{% trans 'Docs↗' %}</span></a></li>
-                        <li><a href="{% url 'userena_profile_detail' user.username %}"><span>{% trans 'Account' %} ({{ user.username }})</span></a></li>
-                        <li><a href="{% url 'logout' %}"><span>{% trans 'Signout' %}</span></a></li>
-                    {% else %}
-                        <li><a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener"><span>{% trans 'Docs↗' %}</span></a></li>
-                        <li><a href="{% url 'login' %}"><span>{% trans 'Signin' %}</span></a></li>
-                        <li><a href="{% url 'signup' %}"><span>{% trans 'Signup' %}</span></a></li>
-                    {% endif %}
-                </ul>
-                {% endblock %}
-                {% if not user.is_authenticated %}
-                <div id="try"></div>
-                {% endif %}
+  <!-- Flash messages -->
+  {% if messages %}
+  <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
+    {% for message in messages %}
+    <div role="alert" class="flex items-start gap-3 rounded-lg px-4 py-3 text-sm font-medium
+      {% if message.tags == 'error' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+      {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+      {% elif message.tags == 'success' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+      {% else %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% endif %}">
+      <span class="text-base">
+        {% if message.tags == 'error' %}❌
+        {% elif message.tags == 'warning' %}⚠️
+        {% elif message.tags == 'success' %}✅
+        {% else %}ℹ️{% endif %}
+      </span>
+      <span class="flex-1">{{ message }}</span>
+      <button data-dismiss-alert class="ml-auto text-current opacity-70 hover:opacity-100 font-bold text-base leading-none">&times;</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-            </div>
-            {% block content_title %}{% endblock %}
-            <div id="content-container">
-                {% block content %}{% endblock %}
-            </div><!-- /content-container-->
+  <!-- Main content -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+    {% block content_title %}{% endblock %}
+    {% block content %}{% endblock %}
+  </main>
 
-            <div id="footer">
-                <p>Built by FOSDEM volunteers for FOSDEM volunteers!</p>
-                <div class="footer-links">
-                    <a href="https://github.com/FOSDEM/volunteers" target="_blank" rel="noopener">GitHub Repository</a>
-                    <a href="https://github.com/FOSDEM/volunteers/blob/master/LICENSE.md" target="_blank" rel="noopener">AGPL License</a>
-                    <a href="https://fosdem.org" target="_blank" rel="noopener">FOSDEM.org</a>
-                </div>
-            </div>
-        </div><!-- /container-->
-    </body>
- </html>
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+        Built by FOSDEM volunteers for FOSDEM volunteers! &nbsp;·&nbsp;
+        <a href="https://github.com/FOSDEM/volunteers" target="_blank" rel="noopener" class="hover:text-fosdem">GitHub</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/FOSDEM/volunteers/blob/master/LICENSE.md" target="_blank" rel="noopener" class="hover:text-fosdem">AGPL License</a>
+        &nbsp;·&nbsp;
+        <a href="https://fosdem.org" target="_blank" rel="noopener" class="hover:text-fosdem">FOSDEM.org</a>
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

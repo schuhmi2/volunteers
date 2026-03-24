@@ -1,35 +1,10 @@
-{% load i18n %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-    <head>
-        <title>Site crashed!</title>
-
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
-        <link rel="stylesheet" type="text/css" media="screen" href="{{ MEDIA_URL }}css/master.css" />
-        <link rel="shortcut icon" type="image/ico" href="/favicon.ico" />
-        <link href='https://fonts.googleapis.com/css?family=Droid+Sans:regular,bold' rel='stylesheet' type='text/css' />
-    </head>
-  <body>
-    <div id="container">	
-        <div id="content-container">
-            <h1>Site crashed</h1>
-
-            <p>Sorry for the inconvenience.</p>
-
-            <p>Please take the time to report an issue at Github so it doesn't happen again.</p>
-        </div><!-- /content-container-->
-    </div><!-- /container-->
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-8888610-14']);
-        _gaq.push(['_trackPageview']);
-        (function() {
-            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-        })();
-     </script>
-    </body>
- </html>
+{% extends "base.html" %}
+{% block title %}500 — Server Error{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto text-center py-16">
+  <div class="text-8xl font-black text-red-200 dark:text-red-900 mb-4">500</div>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Server Error</h1>
+  <p class="text-gray-600 dark:text-gray-300 mb-8">Something went wrong on our end. Please try again later.</p>
+  <a href="/" class="bg-fosdem hover:bg-fosdem-dark text-white px-6 py-2.5 rounded-lg font-semibold transition-colors">Go Home</a>
+</div>
+{% endblock %}

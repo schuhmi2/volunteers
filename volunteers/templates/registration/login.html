@@ -1,17 +1,40 @@
 {% extends "base.html" %}
-
+{% load i18n %}
+{% block title %}Sign In — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<h1>Login</h1>
-
-<form method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    {{ form.as_p }}
-
-    <button type="submit">Log in</button>
-</form>
-If you have forgotten your login: <a href="{% url 'password_reset' %}">click here</a>.
-{% if next %}
-    <input type="hidden" name="next" value="{{ next }}">
-{% endif %}
+<div class="max-w-md mx-auto">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Sign In</h1>
+    <form method="post" action="{% url 'login' %}" class="space-y-4">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg p-3 text-sm">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+      {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {{ field.label }}
+        </label>
+        {% if field.errors %}
+        <p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>
+        {% endif %}
+        <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-gray-600 [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-gray-700 [&_input]:text-gray-900 [&_input]:dark:text-white [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem">
+          {{ field }}
+        </div>
+      </div>
+      {% endfor %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      <button type="submit"
+              class="w-full bg-fosdem hover:bg-fosdem-dark text-white font-semibold py-2.5 rounded-lg transition-colors mt-2">
+        Sign In
+      </button>
+    </form>
+    <div class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400 space-y-2">
+      <p><a href="{% url 'password_reset' %}" class="text-fosdem hover:underline">Forgot your password?</a></p>
+      <p>Don't have an account? <a href="{% url 'signup' %}" class="text-fosdem hover:underline">Sign up</a></p>
+    </div>
+  </div>
+</div>
 {% endblock %}
-

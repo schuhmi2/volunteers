@@ -1,17 +1,11 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
-
-{% block title %}{% trans "Signup almost done!" %}{% endblock %}
-
-{% block content_title %}<h2 class="huge-font">{% trans "Signup" %}</h2>{% endblock %}
-
+{% block title %}Sign Up Complete — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<p class="huge-font">{% trans "Thank you for signing up with us!" %}</p>
-
-{% if userena_activation_required %}
-<p class="huge-font">{% blocktrans %}You have been sent an e-mail with an activation link to the supplied email.{% endblocktrans %}</p>
-<p class="huge-font">{% blocktrans %}We will store your signup information for {{ userena_activation_days }} days on our server. {% endblocktrans %}</p>
-{% else  %}
-<p class="huge-font">{% blocktrans %}You can now use the supplied credentials to signin.{% endblocktrans %}</p>
-{% endif %}
+<div class="max-w-md mx-auto text-center py-16">
+  <div class="text-5xl mb-4">🎉</div>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{% trans "Sign Up Complete!" %}</h1>
+  <p class="text-gray-600 dark:text-gray-300 mb-4">{% trans "Your account has been created. Please check your email to activate your account." %}</p>
+  <a href="{% url 'promo' %}" class="text-fosdem hover:underline text-sm">Back to Home</a>
+</div>
 {% endblock %}

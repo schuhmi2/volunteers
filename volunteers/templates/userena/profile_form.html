@@ -1,25 +1,37 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
-
-{% block title %}{% trans "Account setup" %}{% endblock %}
-
-{% block content_title %}<h2 class="content-title">Account &raquo; {{ user.username }}</h2>{% endblock %}
-
+{% block title %}{% trans "Edit Profile" %} — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<ul id="profile-nav">
-    <li><a href="{% url 'userena_profile_detail' user.username %}">{% trans "View profile" %}</a></li>
-    <li class="selected"><a href="{% url 'userena_profile_edit' user.username %}">{% trans "Edit details" %}</a></li>
-    <li><a href="{% url 'userena_password_change'%}">{% trans "Change password" %}</a></li>
-    <li><a href="{% url 'userena_email_change' %}">{% trans "Change email" %}</a></li>
-</ul>
+<div class="max-w-2xl mx-auto space-y-6">
 
-<form action="" enctype="multipart/form-data" method="post">
-    {% csrf_token %}
-    <center><img src="{{ profile.get_mugshot_url }}" alt="mugshot"></center>
-    <fieldset>
-        <legend>{% trans "Edit Profile" %}</legend>
-        {{ form.as_p }}
-    </fieldset>
-    <input type="submit" value="{% trans "Save changes" %}" />
-</form>
+  <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
+    <a href="{% url 'userena_profile_detail' user.username %}"
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "View profile" %}</a>
+    <a href="{% url 'userena_profile_edit' user.username %}"
+       class="px-4 py-2 rounded-t-lg text-sm font-medium bg-fosdem text-white">{% trans "Edit details" %}</a>
+    <a href="{% url 'userena_password_change' %}"
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "Change password" %}</a>
+    <a href="{% url 'userena_email_change' %}"
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "Change email" %}</a>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+    <div class="flex justify-center mb-6">
+      <img src="{{ profile.get_mugshot_url }}" alt="Current profile photo"
+           class="w-24 h-24 rounded-full object-cover ring-2 ring-fosdem" />
+    </div>
+    <form action="" enctype="multipart/form-data" method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-gray-600 [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-gray-700 [&_input]:text-gray-900 [&_input]:dark:text-white [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem [&_textarea]:w-full [&_textarea]:border [&_textarea]:border-gray-300 [&_textarea]:dark:border-gray-600 [&_textarea]:rounded-lg [&_textarea]:px-3 [&_textarea]:py-2 [&_textarea]:bg-white [&_textarea]:dark:bg-gray-700 [&_textarea]:text-gray-900 [&_textarea]:dark:text-white [&_textarea]:focus:outline-none [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-fosdem">{{ field }}</div>
+      </div>
+      {% endfor %}
+      <button type="submit" class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">{% trans "Save changes" %}</button>
+    </form>
+  </div>
+</div>
 {% endblock %}

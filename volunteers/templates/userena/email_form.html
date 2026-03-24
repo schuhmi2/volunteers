@@ -1,30 +1,21 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
-
-{% block content_title %}<h2 class="content-title">Account &raquo; {{ account.user.username }}</h2>{% endblock %}
-
+{% block title %}{% trans "Change Email" %} — FOSDEM Volunteers{% endblock %}
 {% block content %}
-<ul id="profile-nav">
-    <li><a href="{% url 'userena_profile_detail' user.username %}">{% trans "View profile" %}</a></li>
-    <li><a href="{% url 'userena_profile_edit' user.username %}">{% trans "Edit details" %}</a></li>
-    <li><a href="{% url 'userena_password_change' %}">{% trans "Change password" %}</a></li>
-    <li class="selected"><a href="{% url 'userena_email_change' %}">{% trans "Change email" %}</a></li>
-</ul>
-
-<form action="" method="post">
-    {% if user.username == account.user.username %}
-    <ul id="box-nav">
-        <li class="first"><a href="{% url 'userena_detail' %}"><span>{% trans 'View profile' %}</span></a></li>
-        <li><a href="{% url 'userena_edit' account.user.username %}">{% trans "Edit profile" %}</a></li>
-        <li><a href="{% url 'userena_password_change' %}">{% trans "Change password" %}</a></li>
-        <li class="last selected"><a href="{% url 'userena_email_change' %}">{% trans "Change email" %}</a></li>
-    </ul>
-    {% endif %}
-    {% csrf_token %}
-    <fieldset>
-        <legend>{% trans "Change email address" %}</legend>
-        {{ form.as_p }}
-    </fieldset>
-    <input type="submit" value="{% trans "Change email" %}" />
-</form>
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
+    <a href="{% url 'userena_profile_detail' user.username %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "View profile" %}</a>
+    <a href="{% url 'userena_profile_edit' user.username %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "Edit details" %}</a>
+    <a href="{% url 'userena_password_change' %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "Change password" %}</a>
+    <a href="{% url 'userena_email_change' %}" class="px-4 py-2 rounded-t-lg text-sm font-medium bg-fosdem text-white">{% trans "Change email" %}</a>
+  </div>
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-4">{% trans "Change Email Address" %}</h1>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">{% trans "Change email" %}</button>
+    </form>
+  </div>
+</div>
 {% endblock %}

@@ -1,61 +1,66 @@
-{% extends 'userena/base_userena.html' %}
+{% extends "base.html" %}
 {% load i18n %}
 {% load volunteer_extras %}
 
-{% block content_title %}<h2 class="content-title">{% trans 'Talks' %}</h2>{% endblock %}
+{% block title %}{% trans "Talks" %} — FOSDEM Volunteers{% endblock %}
+
 {% block content %}
-<form class="task_list" action="/talks/" method="post">{% csrf_token %}
+<div class="space-y-6">
+  <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Talks" %}</h1>
+
+  <form action="/talks/" method="post" id="talks-form">
+    {% csrf_token %}
+
     {% for talk in talks %}
-        {% with next=talks|next:forloop.counter0 %}
-        {% with previous=talks|previous:forloop.counter0 %}
-        {% if talk.track != previous.track %}
-        <fieldset>
-            <legend class="talk_list">{{ talk.track.title }}</legend>
-            <table class="talk_list">
-                <thead>
-                    <tr>
-                        <th>{% trans "I'm Going" %}!</th>
-                        <th>{% trans 'Title' %}</th>
-                        <th nowrap>{% trans 'When' %}</th>
-                        <th>{% trans 'Speaker' %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-        {% endif %}
-                    <tr>
-                        <td data-title="{% trans 'Going' %}!"><input type="checkbox" name="talk" value="{{ talk.id }}" {{ checked|get_item:talk.id }} /></td>
-                        <td data-title="{% trans 'Title' %}"><a href="{% url 'talk_detailed' talk.id %}">{{ talk.title }}</a></td>
-                        <td nowrap data-title="{% trans 'When' %}">{{ talk.date|date:"D" }}, {{ talk.start_time|time:"H:i" }} - {{ talk.end_time|time:"H:i" }}</td>
-                        <td data-title="{% trans 'Speaker' %}">{{ talk.speaker }}</td>
-                    </tr>
-        {% if talk.track != next.track %}
-                </tbody>
-            </table>
-        </fieldset>
-        {% endif %}
-            {% endwith %}
+    {% with next=talks|next:forloop.counter0 %}
+    {% with previous=talks|previous:forloop.counter0 %}
+
+    {% if talk.track != previous.track %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden mb-6">
+      <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ talk.track.title }}</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300 w-10">{% trans "Going" %}!</th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Title" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">{% trans "When" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Speaker" %}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+    {% endif %}
+
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+            <td class="px-4 py-2.5">
+              <input type="checkbox" name="talk" value="{{ talk.id }}" {{ checked|get_item:talk.id }} class="accent-fosdem w-4 h-4">
+            </td>
+            <td class="px-4 py-2.5 font-medium">
+              <a href="{% url 'talk_detailed' talk.id %}" class="text-fosdem hover:underline">{{ talk.title }}</a>
+            </td>
+            <td class="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-gray-300">{{ talk.date|date:"D" }}, {{ talk.start_time|time:"H:i" }}–{{ talk.end_time|time:"H:i" }}</td>
+            <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ talk.speaker }}</td>
+          </tr>
+
+    {% if talk.track != next.track %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% endwith %}
     {% endwith %}
     {% endfor %}
-    <input type="submit" value="{% trans "Save changes" %}" />
-</form>
 
-<div id="dialog" title="Talk"></div>
-
-{% if is_paginated %}
-<div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-        <a href="{% url 'userena_profile_list_paginated' page_obj.previous_page_number %}">{% trans 'previous' %}</a>
-        {% endif %}
-
-        <span class="current">
-            {% trans 'Page' %} {{ page_obj.number }} {% trans 'of' %} {{ page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-        <a href="{% url 'userena_profile_list_paginated'  page_obj.next_page_number %}">{% trans 'next' %}</a>
-        {% endif %}
-    </span>
+    <div class="flex justify-end pt-2">
+      <button type="submit"
+              class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-8 py-2.5 rounded-lg transition-colors shadow">
+        {% trans "Save changes" %}
+      </button>
+    </div>
+  </form>
 </div>
-{% endif %}
 {% endblock %}
