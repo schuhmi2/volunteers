@@ -42,6 +42,22 @@
         <p class="text-gray-700 dark:text-gray-300 mt-1">{{ profile.tshirt_size }}</p>
       </div>
       {% endif %}
+      {% if profile.pronouns %}
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{% trans "Pronouns" %}</span>
+        <p class="text-gray-700 dark:text-gray-300 mt-1">{{ profile.pronouns }}</p>
+      </div>
+      {% endif %}
+      {% with languages=profile.spoken_languages.all %}
+      {% if languages %}
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{% trans "Speaks" %}</span>
+        <p class="text-gray-700 dark:text-gray-300 mt-1">
+          {% for lang in languages %}{{ lang.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </p>
+      </div>
+      {% endif %}
+      {% endwith %}
       <div>
         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{% trans "Signed up" %}</span>
         <p class="text-gray-700 dark:text-gray-300 mt-1">{{ profile.signed_up }}</p>

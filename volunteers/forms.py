@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
-from volunteers.models import Volunteer, VolunteerTask, TaskCategory
+from volunteers.models import Volunteer, VolunteerTask, TaskCategory, Language, VolunteerLanguage
 from django.contrib.auth.forms import AuthenticationForm
 
 User = get_user_model()
@@ -165,15 +165,25 @@ class EditProfileForm(forms.ModelForm):
     first_name = forms.CharField(label=_('First name'), max_length=30, required=True)
     last_name = forms.CharField(label=_('Last name'), max_length=30, required=True)
 
+    spoken_languages = forms.ModelMultipleChoiceField(
+        queryset=Language.objects.all().order_by('name'),
+        required=False,
+        label=_('Spoken languages'),
+        help_text=_('Select all languages you speak. Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple.'),
+        widget=forms.SelectMultiple(attrs={'size': '8', 'class': 'language-select'}),
+    )
+
     def __init__(self, *args, **kw):
         super(EditProfileForm, self).__init__(*args, **kw)
-        # Put the first and last name at the top
+        # Prepopulate spoken_languages from existing VolunteerLanguage records
+        if self.instance and self.instance.pk:
+            self.fields['spoken_languages'].initial = self.instance.spoken_languages.all()
 
     class Meta:
         model = Volunteer
         exclude = ['user', 'editions', 'tasks', 'signed_up', 'language', 'privacy', 'private_staff_rating',
-                   'private_staff_notes', 'categories']
-        fields = ['first_name', 'last_name', 'matrix_id', 'mobile_nbr', 'about_me', 'mugshot', 'tshirt_size']
+                   'private_staff_notes', 'categories', 'spoken_languages']
+        fields = ['first_name', 'last_name', 'pronouns', 'matrix_id', 'mobile_nbr', 'about_me', 'mugshot', 'tshirt_size']
         help_texts = {
                 "mugshot": _("A personal image displayed in your profile. Max 2MB.")
                 }
@@ -182,6 +192,7 @@ class EditProfileForm(forms.ModelForm):
         data = super().clean()
         if data.get("matrix_id"):
             validate_matrix_id(data["matrix_id"])
+
     def save(self, force_insert=False, force_update=False, commit=True):
         profile = super(EditProfileForm, self).save(commit=commit)
         # Save first and last name
@@ -189,6 +200,15 @@ class EditProfileForm(forms.ModelForm):
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
         user.save()
+
+        # Sync spoken languages (through table, can't use save_m2m)
+        if commit:
+            selected = set(self.cleaned_data.get('spoken_languages', []))
+            existing = set(profile.spoken_languages.all())
+            for lang in selected - existing:
+                VolunteerLanguage.objects.get_or_create(volunteer=profile, language=lang)
+            for lang in existing - selected:
+                VolunteerLanguage.objects.filter(volunteer=profile, language=lang).delete()
 
         return profile
 

@@ -16,10 +16,12 @@ from django.urls import path
 from volunteers.models import Edition
 from volunteers.models import Track
 from volunteers.models import Talk
+from volunteers.models import Language
 from volunteers.models import TaskCategory
 from volunteers.models import TaskTemplate
 from volunteers.models import Task
 from volunteers.models import Volunteer
+from volunteers.models import VolunteerLanguage
 from volunteers.models import VolunteerStatus
 from volunteers.models import VolunteerTask
 
@@ -371,13 +373,18 @@ class TaskAdmin(admin.ModelAdmin):
     mass_mail_volunteer.short_description = "Send mass mail"
 
 
+class VolunteerLanguageInline(admin.TabularInline):
+    model = VolunteerLanguage
+    extra = 1
+
+
 class VolunteerAdmin(admin.ModelAdmin):
     change_list_template = 'admin/volunteer_change_list.html'
 
-    fields = ['user', 'full_name', 'email', 'mobile_nbr', 'matrix_id', 'tshirt_size', 'private_staff_rating', 'private_staff_notes',
-              'penta_account_name']
-#    inlines = (VolunteerCategoryInline, VolunteerTaskInline)
-    list_display = ['full_name', 'mobile_nbr', 'matrix_id', 'email', 'tshirt_size', 'private_staff_rating', 'private_staff_notes']
+    fields = ['user', 'full_name', 'email', 'mobile_nbr', 'matrix_id', 'pronouns', 'tshirt_size',
+              'private_staff_rating', 'private_staff_notes', 'penta_account_name']
+    inlines = [VolunteerLanguageInline]
+    list_display = ['full_name', 'mobile_nbr', 'matrix_id', 'email', 'pronouns', 'tshirt_size', 'private_staff_rating', 'private_staff_notes']
     list_editable = ['private_staff_rating', 'private_staff_notes', 'mobile_nbr', 'tshirt_size']
     list_filter = [MyVolunteersFilter, TaskCategoryFilter, ThisYearsVolunteersFilter,
                    TaskFilter, 'private_staff_rating']
@@ -532,6 +539,7 @@ class VolunteerStatusAdmin(admin.ModelAdmin):
 admin.site.register(Edition, EditionAdmin)
 admin.site.register(Track, TrackAdmin)
 admin.site.register(Talk, TalkAdmin)
+admin.site.register(Language)
 admin.site.register(TaskCategory, TaskCategoryAdmin)
 admin.site.register(TaskTemplate, TaskTemplateAdmin)
 admin.site.register(Task, TaskAdmin)

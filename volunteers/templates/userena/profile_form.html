@@ -24,10 +24,58 @@
       {% csrf_token %}
       {% for field in form %}
       <div>
+        {% if field.name == 'spoken_languages' %}
+        {# Searchable multi-select for languages #}
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        <input type="text" id="lang-search" placeholder="Filter languages…"
+               class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mb-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem text-sm" />
+        <select name="{{ field.html_name }}" id="{{ field.id_for_label }}" multiple size="8"
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem text-sm">
+          {% for choice_val, choice_label in field.field.choices %}
+          <option value="{{ choice_val }}"
+            {% if choice_val in field.value %}selected{% endif %}>
+            {{ choice_label }}
+          </option>
+          {% endfor %}
+        </select>
+        <script>
+          (function(){
+            var inp = document.getElementById('lang-search');
+            var sel = document.getElementById('{{ field.id_for_label }}');
+            var opts = Array.from(sel.options);
+            inp.addEventListener('input', function(){
+              var q = this.value.toLowerCase();
+              opts.forEach(function(o){
+                o.style.display = o.text.toLowerCase().includes(q) ? '' : 'none';
+              });
+            });
+          })();
+        </script>
+        {% elif field.name == 'pronouns' %}
+        {# Text input with datalist suggestions #}
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        <datalist id="pronouns-suggestions">
+          <option value="she/her">
+          <option value="he/him">
+          <option value="they/them">
+          <option value="she/they">
+          <option value="he/they">
+          <option value="any">
+        </datalist>
+        <input type="text" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+               value="{{ field.value|default:'' }}" maxlength="50"
+               list="pronouns-suggestions" autocomplete="off"
+               placeholder="e.g. she/her, he/him, they/them"
+               class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem">
+        {% else %}
         <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
         {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
         {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
         <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-gray-600 [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-gray-700 [&_input]:text-gray-900 [&_input]:dark:text-white [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem [&_textarea]:w-full [&_textarea]:border [&_textarea]:border-gray-300 [&_textarea]:dark:border-gray-600 [&_textarea]:rounded-lg [&_textarea]:px-3 [&_textarea]:py-2 [&_textarea]:bg-white [&_textarea]:dark:bg-gray-700 [&_textarea]:text-gray-900 [&_textarea]:dark:text-white [&_textarea]:focus:outline-none [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-fosdem [&_select]:w-full [&_select]:border [&_select]:border-gray-300 [&_select]:dark:border-gray-600 [&_select]:rounded-lg [&_select]:px-3 [&_select]:py-2 [&_select]:bg-white [&_select]:dark:bg-gray-700 [&_select]:text-gray-900 [&_select]:dark:text-white [&_select]:focus:outline-none [&_select]:focus:ring-2 [&_select]:focus:ring-fosdem">{{ field }}</div>
+        {% endif %}
       </div>
       {% endfor %}
       <button type="submit" class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">{% trans "Save changes" %}</button>

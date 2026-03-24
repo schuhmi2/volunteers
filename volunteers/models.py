@@ -547,6 +547,7 @@ class Volunteer(models.Model):
     # Tasks for which they've signed up.
     tasks = models.ManyToManyField(Task, through='VolunteerTask', blank=True)
     editions = models.ManyToManyField(Edition, through='VolunteerStatus', blank=True)
+    spoken_languages = models.ManyToManyField('Language', through='VolunteerLanguage', blank=True)
     signed_up = models.DateField(default=datetime.date.today)
     about_me = models.TextField(_('about me'), blank=True)
     mobile_nbr = models.CharField('Mobile Phone', max_length=30, blank=True, null=True,
@@ -583,6 +584,13 @@ class Volunteer(models.Model):
             "Volunteer t-shirt size (European sizing). "
             "As the shirt is worn over clothing, consider choosing one size up from your usual size."
         ),
+    )
+    pronouns = models.CharField(
+        'Pronouns',
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Your preferred pronouns (e.g. she/her, he/him, they/them). Optional.",
     )
 
     # Just here for the admin interface.
@@ -748,7 +756,7 @@ class VolunteerLanguage(models.Model):
         verbose_name_plural = _('VolunteerLanguages')
 
     def __str__(self):
-        return language.name.name
+        return self.language.name
 
     volunteer = models.ForeignKey(Volunteer, on_delete=CASCADE)
     language = models.ForeignKey(Language, on_delete=CASCADE)
