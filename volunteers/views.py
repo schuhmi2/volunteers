@@ -518,17 +518,33 @@ def profile_detail(request, username,
             Instance of the currently viewed ``Profile``.
     """
     user = get_object_or_404(get_user_model(), username__iexact=username, volunteer__privacy_policy_accepted_at__isnull=False, volunteer__email_confirmed=True)
-    current_tasks = Task.objects.filter(edition=Edition.get_current()).order_by('date', 'start_time', 'end_time')
-
+    current_edition = Edition.get_current()
+    current_tasks = Task.objects.filter(edition=current_edition).order_by('date', 'start_time', 'end_time')
 
     try:
         profile = user.volunteer
     except profile_model.DoesNotExist:
         profile = Volunteer.objects.create(user=user)
 
+    # Build volunteering history: past editions with their tasks, newest first
+    past_editions = Edition.objects.filter(
+        task__volunteertask__volunteer=profile
+    ).exclude(
+        pk=current_edition.pk if current_edition else None
+    ).distinct().order_by('-start_date')
+
+    history = []
+    for edition in past_editions:
+        edition_tasks = Task.objects.filter(
+            edition=edition,
+            volunteertask__volunteer=profile,
+        ).order_by('date', 'start_time')
+        history.append({'edition': edition, 'tasks': edition_tasks})
+
     if not extra_context: extra_context = dict()
     extra_context['profile'] = profile
     extra_context['tasks'] = current_tasks.filter(volunteers__user=user)
+    extra_context['history'] = history
     extra_context['hide_email'] = True
     extra_context['username'] = profile.user.username
     check_profile_completeness(request, user.volunteer)

@@ -65,20 +65,59 @@
     </div>
   </div>
 
+  <!-- Current edition tasks -->
   {% if tasks %}
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">{% trans "Tasks" %}</h2>
-    <ul class="space-y-1">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">{% trans "Tasks this edition" %}</h2>
+    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
       {% for task in tasks %}
-      <li class="text-sm text-gray-700 dark:text-gray-300">• {{ task.name }}</li>
+      <li class="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ task.name }}</span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{ task.date|date:"D d M" }} · {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</span>
+        {% if task.location %}<span class="text-xs text-gray-400 dark:text-gray-500">📍 {{ task.location }}</span>{% endif %}
+      </li>
       {% endfor %}
     </ul>
   </div>
   {% else %}
   <p class="text-gray-500 dark:text-gray-400 text-sm">
     {% if profile.user.get_full_name %}{{ profile.user.get_full_name }}{% else %}{{ profile.user }}{% endif %}
-    hasn't signed up for any tasks yet.
+    hasn't signed up for any tasks this edition yet.
   </p>
   {% endif %}
+
+  <!-- Volunteering history: past editions -->
+  {% if history %}
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{% trans "Volunteering history" %}</h2>
+    <div class="space-y-3">
+      {% for entry in history %}
+      <details class="group border border-gray-200 dark:border-gray-700 rounded-lg">
+        <summary class="flex items-center justify-between cursor-pointer px-4 py-3 select-none hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
+          <span class="font-medium text-gray-900 dark:text-white">{{ entry.edition.name }}</span>
+          <span class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+              {{ entry.tasks|length }} task{{ entry.tasks|length|pluralize }}
+            </span>
+            <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </span>
+        </summary>
+        <ul class="divide-y divide-gray-100 dark:divide-gray-700 px-4 pb-3">
+          {% for task in entry.tasks %}
+          <li class="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ task.name }}</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ task.date|date:"D d M" }} · {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</span>
+            {% if task.location %}<span class="text-xs text-gray-400 dark:text-gray-500">📍 {{ task.location }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}
