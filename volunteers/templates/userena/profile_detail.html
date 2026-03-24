@@ -36,6 +36,12 @@
         <p class="text-gray-700 dark:text-gray-300 mt-1">{{ profile.about_me }}</p>
       </div>
       {% endif %}
+      {% if profile.tshirt_size and user.username == profile.user.username or profile.tshirt_size and user.is_staff %}
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{% trans "T-shirt size" %}</span>
+        <p class="text-gray-700 dark:text-gray-300 mt-1">{{ profile.tshirt_size }}</p>
+      </div>
+      {% endif %}
       <div>
         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{% trans "Signed up" %}</span>
         <p class="text-gray-700 dark:text-gray-300 mt-1">{{ profile.signed_up }}</p>

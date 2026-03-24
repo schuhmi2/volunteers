@@ -563,6 +563,28 @@ class Volunteer(models.Model):
     privacy = models.CharField(max_length=16, null=True, blank=True)
     language = models.CharField(max_length=8, null=True, blank=True)
 
+    TSHIRT_SIZES = (
+        ('', 'Prefer not to say'),
+        ('XS', 'XS'),
+        ('S', 'S'),
+        ('M', 'M'),
+        ('L', 'L'),
+        ('XL', 'XL'),
+        ('XXL', 'XXL'),
+        ('XXXL', 'XXXL'),
+    )
+    tshirt_size = models.CharField(
+        'T-shirt size',
+        max_length=4,
+        blank=True,
+        null=True,
+        choices=TSHIRT_SIZES,
+        help_text=(
+            "Volunteer t-shirt size (European sizing). "
+            "As the shirt is worn over clothing, consider choosing one size up from your usual size."
+        ),
+    )
+
     # Just here for the admin interface.
     def full_name(self):
         return " ".join([self.user.first_name, self.user.last_name])

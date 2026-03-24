@@ -368,11 +368,11 @@ class TaskAdmin(admin.ModelAdmin):
 
 
 class VolunteerAdmin(admin.ModelAdmin):
-    fields = ['user', 'full_name', 'email', 'mobile_nbr', 'matrix_id', 'private_staff_rating', 'private_staff_notes',
+    fields = ['user', 'full_name', 'email', 'mobile_nbr', 'matrix_id', 'tshirt_size', 'private_staff_rating', 'private_staff_notes',
               'penta_account_name']
 #    inlines = (VolunteerCategoryInline, VolunteerTaskInline)
-    list_display = ['full_name', 'mobile_nbr', 'matrix_id', 'email', 'private_staff_rating', 'private_staff_notes']
-    list_editable = ['private_staff_rating', 'private_staff_notes', 'mobile_nbr']
+    list_display = ['full_name', 'mobile_nbr', 'matrix_id', 'email', 'tshirt_size', 'private_staff_rating', 'private_staff_notes']
+    list_editable = ['private_staff_rating', 'private_staff_notes', 'mobile_nbr', 'tshirt_size']
     list_filter = [MyVolunteersFilter, TaskCategoryFilter, ThisYearsVolunteersFilter,
                    TaskFilter, 'private_staff_rating']
     readonly_fields = ['full_name', 'email']

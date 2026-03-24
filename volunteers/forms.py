@@ -173,7 +173,7 @@ class EditProfileForm(forms.ModelForm):
         model = Volunteer
         exclude = ['user', 'editions', 'tasks', 'signed_up', 'language', 'privacy', 'private_staff_rating',
                    'private_staff_notes', 'categories']
-        fields = ['first_name', 'last_name', 'matrix_id', 'mobile_nbr', 'about_me', 'mugshot']
+        fields = ['first_name', 'last_name', 'matrix_id', 'mobile_nbr', 'about_me', 'mugshot', 'tshirt_size']
         help_texts = {
                 "mugshot": _("A personal image displayed in your profile. Max 2MB.")
                 }
