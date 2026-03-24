@@ -64,6 +64,12 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
       <h3 class="text-lg font-semibold text-fosdem dark:text-fosdem-light mb-2">{{ task.name }}</h3>
       <p class="text-gray-700 dark:text-gray-300 text-sm">{{ task.description|linebreaksbr }}</p>
+      {% if task.info_url %}
+      <a href="{{ task.info_url }}" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-1 text-sm text-fosdem hover:underline font-medium mt-1">
+        📖 Read the documentation ↗
+      </a>
+      {% endif %}
     </div>
     {% endfor %}
   </div>

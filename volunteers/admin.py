@@ -297,7 +297,7 @@ class TaskCategoryAdmin(admin.ModelAdmin):
 
 
 class TaskTemplateAdmin(admin.ModelAdmin):
-    fields = ['name', 'description', 'category', 'primary']
+    fields = ['name', 'description', 'info_url', 'category', 'primary']
     list_display = ['link', 'name', 'category', 'primary']
     list_editable = ['name', 'category', 'primary']
     list_filter = [CategoryActiveFilter]
@@ -313,7 +313,7 @@ class TaskAdmin(admin.ModelAdmin):
         (None, {'fields': ['edition', 'name', 'nbr_volunteers', 'nbr_volunteers_min', 'nbr_volunteers_max', 'date',
                            'start_time', 'end_time', 'location']}),
         (None, {'fields': ['talk', 'template']}),
-        (None, {'fields': ['description', 'fosdem_url']}),
+        (None, {'fields': ['description', 'info_url', 'fosdem_url']}),
     ]
 #    inlines = (VolunteerTaskInline,)
     list_display = ['link', 'edition', 'name', 'date', 'start_time', 'end_time', 'assigned_volunteers',

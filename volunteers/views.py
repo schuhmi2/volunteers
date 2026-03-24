@@ -142,7 +142,7 @@ def task_schedule_csv(request, template_id):
     response['Content-Disposition'] = 'attachment; filename=%s' % filename
 
     writer = csv.writer(response)
-    writer.writerow(['Task', 'Volunteers', 'Day', 'Start', 'End', 'Volunteer', 'Nick', 'Email', 'Mobile', 'Matrix_id'])
+    writer.writerow(['Task', 'Volunteers', 'Day', 'Start', 'End', 'Documentation', 'Volunteer', 'Nick', 'Email', 'Mobile', 'Matrix_id'])
     for task in tasks:
         row = [
             task.name,
@@ -150,13 +150,14 @@ def task_schedule_csv(request, template_id):
             task.date.strftime('%a'),
             task.start_time.strftime('%H:%M'),
             task.end_time.strftime('%H:%M'),
-            '', '', '', '',''
+            task.info_url or '',
+            '', '', '', '', ''
         ]
         writer.writerow(row)
         volunteers = Volunteer.objects.filter(tasks=task)
         for number, volunteer in enumerate(volunteers):
             row = [
-                '', '', '', '', '',
+                '', '', '', '', '', '',
                 "%s %s" % (volunteer.user.first_name, volunteer.user.last_name),
                 volunteer.user.username,
                 volunteer.user.email,
@@ -164,7 +165,7 @@ def task_schedule_csv(request, template_id):
                 volunteer.matrix_id
             ]
             writer.writerow(row)
-        row = [''] * 10
+        row = [''] * 11
         writer.writerow(row)
     return response
 

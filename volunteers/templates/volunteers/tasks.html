@@ -46,7 +46,7 @@
                   {% if attending|get_item:task.id == True %}
                   {{ task.name }} <span class="text-xs text-fosdem">(attending)</span>
                   {% else %}
-                  <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>
+                  <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>{% if task.info_url %} <a href="{{ task.info_url }}" target="_blank" rel="noopener" title="Documentation" class="text-gray-400 hover:text-fosdem text-xs">📖</a>{% endif %}
                   {% endif %}
                 </td>
                 <td class="px-3 py-2 whitespace-nowrap text-gray-600 dark:text-gray-300">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
@@ -126,7 +126,7 @@
                   <span class="text-fosdem">{{ task.name }}</span>
                   <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">(attending)</span>
                   {% else %}
-                  <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>
+                  <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>{% if task.info_url %} <a href="{{ task.info_url }}" target="_blank" rel="noopener" title="Documentation" class="text-gray-400 hover:text-fosdem text-xs">📖</a>{% endif %}
                   {% endif %}
                 </td>
                 <td class="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-gray-300">

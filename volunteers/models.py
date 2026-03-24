@@ -332,6 +332,7 @@ class TaskTemplate(models.Model):
 
     name = models.CharField(max_length=50)
     description = models.TextField()
+    info_url = models.URLField(null=True, blank=True, help_text="Link to volunteer documentation for this task type")
     category = models.ForeignKey(TaskCategory, on_delete=PROTECT)
     primary = models.ForeignKey(User, default=1, limit_choices_to={'is_staff': True}, on_delete=PROTECT)
 
@@ -376,6 +377,7 @@ class Task(models.Model):
     counter = models.CharField(max_length=2)
     description = models.TextField()
     fosdem_url = models.TextField(null=True, blank=True)
+    info_url = models.URLField(null=True, blank=True, help_text="Link to volunteer documentation for this task")
     location = models.CharField(null=True, max_length=30)
     date = models.DateField()
     start_time = models.TimeField()
@@ -436,6 +438,7 @@ class Task(models.Model):
         task.end_time = talk.end_time
         task.edition = edition
         task.description = template.description
+        task.info_url = template.info_url
         task.nbr_volunteers = volunteers[0]
         task.nbr_volunteers_min = volunteers[1]
         task.nbr_volunteers_max = volunteers[2]
@@ -456,8 +459,12 @@ class Task(models.Model):
         else:
             task = cls(name=name, counter=counter, template=template, edition=edition)
         task.description = xml.find('description').text
-        if xml.find('url'):
-            task.fosdem_url = xml.find('url').text
+        # Read info_url from XML; fall back to template's info_url
+        info_url_elem = xml.find('info_url')
+        if info_url_elem is not None and info_url_elem.text and info_url_elem.text.strip():
+            task.info_url = info_url_elem.text.strip()
+        elif template.info_url:
+            task.info_url = template.info_url
         location_elem = xml.find('location')
         if location_elem is not None and location_elem.text:
             task.location = location_elem.text
