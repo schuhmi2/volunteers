@@ -1,0 +1,101 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}T-shirt Report{% endblock %}
+
+{% block content %}
+<h1>T-shirt Report</h1>
+
+<form method="get" style="margin-bottom: 1.5em;">
+    <label for="edition"><strong>Edition:</strong></label>
+    <select name="edition" id="edition" onchange="this.form.submit()" style="margin-left: 0.5em; padding: 4px 8px;">
+        {% for ed in all_editions %}
+        <option value="{{ ed.pk }}" {% if ed.pk == selected_edition.pk %}selected{% endif %}>
+            {{ ed.name }}
+        </option>
+        {% endfor %}
+    </select>
+    <noscript><button type="submit">Go</button></noscript>
+</form>
+
+{% if selected_edition %}
+<h2>Edition: {{ selected_edition.name }}</h2>
+<p>
+    T-shirt days counted:
+    {% for d in tshirt_day_dates %}
+        <strong>{{ d|date:"D d M Y" }}</strong>{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+    <br>
+    <small>
+        Volunteers working on multiple t-shirt days receive one shirt per day.
+        Volunteers with no size set are listed separately.
+    </small>
+</p>
+
+<!-- Summary table -->
+<h3>Summary</h3>
+<table style="border-collapse:collapse; min-width: 300px;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ccc; padding: 6px 12px; background: #f8f8f8;">T-shirt size</th>
+            <th style="border: 1px solid #ccc; padding: 6px 12px; background: #f8f8f8;">Quantity needed</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for size, count in summary %}
+        <tr>
+            <td style="border: 1px solid #ccc; padding: 6px 12px;">
+                {% if size %}{{ size }}{% else %}<em>Not set</em>{% endif %}
+            </td>
+            <td style="border: 1px solid #ccc; padding: 6px 12px; text-align: center;">
+                <strong>{{ count }}</strong>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="2" style="padding: 8px; color: #666;">No signed-up volunteers found for this edition.</td></tr>
+        {% endfor %}
+        <tr style="background: #f0f0f0;">
+            <td style="border: 1px solid #ccc; padding: 6px 12px;"><strong>Total</strong></td>
+            <td style="border: 1px solid #ccc; padding: 6px 12px; text-align: center;"><strong>{{ total }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Per-size breakdown -->
+<h3 style="margin-top: 2em;">Breakdown by size</h3>
+{% for size, volunteers in breakdown %}
+<details style="margin-bottom: 1em; border: 1px solid #ddd; border-radius: 4px; padding: 6px 12px;">
+    <summary style="cursor: pointer; font-weight: bold; padding: 4px 0;">
+        {% if size %}{{ size }}{% else %}<em>No size set</em>{% endif %}
+        — {{ volunteers|length }} volunteer{{ volunteers|length|pluralize }},
+        {% for s, count in summary %}{% if s == size %}{{ count }}{% endif %}{% endfor %} shirt{% for s, count in summary %}{% if s == size %}{{ count|pluralize }}{% endif %}{% endfor %}
+    </summary>
+    <table style="border-collapse:collapse; width: 100%; margin-top: 0.5em;">
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ccc; padding: 4px 10px; background: #f8f8f8; text-align:left;">Volunteer</th>
+                <th style="border: 1px solid #ccc; padding: 4px 10px; background: #f8f8f8; text-align:left;">Username</th>
+                <th style="border: 1px solid #ccc; padding: 4px 10px; background: #f8f8f8; text-align:left;">Working days</th>
+                <th style="border: 1px solid #ccc; padding: 4px 10px; background: #f8f8f8; text-align:center;">Shirts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for volunteer, n_shirts, dates in volunteers %}
+            <tr>
+                <td style="border: 1px solid #ccc; padding: 4px 10px;">{{ volunteer.user.get_full_name }}</td>
+                <td style="border: 1px solid #ccc; padding: 4px 10px;">{{ volunteer.user.username }}</td>
+                <td style="border: 1px solid #ccc; padding: 4px 10px;">
+                    {% for d in dates %}{{ d|date:"D d M" }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                </td>
+                <td style="border: 1px solid #ccc; padding: 4px 10px; text-align: center;">{{ n_shirts }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</details>
+{% endfor %}
+
+{% else %}
+<p>No edition selected.</p>
+{% endif %}
+
+{% endblock %}

@@ -1,4 +1,7 @@
 import sys
+import datetime
+from collections import defaultdict, OrderedDict
+
 from django.contrib import admin
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -8,6 +11,7 @@ from django.db.models import Count
 from django.forms import TextInput, Textarea, Form, CharField, MultipleHiddenInput
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import path
 
 from volunteers.models import Edition
 from volunteers.models import Track
@@ -368,6 +372,8 @@ class TaskAdmin(admin.ModelAdmin):
 
 
 class VolunteerAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/volunteer_change_list.html'
+
     fields = ['user', 'full_name', 'email', 'mobile_nbr', 'matrix_id', 'tshirt_size', 'private_staff_rating', 'private_staff_notes',
               'penta_account_name']
 #    inlines = (VolunteerCategoryInline, VolunteerTaskInline)
@@ -436,6 +442,85 @@ class VolunteerAdmin(admin.ModelAdmin):
         return volunteer.tasks.filter(edition=Edition.get_current()).count()
 
     num_tasks.admin_order_field = 'num_tasks'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path('tshirt_report/', self.admin_site.admin_view(self.tshirt_report_view), name='volunteer_tshirt_report'),
+        ]
+        return custom + urls
+
+    def tshirt_report_view(self, request):
+        if not request.user.is_staff:
+            raise PermissionDenied
+
+        all_editions = Edition.objects.all().order_by('-start_date')
+
+        # Determine selected edition
+        edition_pk = request.GET.get('edition')
+        if edition_pk:
+            try:
+                selected_edition = Edition.objects.get(pk=edition_pk)
+            except Edition.DoesNotExist:
+                selected_edition = Edition.get_current() or (all_editions.first() if all_editions.exists() else None)
+        else:
+            selected_edition = Edition.get_current() or (all_editions.first() if all_editions.exists() else None)
+
+        tshirt_day_offsets = getattr(settings, 'TSHIRT_DAYS', [0, 1])
+        tshirt_day_dates = []
+        summary = []
+        breakdown = []
+        total = 0
+        size_totals = {}
+
+        if selected_edition:
+            tshirt_day_dates = sorted([
+                selected_edition.start_date + datetime.timedelta(days=d)
+                for d in tshirt_day_offsets
+            ])
+
+            # Map volunteer → set of distinct t-shirt day dates they work
+            vol_dates = defaultdict(set)
+            tasks = (
+                Task.objects
+                .filter(edition=selected_edition, date__in=tshirt_day_dates)
+                .prefetch_related('volunteers')
+            )
+            for task in tasks:
+                for volunteer in task.volunteers.all():
+                    vol_dates[volunteer.pk].add(task.date)
+
+            # Aggregate by t-shirt size
+            size_data = defaultdict(list)  # size → [(volunteer, n_shirts, sorted_dates)]
+            for vol_pk, dates in vol_dates.items():
+                volunteer = Volunteer.objects.select_related('user').get(pk=vol_pk)
+                n_shirts = len(dates)
+                size = volunteer.tshirt_size or ''
+                size_data[size].append((volunteer, n_shirts, sorted(dates)))
+
+            # Order sizes sensibly
+            size_order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '']
+            ordered_sizes = sorted(size_data.keys(), key=lambda s: size_order.index(s) if s in size_order else 99)
+
+            for size in ordered_sizes:
+                volunteers = sorted(size_data[size], key=lambda x: x[0].user.last_name.lower())
+                count = sum(n for _, n, _ in volunteers)
+                size_totals[size] = count
+                summary.append((size, count))
+                breakdown.append((size, volunteers))
+                total += count
+
+        return render(request, 'admin/tshirt_report.html', {
+            'title': 'T-shirt Report',
+            'all_editions': all_editions,
+            'selected_edition': selected_edition,
+            'tshirt_day_dates': tshirt_day_dates,
+            'summary': summary,
+            'breakdown': breakdown,
+            'size_totals': size_totals,
+            'total': total,
+            'opts': self.model._meta,
+        })
 
 
 class VolunteerStatusAdmin(admin.ModelAdmin):

@@ -233,4 +233,9 @@ LOGOUT_REDIRECT_URL = '/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Day offsets (relative to edition.start_date) on which volunteers receive a t-shirt.
+# day 0 = Saturday (FOSDEM day 1), day 1 = Sunday (FOSDEM day 2), day -1 = Friday (build-up).
+# Override in localsettings.py if your event uses different days.
+TSHIRT_DAYS = [-1, 0, 1]
+
 from volunteer_mgmt.localsettings import *
