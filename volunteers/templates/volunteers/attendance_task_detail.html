@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Task Attendance" %}: {{ task.name }} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <a href="{% url 'attendance_dashboard' %}" class="text-sm text-fosdem hover:underline">&larr; {% trans "Back to Dashboard" %}</a>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ task.name }}</h1>
+      <p class="text-gray-500 dark:text-gray-400 text-sm">
+        {{ task.date|date:"l, F j" }} &middot; {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}
+        {% if task.location %}&middot; 📍 {{ task.location }}{% endif %}
+      </p>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      {% if signin_matrix_enabled %}
+      <form method="post" action="{% url 'need_volunteers_matrix' %}">
+        {% csrf_token %}
+        <input type="hidden" name="task_id" value="{{ task.id }}">
+        <button type="submit" class="inline-flex items-center px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
+          📢 {% trans "Need Volunteers" %}
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Volunteer List -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Volunteer" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Status" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Signed In" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Signed Out" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for item in volunteers_data %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+              {{ item.volunteer.user.first_name }} {{ item.volunteer.user.last_name }}
+              <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">({{ item.volunteer.user.username }})</span>
+            </td>
+            <td class="px-4 py-3">
+              {% if item.status == "active" %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">● {% trans "Active" %}</span>
+              {% elif item.status == "completed" %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">✓ {% trans "Done" %}</span>
+              {% elif item.status == "not_arrived" %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300">⏳ {% trans "Waiting" %}</span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">✗ {% trans "No Record" %}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-300 text-xs">
+              {% if item.attendance and item.attendance.signed_in_at %}
+                {{ item.attendance.signed_in_at|time:"H:i" }}
+                {% if item.attendance.manually_marked_by %}<span class="text-gray-400">(manual)</span>{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-300 text-xs">
+              {% if item.attendance and item.attendance.signed_out_at %}
+                {{ item.attendance.signed_out_at|time:"H:i" }}
+                {% if item.attendance.manually_marked_by %}<span class="text-gray-400">(manual)</span>{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-1 flex-wrap">
+                {% if item.status != "active" and item.status != "completed" %}
+                <form method="post" action="{% url 'attendance_mark' %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="vt_id" value="{{ item.volunteer_task.id }}">
+                  <input type="hidden" name="action" value="signin">
+                  <button type="submit" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors">
+                    {% trans "Sign in" %}
+                  </button>
+                </form>
+                {% endif %}
+                {% if item.status == "active" %}
+                <form method="post" action="{% url 'attendance_mark' %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="vt_id" value="{{ item.volunteer_task.id }}">
+                  <input type="hidden" name="action" value="signout">
+                  <button type="submit" class="px-2 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded transition-colors">
+                    {% trans "Sign out" %}
+                  </button>
+                </form>
+                {% endif %}
+                {% if signin_matrix_enabled or signin_email_enabled %}
+                <form method="post" action="{% url 'summon_runner' %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="volunteer_id" value="{{ item.volunteer.id }}">
+                  <input type="hidden" name="task_id" value="{{ task.id }}">
+                  <button type="submit" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors">
+                    🏃 {% trans "Summon" %}
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">{% trans "No volunteers assigned to this task." %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Transfer Runner -->
+  {% if available_runners %}
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{% trans "Transfer Runner" %}</h2>
+    <form method="post" action="{% url 'transfer_runner' %}" class="flex items-end gap-3 flex-wrap">
+      {% csrf_token %}
+      <input type="hidden" name="task_id" value="{{ task.id }}">
+      <div class="flex-1 min-w-[200px]">
+        <label for="runner-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{% trans "Select volunteer" %}</label>
+        <select name="volunteer_id" id="runner-select"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-fosdem">
+          {% for vol in available_runners %}
+          <option value="{{ vol.id }}">{{ vol.user.first_name }} {{ vol.user.last_name }} ({{ vol.user.username }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="px-4 py-2 bg-fosdem hover:bg-fosdem-dark text-white font-medium text-sm rounded-lg transition-colors">
+        {% trans "Assign as Runner" %}
+      </button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

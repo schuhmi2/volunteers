@@ -1,8 +1,9 @@
 from django.utils import timezone
 from datetime import timedelta
+import datetime as _dt
 
 from .models import Volunteer, VolunteerTask, VolunteerTalk, TaskCategory, TaskTemplate, Task, Track, \
-    Talk, Edition, EmailConfirmation, LabelPrintLog
+    Talk, Edition, EmailConfirmation, LabelPrintLog, TaskAttendance
 from .forms import EditProfileForm, SignupForm, EventSignupForm, EmailChangeForm, ResendActivationForm
 
 from django.contrib import messages
@@ -78,6 +79,11 @@ def task_detailed(request, task_id):
             Volunteer.objects.select_related('user')
             .exclude(id__in=assigned_volunteer_ids)
             .order_by('user__first_name', 'user__last_name')
+        )
+        # Pending approval signups
+        context['pending_signups'] = (
+            VolunteerTask.objects.filter(task=task, status='pending')
+            .select_related('volunteer__user')
         )
     return render(request, 'volunteers/task_detailed.html', context)
 
@@ -241,8 +247,29 @@ def task_list(request):
         VolunteerTask.objects.exclude(task_id__in=task_ids).filter(volunteer=volunteer).delete()
 
         # checked boxes, add the volunteer to the tasks when he/she is not added
+        pending_tasks = []
         for task in current_tasks.filter(id__in=task_ids):
-            VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer)
+            vt, created = VolunteerTask.objects.get_or_create(
+                task=task, volunteer=volunteer,
+                defaults={'status': 'pending' if task.effective_requires_approval else 'approved'}
+            )
+            if created and task.effective_requires_approval:
+                pending_tasks.append(task)
+
+        # Send notifications for pending tasks
+        if pending_tasks:
+            from .emails import send_approval_request_email, safe_send_email
+            email_failed = False
+            for task in pending_tasks:
+                if not safe_send_email(send_approval_request_email, volunteer, task):
+                    email_failed = True
+            if email_failed:
+                messages.warning(request, _('Some notification emails could not be sent.'), fail_silently=True)
+            messages.info(
+                request,
+                _('Your sign-up for %(count)d task(s) is pending approval.') % {'count': len(pending_tasks)},
+                fail_silently=True
+            )
 
         # show success message when enabled
         messages.success(request, _('Your tasks have been updated.'), fail_silently=True)
@@ -284,9 +311,17 @@ def task_list(request):
 
     # mark checked, attending tasks
     if volunteer:
+        # Get all volunteer's signups (approved and pending)
+        volunteer_task_statuses = dict(
+            VolunteerTask.objects.filter(volunteer=volunteer, task__in=current_tasks)
+            .values_list('task_id', 'status')
+        )
         for task in current_tasks:
-            context['checked'][task.id] = 'checked' if volunteer in task.volunteers.all() else ''
+            status = volunteer_task_statuses.get(task.id)
+            context['checked'][task.id] = 'checked' if status in ('approved', 'pending') else ''
             context['attending'][task.id] = False
+
+        context['pending_task_ids'] = {tid for tid, st in volunteer_task_statuses.items() if st == 'pending'}
 
         # take the moderation tasks to talks the volunteer is attending
         for task in current_tasks.filter(talk__volunteers=volunteer):
@@ -295,6 +330,7 @@ def task_list(request):
     else:
         for task in current_tasks:
             context['attending'][task.id] = False
+        context['pending_task_ids'] = set()
 
     return render(request, 'volunteers/tasks.html', context)
 
@@ -324,9 +360,12 @@ def event_sign_on(request):
             for task in current_tasks.filter(id__in=task_ids):
                 VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer)
             # Send tasks
-            volunteer.mail_schedule()
-            # Send reset password mail
-            volunteer.mail_user_created_for_you()
+            try:
+                volunteer.mail_schedule()
+                volunteer.mail_user_created_for_you()
+            except Exception:
+                messages.warning(request, _('Volunteer created, but notification emails could not be sent.'),
+                                 fail_silently=True)
             # show success message when enabled
             messages.success(request, _('Tasks for {0} have been updated.'.format(user.username)),
                                  fail_silently=True)
@@ -379,7 +418,8 @@ def render_to_pdf(request, template_src, context_dict):
 @login_required
 def task_list_detailed(request, username):
     context = {}
-    current_tasks = Task.objects.filter(edition=Edition.get_current()).order_by('date', 'start_time', 'end_time')
+    edition = Edition.get_current()
+    current_tasks = Task.objects.filter(edition=edition).order_by('date', 'start_time', 'end_time')
 
     # get the requested users tasks
     context['tasks'] = current_tasks.filter(volunteers__user__username=username)
@@ -387,7 +427,58 @@ def task_list_detailed(request, username):
     context['profile_user'] = User.objects.filter(username=username)[0]
     volunteer = Volunteer.objects.filter(user__username=username)[0]
     context['volunteer'] = volunteer
+    context['edition'] = edition
     check_profile_completeness(request, volunteer)
+
+    # Build sign-in availability and status dicts for the template
+    signin_available = {}
+    signin_status = {}
+    if edition and edition.enable_task_signin:
+        now = timezone.now()
+        for task in context['tasks']:
+            task_start = timezone.make_aware(
+                _dt.datetime.combine(task.date, task.start_time),
+                timezone.get_current_timezone()
+            )
+            task_end = timezone.make_aware(
+                _dt.datetime.combine(task.date, task.end_time),
+                timezone.get_current_timezone()
+            )
+            earliest_signin = task_start - timedelta(minutes=15)
+
+            # Get volunteer_task and attendance
+            try:
+                vt = VolunteerTask.objects.get(task=task, volunteer=volunteer)
+                try:
+                    attendance = vt.attendance
+                except TaskAttendance.DoesNotExist:
+                    attendance = None
+            except VolunteerTask.DoesNotExist:
+                vt = None
+                attendance = None
+
+            can_signin = (
+                vt is not None
+                and now >= earliest_signin
+                and now < task_end
+                and (attendance is None or attendance.signed_in_at is None)
+            )
+            can_signout = (
+                attendance is not None
+                and attendance.signed_in_at is not None
+                and attendance.signed_out_at is None
+            )
+
+            signin_available[task.id] = {
+                'can_signin': can_signin,
+                'can_signout': can_signout,
+                'vt_id': vt.id if vt else None,
+            }
+            signin_status[task.id] = attendance.status if attendance else 'no_record'
+
+    context['signin_available'] = signin_available
+    context['signin_status'] = signin_status
+    context['enable_task_signin'] = edition.enable_task_signin if edition else False
 
     if request.POST:
         if 'print_pdf' in request.POST:
@@ -395,9 +486,13 @@ def task_list_detailed(request, username):
             context.update({'pagesize': 'A4'})
             return render_to_pdf(request, 'volunteers/tasks_detailed.html', context)
         elif 'mail_schedule' in request.POST:
-            volunteer.mail_schedule()
-            messages.success(request, _('Your schedule has been mailed to %s.' % (volunteer.user.email,)),
-                             fail_silently=True)
+            try:
+                volunteer.mail_schedule()
+                messages.success(request, _('Your schedule has been mailed to %s.' % (volunteer.user.email,)),
+                                 fail_silently=True)
+            except Exception:
+                messages.warning(request, _('Your schedule could not be emailed. Please try again later.'),
+                                 fail_silently=True)
 
     return render(request, 'volunteers/tasks_detailed.html', context)
 
@@ -902,3 +997,483 @@ def matrix_ids_export(request):
         'volunteers': volunteers,
     }
     return render(request, 'volunteers/matrix_ids_export.html', context)
+
+
+# --- Admin Approval Dashboard ---
+
+@user_passes_test(lambda u: u.is_superuser)
+def approval_dashboard(request):
+    """List all pending sign-up approvals for the current edition."""
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('task_list')
+
+    pending = (
+        VolunteerTask.objects
+        .filter(task__edition=edition, status='pending')
+        .select_related('volunteer__user', 'task', 'task__template')
+        .order_by('requested_at')
+    )
+
+    context = {
+        'edition': edition,
+        'pending': pending,
+    }
+    return render(request, 'volunteers/approval_dashboard.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def approval_respond(request):
+    """Approve or deny a pending signup."""
+    if request.method != 'POST':
+        return redirect('approval_dashboard')
+
+    from .emails import send_approval_decision_email, safe_send_email
+
+    vt_id = request.POST.get('vt_id')
+    action = request.POST.get('action')
+
+    vt = get_object_or_404(VolunteerTask, id=vt_id, status='pending')
+
+    if action == 'approve':
+        vt.status = 'approved'
+        vt.reviewed_at = timezone.now()
+        vt.reviewed_by = request.user
+        vt.save()
+        if not safe_send_email(send_approval_decision_email, vt, True):
+            messages.warning(request, _('Approval saved, but notification email could not be sent.'))
+        messages.success(
+            request,
+            _('%(name)s approved for "%(task)s".') % {
+                'name': vt.volunteer.user.get_full_name(),
+                'task': vt.task.name,
+            }
+        )
+    elif action == 'deny':
+        if not safe_send_email(send_approval_decision_email, vt, False):
+            messages.warning(request, _('Denial processed, but notification email could not be sent.'))
+        vt.delete()  # Delete so volunteer can re-apply
+        messages.success(
+            request,
+            _('Sign-up denied. The volunteer can re-apply if they wish.')
+        )
+
+    return redirect('approval_dashboard')
+
+
+# --- Task Sign-in/Sign-out Views ---
+
+
+def _combine_task_datetime(task, time_field):
+    """Combine task date with a time field to produce a timezone-aware datetime."""
+    naive = _dt.datetime.combine(task.date, time_field)
+    return timezone.make_aware(naive, timezone.get_current_timezone())
+
+
+def task_signin_token(request, token):
+    """Token-based sign-in (no login required). Used from email links."""
+    attendance = get_object_or_404(TaskAttendance, signin_token=token)
+    task = attendance.volunteer_task.task
+    edition = task.edition
+
+    if not edition.enable_task_signin:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'Task sign-in is not enabled for this edition.'
+        })
+
+    now = timezone.now()
+    task_start = _combine_task_datetime(task, task.start_time)
+    task_end = _combine_task_datetime(task, task.end_time)
+    earliest_signin = task_start - timedelta(minutes=15)
+
+    if now < earliest_signin:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': f'Too early to sign in. Sign-in opens at {(task_start - timedelta(minutes=15)).strftime("%H:%M")}.',
+            'task': task,
+        })
+
+    if now >= task_end:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'This task has already ended.',
+            'task': task,
+        })
+
+    if attendance.signed_in_at:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'You have already signed in for this task.',
+            'task': task,
+        })
+
+    attendance.signed_in_at = now
+    attendance.save(update_fields=['signed_in_at'])
+
+    # Send sign-out link email if enabled
+    if getattr(settings, 'SIGNIN_EMAIL_ENABLED', False):
+        from .emails import send_signout_link_email, safe_send_email
+        if safe_send_email(send_signout_link_email, attendance):
+            attendance.signout_link_sent_at = now
+            attendance.save(update_fields=['signout_link_sent_at'])
+
+    return render(request, 'volunteers/signin_confirm.html', {
+        'task': task,
+        'attendance': attendance,
+    })
+
+
+def task_signout_token(request, token):
+    """Token-based sign-out (no login required). Used from email links."""
+    attendance = get_object_or_404(TaskAttendance, signin_token=token)
+    task = attendance.volunteer_task.task
+
+    if not attendance.signed_in_at:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'You have not signed in for this task yet.',
+            'task': task,
+        })
+
+    if attendance.signed_out_at:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'You have already signed out of this task.',
+            'task': task,
+        })
+
+    attendance.signed_out_at = timezone.now()
+    attendance.save(update_fields=['signed_out_at'])
+
+    return render(request, 'volunteers/signout_confirm.html', {
+        'task': task,
+        'attendance': attendance,
+    })
+
+
+@login_required
+def task_signin(request, vt_id):
+    """Login-required sign-in using volunteer_task ID. Verifies ownership."""
+    volunteer = get_object_or_404(Volunteer, user=request.user)
+    vt = get_object_or_404(VolunteerTask, id=vt_id, volunteer=volunteer)
+    task = vt.task
+    edition = task.edition
+
+    if not edition.enable_task_signin:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'Task sign-in is not enabled for this edition.'
+        })
+
+    # Get or create attendance record
+    attendance, _created = TaskAttendance.objects.get_or_create(volunteer_task=vt)
+
+    now = timezone.now()
+    task_start = _combine_task_datetime(task, task.start_time)
+    task_end = _combine_task_datetime(task, task.end_time)
+    earliest_signin = task_start - timedelta(minutes=15)
+
+    if now < earliest_signin:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': f'Too early to sign in. Sign-in opens at {(task_start - timedelta(minutes=15)).strftime("%H:%M")}.',
+            'task': task,
+        })
+
+    if now >= task_end:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'This task has already ended.',
+            'task': task,
+        })
+
+    if attendance.signed_in_at:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'You have already signed in for this task.',
+            'task': task,
+        })
+
+    attendance.signed_in_at = now
+    attendance.save(update_fields=['signed_in_at'])
+
+    # Send sign-out link email if enabled
+    if getattr(settings, 'SIGNIN_EMAIL_ENABLED', False):
+        from .emails import send_signout_link_email, safe_send_email
+        if safe_send_email(send_signout_link_email, attendance):
+            attendance.signout_link_sent_at = now
+            attendance.save(update_fields=['signout_link_sent_at'])
+        else:
+            messages.warning(request, _('You are signed in, but the confirmation email could not be sent.'))
+
+    messages.success(request, _('You are now signed in for "%s".') % task.name)
+    return render(request, 'volunteers/signin_confirm.html', {
+        'task': task,
+        'attendance': attendance,
+    })
+
+
+@login_required
+def task_signout(request, vt_id):
+    """Login-required sign-out using volunteer_task ID. Verifies ownership."""
+    volunteer = get_object_or_404(Volunteer, user=request.user)
+    vt = get_object_or_404(VolunteerTask, id=vt_id, volunteer=volunteer)
+    task = vt.task
+
+    attendance = get_object_or_404(TaskAttendance, volunteer_task=vt)
+
+    if not attendance.signed_in_at:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'You have not signed in for this task yet.',
+            'task': task,
+        })
+
+    if attendance.signed_out_at:
+        return render(request, 'volunteers/signin_error.html', {
+            'error': 'You have already signed out of this task.',
+            'task': task,
+        })
+
+    attendance.signed_out_at = timezone.now()
+    attendance.save(update_fields=['signed_out_at'])
+
+    messages.success(request, _('You have signed out of "%s".') % task.name)
+    return render(request, 'volunteers/signout_confirm.html', {
+        'task': task,
+        'attendance': attendance,
+    })
+
+
+# --- Admin Attendance Dashboard Views ---
+
+@user_passes_test(lambda u: u.is_superuser)
+def attendance_dashboard(request):
+    """Admin attendance dashboard showing all tasks grouped by day with sign-in counts."""
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('task_list')
+
+    if not edition.enable_task_signin:
+        messages.warning(request, _('Task sign-in is not enabled for this edition.'))
+        return redirect('task_list')
+
+    tasks = (
+        Task.objects.filter(edition=edition)
+        .select_related('template', 'template__category')
+        .prefetch_related('volunteertask_set__attendance')
+        .order_by('date', 'start_time', 'name')
+    )
+
+    # Group tasks by day with attendance counts
+    days = {}
+    for task in tasks:
+        day = task.date
+        if day not in days:
+            days[day] = []
+
+        assigned = VolunteerTask.objects.filter(task=task, status='approved').count()
+        signed_in = TaskAttendance.objects.filter(
+            volunteer_task__task=task,
+            signed_in_at__isnull=False,
+            signed_out_at__isnull=True,
+        ).count()
+        completed = TaskAttendance.objects.filter(
+            volunteer_task__task=task,
+            signed_out_at__isnull=False,
+        ).count()
+        missing = assigned - signed_in - completed
+
+        days[day].append({
+            'task': task,
+            'assigned': assigned,
+            'signed_in': signed_in,
+            'completed': completed,
+            'missing': max(0, missing),
+        })
+
+    context = {
+        'edition': edition,
+        'days': dict(sorted(days.items())),
+    }
+    return render(request, 'volunteers/attendance_dashboard.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def attendance_task_detail(request, task_id):
+    """Admin view showing individual volunteers for a task with their attendance status."""
+    task = get_object_or_404(Task, id=task_id)
+    edition = task.edition
+
+    if not edition.enable_task_signin:
+        messages.warning(request, _('Task sign-in is not enabled for this edition.'))
+        return redirect('task_list')
+
+    volunteer_tasks = (
+        VolunteerTask.objects.filter(task=task, status='approved')
+        .select_related('volunteer__user')
+        .prefetch_related('attendance')
+    )
+
+    volunteers_data = []
+    for vt in volunteer_tasks:
+        attendance = getattr(vt, 'attendance', None)
+        try:
+            attendance = vt.attendance
+        except TaskAttendance.DoesNotExist:
+            attendance = None
+        volunteers_data.append({
+            'volunteer_task': vt,
+            'volunteer': vt.volunteer,
+            'attendance': attendance,
+            'status': attendance.status if attendance else 'no_record',
+        })
+
+    # Get available runners for transfer dropdown (volunteers not on this task)
+    assigned_ids = volunteer_tasks.values_list('volunteer_id', flat=True)
+    available_runners = (
+        Volunteer.objects.select_related('user')
+        .filter(tasks__edition=edition)
+        .exclude(id__in=assigned_ids)
+        .distinct()
+        .order_by('user__first_name', 'user__last_name')
+    )
+
+    context = {
+        'task': task,
+        'edition': edition,
+        'volunteers_data': volunteers_data,
+        'available_runners': available_runners,
+        'signin_email_enabled': getattr(settings, 'SIGNIN_EMAIL_ENABLED', False),
+        'signin_matrix_enabled': getattr(settings, 'SIGNIN_MATRIX_ENABLED', False),
+    }
+    return render(request, 'volunteers/attendance_task_detail.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def attendance_mark(request):
+    """POST: Manually sign-in or sign-out a volunteer."""
+    if request.method != 'POST':
+        return redirect('attendance_dashboard')
+
+    vt_id = request.POST.get('vt_id')
+    action = request.POST.get('action')  # 'signin' or 'signout'
+
+    vt = get_object_or_404(VolunteerTask, id=vt_id)
+    attendance, _created = TaskAttendance.objects.get_or_create(volunteer_task=vt)
+
+    now = timezone.now()
+
+    if action == 'signin':
+        attendance.signed_in_at = now
+        attendance.manually_marked_by = request.user
+        attendance.save(update_fields=['signed_in_at', 'manually_marked_by'])
+        messages.success(request, _('Manually signed in %s.') % vt.volunteer.user.get_full_name())
+    elif action == 'signout':
+        attendance.signed_out_at = now
+        attendance.manually_marked_by = request.user
+        attendance.save(update_fields=['signed_out_at', 'manually_marked_by'])
+        messages.success(request, _('Manually signed out %s.') % vt.volunteer.user.get_full_name())
+
+    return redirect('attendance_task_detail', task_id=vt.task.id)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def transfer_runner(request):
+    """POST: Assign a runner volunteer to a task."""
+    if request.method != 'POST':
+        return redirect('attendance_dashboard')
+
+    task_id = request.POST.get('task_id')
+    volunteer_id = request.POST.get('volunteer_id')
+
+    task = get_object_or_404(Task, id=task_id)
+    volunteer = get_object_or_404(Volunteer, id=volunteer_id)
+
+    vt, created = VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer)
+    if created:
+        # Create attendance record
+        attendance = TaskAttendance.objects.create(volunteer_task=vt)
+        messages.success(
+            request,
+            _('%(name)s has been assigned as runner to "%(task)s".') % {
+                'name': volunteer.user.get_full_name(),
+                'task': task.name,
+            }
+        )
+    else:
+        messages.info(request, _('%s is already assigned to this task.') % volunteer.user.get_full_name())
+
+    return redirect('attendance_task_detail', task_id=task.id)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def summon_runner(request):
+    """POST: Send Matrix message or email to summon a runner. Requires SIGNIN_MATRIX_ENABLED or SIGNIN_EMAIL_ENABLED."""
+    if request.method != 'POST':
+        return redirect('attendance_dashboard')
+
+    volunteer_id = request.POST.get('volunteer_id')
+    task_id = request.POST.get('task_id')
+    volunteer = get_object_or_404(Volunteer, id=volunteer_id)
+    task = get_object_or_404(Task, id=task_id)
+
+    sent = False
+
+    # Try Matrix first
+    if getattr(settings, 'SIGNIN_MATRIX_ENABLED', False):
+        from .matrix_bot import summon_runner_matrix
+        sent = summon_runner_matrix(volunteer, task.location or task.name)
+
+    # Fallback to email
+    if not sent and getattr(settings, 'SIGNIN_EMAIL_ENABLED', False) and volunteer.user.email:
+        try:
+            from django.core.mail import EmailMultiAlternatives
+            subject = f'[FOSDEM Volunteers] You are needed: {task.name}'
+            body = (
+                f'Hi {volunteer.user.username},\n\n'
+                f'You are needed at "{task.name}" ({task.location or "N/A"}).\n'
+                f'Please head there now.\n\n'
+                f'Thanks,\nFOSDEM Volunteers System'
+            )
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=body,
+                from_email='volunteer-admin@fosdem.org',
+                to=[volunteer.user.email],
+            )
+            email.send(fail_silently=False)
+            sent = True
+        except Exception:
+            messages.warning(request, _('Email notification could not be sent.'))
+
+    if sent:
+        messages.success(request, _('Runner summoned: %s') % volunteer.user.get_full_name())
+    else:
+        messages.error(request, _('Could not summon runner. No Matrix or email available.'))
+
+    return redirect('attendance_task_detail', task_id=task.id)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def need_volunteers_matrix(request):
+    """POST: Post a message to Matrix room requesting more volunteers. Requires SIGNIN_MATRIX_ENABLED."""
+    if request.method != 'POST':
+        return redirect('attendance_dashboard')
+
+    task_id = request.POST.get('task_id')
+    task = get_object_or_404(Task, id=task_id)
+
+    if not getattr(settings, 'SIGNIN_MATRIX_ENABLED', False):
+        messages.error(request, _('Matrix notifications are not enabled.'))
+        return redirect('attendance_task_detail', task_id=task.id)
+
+    assigned = VolunteerTask.objects.filter(task=task, status='approved').count()
+    signed_in = TaskAttendance.objects.filter(
+        volunteer_task__task=task,
+        signed_in_at__isnull=False,
+        signed_out_at__isnull=True,
+    ).count()
+    missing = max(0, assigned - signed_in)
+
+    from .matrix_bot import need_volunteers_message
+    result = need_volunteers_message(task, missing if missing > 0 else 1)
+
+    if result:
+        messages.success(request, _('Posted need-volunteers message to Matrix.'))
+    else:
+        messages.error(request, _('Failed to post to Matrix room.'))
+
+    return redirect('attendance_task_detail', task_id=task.id)

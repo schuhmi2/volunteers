@@ -243,4 +243,17 @@ TSHIRT_DAYS = [-1, 0, 1]
 LABEL_WIDTH_MM = 80
 LABEL_HEIGHT_MM = 50
 
+# Task sign-in/sign-out settings
+SIGNIN_EMAIL_ENABLED = True
+SIGNIN_MATRIX_ENABLED = False
+SIGNIN_REMINDER_MINUTES = 15
+
+# Matrix bot configuration (only used if SIGNIN_MATRIX_ENABLED = True)
+MATRIX_BOT_HOMESERVER = ''
+MATRIX_BOT_TOKEN = ''
+MATRIX_BOT_ROOM = '#volunteers-backstage:fosdem.org'
+
+# Base URL for building links in emails/notifications (no trailing slash)
+SITE_URL = 'http://localhost:8000'
+
 from volunteer_mgmt.localsettings import *

@@ -61,6 +61,26 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 space-y-4">
     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{% trans "Admin: Manage Volunteers" %}</h2>
 
+    {# Pending approval signups #}
+    {% if pending_signups %}
+    <div>
+      <h3 class="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-2">⏳ {% trans "Pending Approval" %}</h3>
+      <div class="space-y-2">
+        {% for vt in pending_signups %}
+        <div class="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg px-3 py-2">
+          <span class="text-sm text-gray-900 dark:text-white">{{ vt.volunteer.user.first_name }} {{ vt.volunteer.user.last_name }} ({{ vt.volunteer.user.username }})</span>
+          <form method="post" action="{% url 'approval_respond' %}" class="inline-flex gap-2">
+            {% csrf_token %}
+            <input type="hidden" name="vt_id" value="{{ vt.id }}">
+            <button type="submit" name="action" value="approve" class="text-green-600 hover:text-green-800 dark:text-green-400 text-xs font-medium">{% trans "Approve" %}</button>
+            <button type="submit" name="action" value="deny" class="text-red-600 hover:text-red-800 dark:text-red-400 text-xs font-medium">{% trans "Deny" %}</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
     {# Currently assigned volunteers with unassign option #}
     {% if task.volunteer_set.all %}
     <div>

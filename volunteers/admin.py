@@ -271,8 +271,8 @@ class VolunteerTaskInline(admin.TabularInline):
 
 
 class EditionAdmin(admin.ModelAdmin):
-    fields = ['name', 'start_date', 'end_date', 'visible_from', 'visible_until', 'digital_edition']
-    list_display = ['name', 'start_date', 'end_date', 'visible_from', 'visible_until']
+    fields = ['name', 'start_date', 'end_date', 'visible_from', 'visible_until', 'digital_edition', 'enable_task_signin']
+    list_display = ['name', 'start_date', 'end_date', 'visible_from', 'visible_until', 'enable_task_signin']
 
 
 class TrackAdmin(admin.ModelAdmin):
@@ -303,15 +303,17 @@ class TaskCategoryAdmin(admin.ModelAdmin):
 
 
 class TaskTemplateAdmin(admin.ModelAdmin):
-    fields = ['name', 'description', 'info_url', 'category', 'primary']
-    list_display = ['link', 'name', 'category', 'primary']
-    list_editable = ['name', 'category', 'primary']
+    fields = ['name', 'description', 'info_url', 'category', 'primary', 'requires_approval']
+    list_display = ['link', 'name', 'category', 'primary', 'requires_approval']
+    list_editable = ['name', 'category', 'primary', 'requires_approval']
     list_filter = [CategoryActiveFilter]
 
 
 class VolunteerTaskAdmin(admin.ModelAdmin):
-    fields = ['volunteer', 'task']
-    #list_display = ['volunteer__user', 'task__name']
+    fields = ['volunteer', 'task', 'status', 'reviewed_at', 'reviewed_by']
+    list_display = ['volunteer', 'task', 'status', 'requested_at']
+    list_filter = ['status']
+    readonly_fields = ['requested_at']
 
 
 class TaskAdmin(admin.ModelAdmin):
@@ -320,6 +322,7 @@ class TaskAdmin(admin.ModelAdmin):
                            'start_time', 'end_time', 'location']}),
         (None, {'fields': ['talk', 'template']}),
         (None, {'fields': ['description', 'info_url', 'fosdem_url']}),
+        ('Approval', {'fields': ['requires_approval'], 'description': 'Leave blank to inherit from template. Set to override.'}),
     ]
 #    inlines = (VolunteerTaskInline,)
     list_display = ['link', 'edition', 'name', 'date', 'start_time', 'end_time', 'assigned_volunteers',

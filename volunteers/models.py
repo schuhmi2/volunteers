@@ -70,6 +70,7 @@ class Edition(models.Model):
     visible_from = models.DateField()
     visible_until = models.DateField()
     digital_edition = models.BooleanField(default=False)
+    enable_task_signin = models.BooleanField(default=False, help_text='Enable task sign-in/sign-out tracking for this edition.')
 
     @classmethod
     def get_current(cls):
@@ -335,6 +336,7 @@ class TaskTemplate(models.Model):
     info_url = models.URLField(null=True, blank=True, help_text="Link to volunteer documentation for this task type")
     category = models.ForeignKey(TaskCategory, on_delete=PROTECT)
     primary = models.ForeignKey(User, default=1, limit_choices_to={'is_staff': True}, on_delete=PROTECT)
+    requires_approval = models.BooleanField(default=False, help_text="If set, volunteer sign-ups require approval from the task responsible.")
 
     def link(self):
         return 'Link'
@@ -391,17 +393,30 @@ class Task(models.Model):
     # Only for heralding, or possible future tasks related
     # to a specific talk.
     talk = models.ForeignKey(Talk, blank=True, null=True, on_delete=CASCADE)
+    # Override template's requires_approval (null = inherit from template)
+    requires_approval = models.BooleanField(
+        null=True, blank=True, default=None,
+        help_text="Override template setting. Leave blank to inherit from template."
+    )
+
+    @property
+    def effective_requires_approval(self):
+        """Return whether this task requires signup approval (inherits from template if not overridden)."""
+        if self.requires_approval is not None:
+            return self.requires_approval
+        return self.template.requires_approval
 
     def assigned_volunteers(self):
-        # use the annotated volunteers_count if available
-        # You should request tasks with Task.objects.annotate(volunteers_count=Count(volunteers)
-        # note: in a more recent django version this construct is no longer
-        # required and we can just return self.volunteers__count
-
+        """Count only approved volunteers for this task."""
         if hasattr(self, "volunteers__count"):
-            return self.volunteers__count
+            # If annotated, it may not filter by status - fall back to query
+            return VolunteerTask.objects.filter(task=self, status='approved').count()
         else:
-            return self.volunteers.count()
+            return VolunteerTask.objects.filter(task=self, status='approved').count()
+
+    def pending_volunteers(self):
+        """Count volunteers pending approval for this task."""
+        return VolunteerTask.objects.filter(task=self, status='pending').count()
 
     def link(self):
         return 'Link'
@@ -477,6 +492,10 @@ class Task(models.Model):
         task.nbr_volunteers = int(xml.find('nbr_volunteers').text)
         task.nbr_volunteers_min = int(xml.find('nbr_volunteers_min').text)
         task.nbr_volunteers_max = int(xml.find('nbr_volunteers_max').text)
+        # Read requires_approval from XML; fall back to template's setting
+        requires_approval_elem = xml.find('requires_approval')
+        if requires_approval_elem is not None and requires_approval_elem.text:
+            task.requires_approval = requires_approval_elem.text.strip().lower() in ('true', '1', 'yes')
         task.save()
         return task
 
@@ -741,8 +760,21 @@ class VolunteerTask(models.Model):
     def __str__(self):
         return self.task.name
 
+    STATUS_CHOICES = (
+        ('approved', 'Approved'),
+        ('pending', 'Pending Approval'),
+        ('denied', 'Denied'),
+    )
+
     volunteer = models.ForeignKey(Volunteer, on_delete=CASCADE)
     task = models.ForeignKey(Task, on_delete=CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='approved')
+    requested_at = models.DateTimeField(auto_now_add=True, null=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='reviewed_signups'
+    )
 
 
 """
@@ -851,6 +883,39 @@ class EmailConfirmation(models.Model):
             to=[self.user.email],
         )
         email.send()
+
+
+class TaskAttendance(models.Model):
+    """Tracks volunteer sign-in/sign-out for a task assignment."""
+    class Meta:
+        verbose_name = _('Task Attendance')
+        verbose_name_plural = _('Task Attendances')
+
+    volunteer_task = models.OneToOneField('VolunteerTask', on_delete=models.CASCADE, related_name='attendance')
+    signed_in_at = models.DateTimeField(null=True, blank=True)
+    signed_out_at = models.DateTimeField(null=True, blank=True)
+    signin_token = models.UUIDField(default=uuid.uuid4, unique=True)
+    reminder_sent_at = models.DateTimeField(null=True, blank=True)
+    signout_link_sent_at = models.DateTimeField(null=True, blank=True)
+    manually_marked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='attendance_marks'
+    )
+
+    @property
+    def is_signed_in(self):
+        return self.signed_in_at is not None and self.signed_out_at is None
+
+    @property
+    def status(self):
+        if self.signed_out_at:
+            return 'completed'
+        if self.signed_in_at:
+            return 'active'
+        return 'not_arrived'
+
+    def __str__(self):
+        return f'{self.volunteer_task} - {self.status}'
 
 
 class LabelPrintLog(models.Model):

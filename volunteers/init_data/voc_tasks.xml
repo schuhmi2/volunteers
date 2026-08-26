@@ -8,6 +8,7 @@ Make sure the VOC (Video Operations Center) is up and operational, so the video 
 You'll help set up networking equipment, test video feeds, configure monitoring systems, and ensure all infrastructure is ready for the video team to deploy to individual rooms.
 Some technical knowledge is helpful but not required - training and guidance will be provided on-site.</description>
         <info_url>https://doc.volunteers.fosdem.org/video/video/</info_url>
+        <requires_approval>true</requires_approval>
         <location>NOC</location><day>-1</day>
         <start_time>09:00</start_time>
         <end_time>12:00</end_time>

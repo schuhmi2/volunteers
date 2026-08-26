@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Signup Approvals" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Signup Approvals" %}</h1>
+    <span class="text-sm text-gray-500 dark:text-gray-400">{{ edition.name }}</span>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Volunteer" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Task" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "When" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Requested" %}</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">{% trans "Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for vt in pending %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900 dark:text-white">{{ vt.volunteer.user.get_full_name }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ vt.volunteer.user.username }}</div>
+            </td>
+            <td class="px-4 py-3">
+              <a href="{% url 'task_detailed' vt.task.id %}" class="text-fosdem hover:underline">{{ vt.task.name }}</a>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-300">
+              {{ vt.task.date|date:"D d M" }}, {{ vt.task.start_time|time:"H:i" }}–{{ vt.task.end_time|time:"H:i" }}
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400 text-xs">
+              {% if vt.requested_at %}{{ vt.requested_at|date:"d M Y H:i" }}{% else %}—{% endif %}
+            </td>
+            <td class="px-4 py-3 text-right">
+              <form method="post" action="{% url 'approval_respond' %}" class="inline-flex gap-2">
+                {% csrf_token %}
+                <input type="hidden" name="vt_id" value="{{ vt.id }}">
+                <button type="submit" name="action" value="approve"
+                        class="bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors">
+                  ✓ {% trans "Approve" %}
+                </button>
+                <button type="submit" name="action" value="deny"
+                        class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors">
+                  ✗ {% trans "Deny" %}
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+              {% trans "No pending approvals." %} 🎉
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

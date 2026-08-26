@@ -36,6 +36,7 @@
             <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Attending" %}</th>
             <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Talk" %}</th>
             <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Location" %}</th>
+            {% if enable_task_signin %}<th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Sign-in" %}</th>{% endif %}
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -48,9 +49,40 @@
             </td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ task.talk }}</td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ task.location }}</td>
+            {% if enable_task_signin %}
+            <td class="px-4 py-3">
+              {% with info=signin_available|get_item:task.id %}
+              {% if info %}
+                {% if info.can_signin %}
+                  <a href="{% url 'task_signin_ui' info.vt_id %}"
+                     class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors">
+                    ✓ Sign in
+                  </a>
+                {% elif info.can_signout %}
+                  <a href="{% url 'task_signout_ui' info.vt_id %}"
+                     class="inline-flex items-center px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium rounded-lg transition-colors">
+                    ↩ Sign out
+                  </a>
+                {% else %}
+                  {% with status=signin_status|get_item:task.id %}
+                    {% if status == "completed" %}
+                      <span class="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-lg">✓ Done</span>
+                    {% elif status == "active" %}
+                      <span class="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs rounded-lg">● Active</span>
+                    {% else %}
+                      <span class="text-gray-400 text-xs">—</span>
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+              {% else %}
+                <span class="text-gray-400 text-xs">—</span>
+              {% endif %}
+              {% endwith %}
+            </td>
+            {% endif %}
           </tr>
           {% empty %}
-          <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No tasks scheduled yet.</td></tr>
+          <tr><td colspan="{% if enable_task_signin %}6{% else %}5{% endif %}" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No tasks scheduled yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>

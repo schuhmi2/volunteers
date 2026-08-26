@@ -72,6 +72,8 @@
                 </button>
                 <div id="admin-dropdown-menu" class="hidden absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                   <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{% trans 'Django Admin' %}</a>
+                  <a href="{% url 'approval_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{% trans 'Approvals' %}</a>
+                  <a href="{% url 'attendance_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{% trans 'Attendance' %}</a>
                   <a href="{% url 'label_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{% trans 'Labels' %}</a>
                   <a href="{% url 'tshirt_report' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{% trans 'T-shirt Report' %}</a>
                   <a href="{% url 'matrix_ids_export' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{% trans 'Matrix IDs' %}</a>
@@ -120,6 +122,8 @@
             <div class="border-t border-fosdem-dark/50 my-1"></div>
             <span class="block px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pink-200">{% trans 'Admin' %}</span>
             <a href="{% url 'admin:index' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Django Admin' %}</a>
+            <a href="{% url 'approval_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Approvals' %}</a>
+            <a href="{% url 'attendance_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Attendance' %}</a>
             <a href="{% url 'label_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Labels' %}</a>
             <a href="{% url 'tshirt_report' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'T-shirt Report' %}</a>
             <a href="{% url 'matrix_ids_export' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Matrix IDs' %}</a>

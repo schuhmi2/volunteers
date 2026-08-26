@@ -120,6 +120,9 @@
                          {% if task.status == 'FULL' and not checked|get_item:task.id %}disabled{% endif %}
                          {{ checked|get_item:task.id }}
                          class="accent-fosdem w-4 h-4 cursor-pointer">
+                  {% if task.id in pending_task_ids %}
+                  <span class="text-xs text-yellow-600 dark:text-yellow-400 ml-1" title="{% trans 'Pending approval' %}">⏳</span>
+                  {% endif %}
                 </td>
                 <td class="px-4 py-2.5 font-medium">
                   {% if attending|get_item:task.id == True %}
@@ -127,6 +130,9 @@
                   <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">(attending)</span>
                   {% else %}
                   <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>
+                  {% endif %}
+                  {% if task.effective_requires_approval %}
+                  <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" title="{% trans 'Approval required' %}">🔒</span>
                   {% endif %}
                 </td>
                 <td class="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-gray-300">
@@ -140,6 +146,9 @@
                     {% else %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200{% endif %}">
                     {{ task.assigned_volunteers }}/{{ task.nbr_volunteers }}
                   </span>
+                  {% if task.pending_volunteers %}
+                  <span class="ml-1 text-xs text-yellow-600 dark:text-yellow-400" title="{% trans 'Pending approval' %}">(+{{ task.pending_volunteers }} ⏳)</span>
+                  {% endif %}
                 </td>
                 <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ task.location }}</td>
               </tr>

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Signed Out" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center">
+    <div class="text-5xl mb-4">👋</div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{% trans "You have signed out" %}</h1>
+    <div class="space-y-2 text-gray-600 dark:text-gray-300">
+      <p class="text-lg font-semibold text-fosdem">{{ task.name }}</p>
+      <p>{{ task.date|date:"l, F j" }} &middot; {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</p>
+      {% if task.location %}
+      <p>📍 {{ task.location }}</p>
+      {% endif %}
+    </div>
+    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        {% trans "Thanks for your help! We hope you enjoyed volunteering." %}
+      </p>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="mt-6">
+      <a href="{% url 'task_list_detailed' user.username %}" class="inline-flex items-center px-4 py-2 bg-fosdem hover:bg-fosdem-dark text-white font-medium rounded-lg transition-colors">
+        {% trans "Back to My Schedule" %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
