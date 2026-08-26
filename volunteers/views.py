@@ -515,8 +515,7 @@ def profile_edit(request, username, edit_profile_form=EditProfileForm,
         form = edit_profile_form(request.POST, request.FILES, instance=profile, initial=user_initial)
 
         if form.is_valid():
-            profile = form.save(commit=False)
-            profile.save()
+            profile = form.save()
 
             messages.success(request, _('Your profile has been updated.'), fail_silently=True)
 
