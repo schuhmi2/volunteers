@@ -52,6 +52,56 @@
             });
           })();
         </script>
+        {% elif field.name == 'mobile_nbr' %}
+        {# Phone number with + prefix mask #}
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium select-none pointer-events-none">+</span>
+          <input type="tel" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+                 value="{{ field.value|default:'' }}" maxlength="30"
+                 placeholder="32123456789"
+                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-7 pr-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem">
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">International format required (e.g. +32123456789)</p>
+        <script>
+          (function(){
+            var inp = document.getElementById('{{ field.id_for_label }}');
+            // Strip leading + from displayed value since the mask shows it visually
+            if (inp.value.startsWith('+')) inp.value = inp.value.substring(1);
+            // On form submit, prepend + if there's a value
+            inp.closest('form').addEventListener('submit', function(){
+              var v = inp.value.trim();
+              if (v && !v.startsWith('+')) inp.value = '+' + v;
+            });
+          })();
+        </script>
+        {% elif field.name == 'matrix_id' %}
+        {# Matrix ID with @:server mask #}
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium select-none pointer-events-none">@</span>
+          <input type="text" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+                 value="{{ field.value|default:'' }}" maxlength="255"
+                 placeholder="username:matrix.org"
+                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-7 pr-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem">
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">Format: @username:homeserver.tld (e.g. @yourname:matrix.org)</p>
+        <script>
+          (function(){
+            var inp = document.getElementById('{{ field.id_for_label }}');
+            // Strip leading @ from displayed value since the mask shows it visually
+            if (inp.value.startsWith('@')) inp.value = inp.value.substring(1);
+            // On form submit, prepend @ if there's a value
+            inp.closest('form').addEventListener('submit', function(){
+              var v = inp.value.trim();
+              if (v && !v.startsWith('@')) inp.value = '@' + v;
+            });
+          })();
+        </script>
         {% elif field.name == 'pronouns' %}
         {# Text input with datalist suggestions #}
         <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
@@ -70,6 +120,23 @@
                list="pronouns-suggestions" autocomplete="off"
                placeholder="e.g. she/her, he/him, they/them"
                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem">
+        {% elif field.name == 'mugshot' %}
+        {# Mugshot file input with clear checkbox inline #}
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        {% if field.value %}
+        <div class="flex items-center gap-2 mb-2 text-sm text-gray-600 dark:text-gray-400">
+          <span>{% trans "Current file:" %} {{ field.value }}</span>
+        </div>
+        <div class="flex items-center gap-2 mb-2">
+          <input type="checkbox" name="{{ field.html_name }}-clear" id="{{ field.html_name }}-clear_id"
+                 class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-fosdem focus:ring-fosdem">
+          <label for="{{ field.html_name }}-clear_id" class="text-sm text-gray-700 dark:text-gray-300">{% trans "Clear" %}</label>
+        </div>
+        {% endif %}
+        <input type="file" name="{{ field.html_name }}" id="{{ field.id_for_label }}" accept="image/*"
+               class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-fosdem file:text-white hover:file:bg-fosdem-dark">
         {% else %}
         <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
         {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}

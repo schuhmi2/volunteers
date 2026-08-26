@@ -188,10 +188,31 @@ class EditProfileForm(forms.ModelForm):
                 "mugshot": _("A personal image displayed in your profile. Max 2MB.")
                 }
 
+    def clean_mobile_nbr(self):
+        value = self.cleaned_data.get('mobile_nbr')
+        if value:
+            value = value.strip()
+            if not value.startswith('+'):
+                raise forms.ValidationError(
+                    _('Phone number must be in international format (starting with +). '
+                      'For example: +32123456789')
+                )
+        return value
+
+    def clean_matrix_id(self):
+        value = self.cleaned_data.get('matrix_id')
+        if value:
+            value = value.strip()
+            matrix_id_pattern = r'^@[a-zA-Z0-9._=/\-]+:[a-zA-Z0-9.\-]+$'
+            if not re.match(matrix_id_pattern, value):
+                raise forms.ValidationError(
+                    _('Invalid Matrix ID format. It must follow the pattern @username:homeserver.tld '
+                      '(e.g. @yourname:matrix.org)')
+                )
+        return value
+
     def clean(self):
-        data = super().clean()
-        if data.get("matrix_id"):
-            validate_matrix_id(data["matrix_id"])
+        return super().clean()
 
     def save(self, force_insert=False, force_update=False, commit=True):
         profile = super(EditProfileForm, self).save(commit=commit)
