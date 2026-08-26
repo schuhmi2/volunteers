@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Matrix IDs Export" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Matrix IDs Export" %}</h1>
+    <span class="text-sm text-gray-500 dark:text-gray-400">{{ edition.name }}</span>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 space-y-4">
+    <p class="text-sm text-gray-600 dark:text-gray-400">
+      {% blocktrans with count=volunteers|length edition=edition.name %}
+      {{ count }} volunteers with Matrix IDs for {{ edition }}.
+      {% endblocktrans %}
+    </p>
+
+    {% if volunteers %}
+    <div class="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-900 font-mono text-sm text-gray-800 dark:text-gray-200">
+      {% for volunteer in volunteers %}
+      <div>{{ volunteer.matrix_id }}</div>
+      {% endfor %}
+    </div>
+
+    <a href="{% url 'matrix_ids_export' %}?download"
+       class="inline-flex items-center gap-2 bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow">
+      ⬇️ {% trans "Download as text file" %}
+    </a>
+    {% else %}
+    <p class="text-gray-500 dark:text-gray-400 italic">{% trans "No volunteers with Matrix IDs found for this edition." %}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

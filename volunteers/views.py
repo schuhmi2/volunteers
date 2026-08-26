@@ -870,3 +870,36 @@ def tshirt_report(request):
         'breakdown': breakdown,
         'total': total,
     })
+
+
+# --- Admin Matrix IDs Export ---
+
+@user_passes_test(lambda u: u.is_superuser)
+def matrix_ids_export(request):
+    """Export Matrix IDs of all volunteers for the current edition as a text file."""
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('task_list')
+
+    volunteers = (
+        Volunteer.objects.select_related('user')
+        .filter(tasks__edition=edition, matrix_id__isnull=False)
+        .exclude(matrix_id='')
+        .distinct()
+        .order_by('user__first_name', 'user__last_name')
+    )
+
+    if 'download' in request.GET:
+        # Return as plain text file download
+        matrix_ids = [v.matrix_id for v in volunteers]
+        content = '\n'.join(matrix_ids)
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename="matrix_ids_{edition.name}.txt"'
+        return response
+
+    context = {
+        'edition': edition,
+        'volunteers': volunteers,
+    }
+    return render(request, 'volunteers/matrix_ids_export.html', context)

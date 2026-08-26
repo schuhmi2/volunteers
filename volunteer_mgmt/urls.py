@@ -42,6 +42,7 @@ urlpatterns = [
     path('admin-labels/preview/', label_preview, name='label_preview'),
     path('admin-labels/generate/', label_generate_pdf, name='label_generate_pdf'),
     path('admin-tshirts/', tshirt_report, name='tshirt_report'),
+    path('admin-matrix-ids/', matrix_ids_export, name='matrix_ids_export'),
     path('talk/<int:talk_id>/', talk_detailed, name='talk_detailed'),
     path('tasks/', task_list, name='task_list'),
     path('event_sign_on/', event_sign_on, name='event_sign_on'),
