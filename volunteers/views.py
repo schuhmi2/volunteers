@@ -799,3 +799,74 @@ def label_generate_pdf(request):
     filename = f'labels_{edition.name}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf'
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+
+# --- Admin T-shirt Report View ---
+
+@user_passes_test(lambda u: u.is_superuser)
+def tshirt_report(request):
+    """T-shirt size statistics per edition, accessible from the standard UI."""
+    from collections import defaultdict
+    import datetime as dt
+
+    all_editions = Edition.objects.all().order_by('-start_date')
+
+    edition_pk = request.GET.get('edition')
+    if edition_pk:
+        try:
+            selected_edition = Edition.objects.get(pk=edition_pk)
+        except Edition.DoesNotExist:
+            selected_edition = Edition.get_current() or (all_editions.first() if all_editions.exists() else None)
+    else:
+        selected_edition = Edition.get_current() or (all_editions.first() if all_editions.exists() else None)
+
+    tshirt_day_offsets = getattr(settings, 'TSHIRT_DAYS', [0, 1])
+    tshirt_day_dates = []
+    summary = []
+    breakdown = []
+    total = 0
+
+    if selected_edition:
+        tshirt_day_dates = sorted([
+            selected_edition.start_date + timedelta(days=d)
+            for d in tshirt_day_offsets
+        ])
+
+        # Map volunteer → set of distinct t-shirt day dates they work
+        vol_dates = defaultdict(set)
+        tasks = (
+            Task.objects
+            .filter(edition=selected_edition, date__in=tshirt_day_dates)
+            .prefetch_related('volunteers')
+        )
+        for task in tasks:
+            for volunteer in task.volunteers.all():
+                vol_dates[volunteer.pk].add(task.date)
+
+        # Aggregate by t-shirt size
+        size_data = defaultdict(list)
+        for vol_pk, dates in vol_dates.items():
+            volunteer = Volunteer.objects.select_related('user').get(pk=vol_pk)
+            n_shirts = len(dates)
+            size = volunteer.tshirt_size or ''
+            size_data[size].append((volunteer, n_shirts, sorted(dates)))
+
+        # Order sizes sensibly
+        size_order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '']
+        ordered_sizes = sorted(size_data.keys(), key=lambda s: size_order.index(s) if s in size_order else 99)
+
+        for size in ordered_sizes:
+            volunteers = sorted(size_data[size], key=lambda x: x[0].user.last_name.lower())
+            count = sum(n for _, n, _ in volunteers)
+            summary.append((size, count))
+            breakdown.append((size, volunteers))
+            total += count
+
+    return render(request, 'volunteers/tshirt_report.html', {
+        'all_editions': all_editions,
+        'selected_edition': selected_edition,
+        'tshirt_day_dates': tshirt_day_dates,
+        'summary': summary,
+        'breakdown': breakdown,
+        'total': total,
+    })
