@@ -85,5 +85,21 @@
         checkboxes.forEach((cb) => { if (!cb.disabled) cb.checked = !allChecked; });
       });
     });
+
+    // ── Admin dropdown menu ──────────────────────────────────────────────
+    const adminBtn = document.getElementById('admin-dropdown-btn');
+    const adminMenu = document.getElementById('admin-dropdown-menu');
+    if (adminBtn && adminMenu) {
+      adminBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        adminMenu.classList.toggle('hidden');
+      });
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function (e) {
+        if (!adminMenu.classList.contains('hidden') && !adminMenu.contains(e.target)) {
+          adminMenu.classList.add('hidden');
+        }
+      });
+    }
   });
 })();

@@ -64,7 +64,17 @@
             <a href="{% url 'talk_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Talks' %}</a>
             {% if user.is_staff %}
               <a href="{% url 'category_schedule_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Schedules' %}</a>
-              <a href="{% url 'admin:index' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Admin' %}</a>
+              <div class="relative" id="admin-dropdown">
+                <button type="button" id="admin-dropdown-btn"
+                        class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1">
+                  {% trans 'Admin' %}
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="admin-dropdown-menu" class="hidden absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                  <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{% trans 'Django Admin' %}</a>
+                  <a href="{% url 'label_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{% trans 'Labels' %}</a>
+                </div>
+              </div>
             {% endif %}
             <a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Docs' %} ↗</a>
             <a href="{% url 'userena_profile_detail' user.username %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{{ user.username }}</a>
@@ -105,7 +115,11 @@
           <a href="{% url 'talk_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Talks' %}</a>
           {% if user.is_staff %}
             <a href="{% url 'category_schedule_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Schedules' %}</a>
-            <a href="{% url 'admin:index' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Admin' %}</a>
+            <div class="border-t border-fosdem-dark/50 my-1"></div>
+            <span class="block px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pink-200">{% trans 'Admin' %}</span>
+            <a href="{% url 'admin:index' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Django Admin' %}</a>
+            <a href="{% url 'label_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Labels' %}</a>
+            <div class="border-t border-fosdem-dark/50 my-1"></div>
           {% endif %}
           <a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Docs' %} ↗</a>
           <a href="{% url 'userena_profile_detail' user.username %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{{ user.username }}</a>
