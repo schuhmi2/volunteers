@@ -238,4 +238,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Override in localsettings.py if your event uses different days.
 TSHIRT_DAYS = [-1, 0, 1]
 
+# Label printing settings (for volunteer lanyard cards)
+# Dimensions in millimeters. Adjust to match your label printer/paper.
+LABEL_WIDTH_MM = 80
+LABEL_HEIGHT_MM = 50
+
 from volunteer_mgmt.localsettings import *

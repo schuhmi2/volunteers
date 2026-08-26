@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load volunteer_extras %}
+{% block title %}{% trans "Label Printing" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Label Printing" %}</h1>
+    <span class="text-sm text-gray-500 dark:text-gray-400">{{ edition.name }}</span>
+  </div>
+
+  <form method="post" action="{% url 'label_preview' %}" id="label-form">
+    {% csrf_token %}
+
+    {# Search filter #}
+    <div class="mb-4">
+      <input type="text" id="volunteer-search" placeholder="{% trans 'Search volunteers...' %}"
+             class="w-full md:w-80 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem text-sm">
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th class="px-4 py-3 text-left w-10">
+                <input type="checkbox" id="select-all" class="accent-fosdem w-4 h-4 cursor-pointer">
+              </th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Name" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Username" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Last Printed" %}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-700" id="volunteer-table-body">
+            {% for volunteer in volunteers %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors volunteer-row">
+              <td class="px-4 py-2.5">
+                <input type="checkbox" name="volunteer_ids" value="{{ volunteer.id }}" class="volunteer-checkbox accent-fosdem w-4 h-4 cursor-pointer">
+              </td>
+              <td class="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ volunteer.user.username }}</td>
+              <td class="px-4 py-2.5">
+                {% if volunteer.id in last_prints %}
+                <span class="inline-flex items-center gap-1 text-xs">
+                  <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                  {{ last_prints|get_item:volunteer.id|date:"d M Y H:i" }}
+                </span>
+                {% else %}
+                <span class="text-gray-400 dark:text-gray-500 text-xs">{% trans "Never" %}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                {% trans "No volunteers with tasks in the current edition." %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if volunteers %}
+    <div class="flex items-center justify-between pt-4">
+      <span class="text-sm text-gray-500 dark:text-gray-400" id="selection-count">0 selected</span>
+      <button type="submit"
+              class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow disabled:opacity-50 disabled:cursor-not-allowed"
+              id="generate-btn" disabled>
+        {% trans "Generate Labels for Selected" %}
+      </button>
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+<script>
+(function(){
+  var selectAll = document.getElementById('select-all');
+  var checkboxes = document.querySelectorAll('.volunteer-checkbox');
+  var countEl = document.getElementById('selection-count');
+  var btn = document.getElementById('generate-btn');
+  var search = document.getElementById('volunteer-search');
+  var rows = document.querySelectorAll('.volunteer-row');
+
+  function updateCount(){
+    var checked = document.querySelectorAll('.volunteer-checkbox:checked').length;
+    countEl.textContent = checked + ' selected';
+    btn.disabled = checked === 0;
+  }
+
+  selectAll.addEventListener('change', function(){
+    checkboxes.forEach(function(cb){
+      // Only select visible rows
+      if(!cb.closest('tr').classList.contains('hidden')){
+        cb.checked = selectAll.checked;
+      }
+    });
+    updateCount();
+  });
+
+  checkboxes.forEach(function(cb){
+    cb.addEventListener('change', updateCount);
+  });
+
+  search.addEventListener('input', function(){
+    var q = this.value.toLowerCase();
+    rows.forEach(function(row){
+      var text = row.textContent.toLowerCase();
+      row.classList.toggle('hidden', !text.includes(q));
+    });
+  });
+})();
+</script>
+{% endblock %}

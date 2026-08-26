@@ -851,3 +851,21 @@ class EmailConfirmation(models.Model):
             to=[self.user.email],
         )
         email.send()
+
+
+class LabelPrintLog(models.Model):
+    """Tracks when labels were printed for a volunteer in a given edition."""
+    class Meta:
+        verbose_name = _('Label Print Log')
+        verbose_name_plural = _('Label Print Logs')
+        ordering = ['-printed_at']
+
+    volunteer = models.ForeignKey(Volunteer, on_delete=CASCADE, related_name='label_prints')
+    edition = models.ForeignKey(Edition, on_delete=CASCADE)
+    printed_at = models.DateTimeField(auto_now_add=True)
+    printed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='label_prints_made'
+    )
+
+    def __str__(self):
+        return f'{self.volunteer} - {self.edition} - {self.printed_at:%Y-%m-%d %H:%M}'

@@ -2,7 +2,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from .models import Volunteer, VolunteerTask, VolunteerTalk, TaskCategory, TaskTemplate, Task, Track, \
-    Talk, Edition, EmailConfirmation
+    Talk, Edition, EmailConfirmation, LabelPrintLog
 from .forms import EditProfileForm, SignupForm, EventSignupForm, EmailChangeForm, ResendActivationForm
 
 from django.contrib import messages
@@ -686,3 +686,116 @@ def activate_account(request, token):
         messages.success(request, "Your account has been successfully activated!")
         return redirect('task_list')
 
+
+
+# --- Admin Label Generation Views ---
+
+@user_passes_test(lambda u: u.is_superuser)
+def label_dashboard(request):
+    """Admin dashboard for generating volunteer labels."""
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('task_list')
+
+    volunteers = (
+        Volunteer.objects.select_related('user')
+        .filter(tasks__edition=edition)
+        .distinct()
+        .order_by('user__first_name', 'user__last_name')
+    )
+
+    # Get last print time for each volunteer in this edition
+    last_prints = {}
+    for log in LabelPrintLog.objects.filter(edition=edition).order_by('-printed_at'):
+        if log.volunteer_id not in last_prints:
+            last_prints[log.volunteer_id] = log.printed_at
+
+    context = {
+        'edition': edition,
+        'volunteers': volunteers,
+        'last_prints': last_prints,
+    }
+    return render(request, 'volunteers/label_dashboard.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def label_preview(request):
+    """Show confirmation/preview before generating labels, with reprint warnings."""
+    if request.method != 'POST':
+        return redirect('label_dashboard')
+
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('label_dashboard')
+
+    volunteer_ids = request.POST.getlist('volunteer_ids')
+    if not volunteer_ids:
+        messages.warning(request, _('No volunteers selected.'))
+        return redirect('label_dashboard')
+
+    volunteers = (
+        Volunteer.objects.select_related('user')
+        .filter(id__in=volunteer_ids)
+        .order_by('user__first_name', 'user__last_name')
+    )
+
+    # Check for previous prints
+    reprint_info = {}
+    for log in LabelPrintLog.objects.filter(edition=edition, volunteer__in=volunteers).order_by('-printed_at'):
+        if log.volunteer_id not in reprint_info:
+            reprint_info[log.volunteer_id] = log.printed_at
+
+    context = {
+        'edition': edition,
+        'volunteers': volunteers,
+        'reprint_info': reprint_info,
+        'volunteer_ids': ','.join(volunteer_ids),
+    }
+    return render(request, 'volunteers/label_confirm.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def label_generate_pdf(request):
+    """Generate the PDF and log the print."""
+    from .labels import generate_labels_pdf
+
+    if request.method != 'POST':
+        return redirect('label_dashboard')
+
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('label_dashboard')
+
+    volunteer_ids = request.POST.get('volunteer_ids', '').split(',')
+    volunteer_ids = [vid for vid in volunteer_ids if vid.strip()]
+
+    if not volunteer_ids:
+        messages.warning(request, _('No volunteers selected.'))
+        return redirect('label_dashboard')
+
+    volunteers = (
+        Volunteer.objects.select_related('user')
+        .prefetch_related('spoken_languages', 'tasks')
+        .filter(id__in=volunteer_ids)
+        .order_by('user__first_name', 'user__last_name')
+    )
+
+    # Generate PDF
+    pdf_content = generate_labels_pdf(volunteers, edition)
+
+    # Log the prints
+    for volunteer in volunteers:
+        LabelPrintLog.objects.create(
+            volunteer=volunteer,
+            edition=edition,
+            printed_by=request.user,
+        )
+
+    # Return PDF as download
+    response = HttpResponse(pdf_content, content_type='application/pdf')
+    filename = f'labels_{edition.name}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load volunteer_extras %}
+{% block title %}{% trans "Confirm Label Printing" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+  <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Confirm Label Printing" %}</h1>
+
+  <p class="text-gray-600 dark:text-gray-300 text-sm">
+    {% blocktrans count count=volunteers|length %}
+    You are about to generate labels for {{ count }} volunteer.
+    {% plural %}
+    You are about to generate labels for {{ count }} volunteers.
+    {% endblocktrans %}
+  </p>
+
+  {% if reprint_info %}
+  <div class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-xl p-4">
+    <h2 class="text-yellow-800 dark:text-yellow-300 font-bold text-sm mb-2">⚠️ {% trans "Reprint Warning" %}</h2>
+    <p class="text-yellow-700 dark:text-yellow-400 text-xs mb-3">
+      {% trans "The following volunteers already had labels printed for this edition:" %}
+    </p>
+    <ul class="space-y-1">
+      {% for volunteer in volunteers %}
+      {% if volunteer.id in reprint_info %}
+      <li class="text-sm text-yellow-800 dark:text-yellow-300">
+        <strong>{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</strong>
+        ({{ volunteer.user.username }})
+        — {% trans "last printed:" %} {{ reprint_info|get_item:volunteer.id|date:"d M Y H:i" }}
+      </li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Name" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Username" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">{% trans "Status" %}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for volunteer in volunteers %}
+          <tr>
+            <td class="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</td>
+            <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ volunteer.user.username }}</td>
+            <td class="px-4 py-2.5">
+              {% if volunteer.id in reprint_info %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                {% trans "Reprint" %}
+              </span>
+              {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                {% trans "New" %}
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between">
+    <a href="{% url 'label_dashboard' %}"
+       class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm font-medium">
+      ← {% trans "Back to selection" %}
+    </a>
+    <form method="post" action="{% url 'label_generate_pdf' %}">
+      {% csrf_token %}
+      <input type="hidden" name="volunteer_ids" value="{{ volunteer_ids }}">
+      <button type="submit"
+              class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow">
+        {% trans "Generate PDF" %}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
