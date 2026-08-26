@@ -65,3 +65,9 @@ After cloning the repo do these steps:
 Production setup 
 ================
 See [the playbook instructions](deployment/playbook/README.md) for more information.
+
+
+AI Disclosure
+=============
+
+Parts of this codebase were written and reviewed with the assistance of AI tools. All AI-generated code has been proofread by a human developer and manually tested before being committed.
