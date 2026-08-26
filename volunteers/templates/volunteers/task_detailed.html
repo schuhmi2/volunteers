@@ -56,5 +56,51 @@
     </div>
     {% endif %}
   </div>
+
+  {% if user.is_superuser and assignable_volunteers is not None %}
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 space-y-4">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{% trans "Admin: Manage Volunteers" %}</h2>
+
+    {# Currently assigned volunteers with unassign option #}
+    {% if task.volunteer_set.all %}
+    <div>
+      <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{% trans "Currently assigned" %}</h3>
+      <div class="space-y-2">
+        {% for volunteer in task.volunteer_set.all %}
+        <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2">
+          <span class="text-sm text-gray-900 dark:text-white">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }} ({{ volunteer.user.username }})</span>
+          <form method="post" action="{% url 'admin_assign_volunteer' task.id %}" class="inline">
+            {% csrf_token %}
+            <input type="hidden" name="volunteer_id" value="{{ volunteer.id }}">
+            <input type="hidden" name="action" value="unassign">
+            <button type="submit" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-xs font-medium">{% trans "Remove" %}</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# Assign new volunteer #}
+    <div>
+      <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{% trans "Assign a volunteer" %}</h3>
+      <form method="post" action="{% url 'admin_assign_volunteer' task.id %}" class="flex gap-2">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="assign">
+        <select name="volunteer_id" required
+                class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-fosdem">
+          <option value="">— {% trans "Select volunteer" %} —</option>
+          {% for volunteer in assignable_volunteers %}
+          <option value="{{ volunteer.id }}">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }} ({{ volunteer.user.username }})</option>
+          {% endfor %}
+        </select>
+        <button type="submit"
+                class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm">
+          {% trans "Assign" %}
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

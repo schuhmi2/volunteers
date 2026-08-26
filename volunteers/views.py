@@ -71,7 +71,46 @@ def talk_detailed(request, talk_id):
 def task_detailed(request, task_id):
     task = get_object_or_404(Task, id=task_id)
     context = {'task': task}
+    if request.user.is_authenticated and request.user.is_superuser:
+        # Provide list of all volunteers for admin assignment dropdown
+        assigned_volunteer_ids = task.volunteers.values_list('id', flat=True)
+        context['assignable_volunteers'] = (
+            Volunteer.objects.select_related('user')
+            .exclude(id__in=assigned_volunteer_ids)
+            .order_by('user__first_name', 'user__last_name')
+        )
     return render(request, 'volunteers/task_detailed.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_assign_volunteer(request, task_id):
+    """Admin-only view to assign any volunteer to a task."""
+    task = get_object_or_404(Task, id=task_id)
+
+    if request.method == 'POST':
+        volunteer_id = request.POST.get('volunteer_id')
+        action = request.POST.get('action', 'assign')
+
+        if action == 'assign' and volunteer_id:
+            volunteer = get_object_or_404(Volunteer, id=volunteer_id)
+            VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer)
+            messages.success(
+                request,
+                _('%(name)s has been assigned to this task.') % {
+                    'name': f'{volunteer.user.first_name} {volunteer.user.last_name}'
+                }
+            )
+        elif action == 'unassign' and volunteer_id:
+            volunteer = get_object_or_404(Volunteer, id=volunteer_id)
+            VolunteerTask.objects.filter(task=task, volunteer=volunteer).delete()
+            messages.success(
+                request,
+                _('%(name)s has been removed from this task.') % {
+                    'name': f'{volunteer.user.first_name} {volunteer.user.last_name}'
+                }
+            )
+
+    return redirect('task_detailed', task_id=task.id)
 
 
 @login_required

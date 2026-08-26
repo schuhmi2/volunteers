@@ -37,6 +37,7 @@ urlpatterns = [
 
     re_path(r'^tasks/(?P<username>[\.\w-]+)', task_list_detailed, name='task_list_detailed'),
     path('task/<int:task_id>/', task_detailed, name='task_detailed'),
+    path('task/<int:task_id>/assign/', admin_assign_volunteer, name='admin_assign_volunteer'),
     path('talk/<int:talk_id>/', talk_detailed, name='talk_detailed'),
     path('tasks/', task_list, name='task_list'),
     path('event_sign_on/', event_sign_on, name='event_sign_on'),
