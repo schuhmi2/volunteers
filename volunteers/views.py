@@ -7,7 +7,7 @@ from .models import Volunteer, VolunteerTask, VolunteerTalk, TaskCategory, TaskT
 from .forms import EditProfileForm, SignupForm, EventSignupForm, EmailChangeForm, ResendActivationForm
 
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.generic.list import ListView
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
@@ -215,6 +215,84 @@ def task_schedule_csv(request, template_id):
     return response
 
 
+@login_required
+def task_toggle(request, task_id):
+    """Toggle a volunteer's sign-up for a task. Returns JSON for AJAX, redirects for no-JS."""
+    if request.method != 'POST':
+        return redirect('task_list')
+
+    volunteer = get_object_or_404(Volunteer, user=request.user)
+    task = get_object_or_404(Task, id=task_id, edition=Edition.get_current())
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # Check if already signed up
+    existing = VolunteerTask.objects.filter(task=task, volunteer=volunteer).first()
+
+    if existing:
+        # Remove sign-up
+        existing.delete()
+        result_status = 'removed'
+        warning = None
+    else:
+        # Check if task is full
+        if task.assigned_volunteers() >= task.nbr_volunteers_max and task.nbr_volunteers_max > 0:
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': 'This task is full.'})
+            messages.error(request, _('This task is full.'))
+            return redirect('task_list')
+
+        # Add sign-up
+        if task.effective_requires_approval:
+            VolunteerTask.objects.create(task=task, volunteer=volunteer, status='pending')
+            result_status = 'pending'
+            # Send approval email
+            from .emails import send_approval_request_email, safe_send_email
+            safe_send_email(send_approval_request_email, volunteer, task)
+        else:
+            VolunteerTask.objects.create(task=task, volunteer=volunteer, status='approved')
+            result_status = 'added'
+
+        # Dr. Manhattan detection
+        is_dr_manhattan, dr_manhattan_task_sets = volunteer.detect_dr_manhattan()
+        if is_dr_manhattan:
+            # Find the conflict involving this task
+            conflicts = []
+            for task_set in dr_manhattan_task_sets:
+                if task in task_set:
+                    for t in task_set:
+                        if t.id != task.id:
+                            conflicts.append(t.name)
+            if conflicts:
+                warning = _('Scheduling conflict with: %s') % ', '.join(conflicts)
+            else:
+                warning = None
+        else:
+            warning = None
+
+    slots = f'{task.assigned_volunteers()}/{task.nbr_volunteers}'
+    pending_count = task.pending_volunteers()
+
+    if is_ajax:
+        data = {
+            'status': result_status,
+            'slots': slots,
+            'pending_count': pending_count,
+            'warning': warning,
+        }
+        return JsonResponse(data)
+
+    # No-JS fallback
+    if result_status == 'removed':
+        messages.success(request, _('Removed from "%s".') % task.name)
+    elif result_status == 'pending':
+        messages.info(request, _('Your sign-up for "%s" is pending approval.') % task.name)
+    elif result_status == 'added':
+        messages.success(request, _('Signed up for "%s".') % task.name)
+    if warning:
+        messages.warning(request, warning)
+    return redirect('task_list')
+
+
 def task_list(request):
     # get the signed in volunteer
 
@@ -237,45 +315,6 @@ def task_list(request):
     else:
         ok_tasks = current_tasks
     days = sorted(list(set([x.date for x in current_tasks])))
-
-    # when the user submitted the form
-    if request.method == 'POST' and volunteer:
-        # get the checked tasks
-        task_ids = request.POST.getlist('task')
-
-        # unchecked boxes, delete him/her from the task
-        VolunteerTask.objects.exclude(task_id__in=task_ids).filter(volunteer=volunteer).delete()
-
-        # checked boxes, add the volunteer to the tasks when he/she is not added
-        pending_tasks = []
-        for task in current_tasks.filter(id__in=task_ids):
-            vt, created = VolunteerTask.objects.get_or_create(
-                task=task, volunteer=volunteer,
-                defaults={'status': 'pending' if task.effective_requires_approval else 'approved'}
-            )
-            if created and task.effective_requires_approval:
-                pending_tasks.append(task)
-
-        # Send notifications for pending tasks
-        if pending_tasks:
-            from .emails import send_approval_request_email, safe_send_email
-            email_failed = False
-            for task in pending_tasks:
-                if not safe_send_email(send_approval_request_email, volunteer, task):
-                    email_failed = True
-            if email_failed:
-                messages.warning(request, _('Some notification emails could not be sent.'), fail_silently=True)
-            messages.info(
-                request,
-                _('Your sign-up for %(count)d task(s) is pending approval.') % {'count': len(pending_tasks)},
-                fail_silently=True
-            )
-
-        # show success message when enabled
-        messages.success(request, _('Your tasks have been updated.'), fail_silently=True)
-
-        # redirect to prevent repost
-        return redirect('task_list')
 
     # get the preferred and other tasks, preserve key order with srteddict for view
     context = {

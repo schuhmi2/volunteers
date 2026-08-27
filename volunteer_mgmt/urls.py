@@ -35,6 +35,7 @@ urlpatterns = [
     ),
     path('volunteers/', views.ProfileListView.as_view(), name='userena_profile_list'),
 
+    path('tasks/toggle/<int:task_id>/', task_toggle, name='task_toggle'),
     re_path(r'^tasks/(?P<username>[\.\w-]+)', task_list_detailed, name='task_list_detailed'),
     path('task/<int:task_id>/', task_detailed, name='task_detailed'),
     path('task/<int:task_id>/assign/', admin_assign_volunteer, name='admin_assign_volunteer'),
