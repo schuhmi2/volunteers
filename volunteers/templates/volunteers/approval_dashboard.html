@@ -5,36 +5,36 @@
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-6">
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Signup Approvals" %}</h1>
-    <span class="text-sm text-gray-500 dark:text-dm-muted">{{ edition.name }}</span>
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Signup Approvals" %}</h1>
+    <span class="text-sm text-lm-subtle dark:text-dm-muted">{{ edition.name }}</span>
   </div>
 
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-dm-nav">
+        <thead class="bg-lm-soft dark:bg-dm-nav">
           <tr>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Volunteer" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Task" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "When" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Requested" %}</th>
-            <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-dm-text">{% trans "Actions" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Volunteer" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Task" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "When" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Requested" %}</th>
+            <th class="px-4 py-3 text-right font-medium text-lm-muted dark:text-dm-text">{% trans "Actions" %}</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for vt in pending %}
-          <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover">
+          <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover">
             <td class="px-4 py-3">
-              <div class="font-medium text-gray-900 dark:text-dm-text">{{ vt.volunteer.user.get_full_name }}</div>
-              <div class="text-xs text-gray-500 dark:text-dm-muted">{{ vt.volunteer.user.username }}</div>
+              <div class="font-medium text-lm-text dark:text-dm-text">{{ vt.volunteer.user.get_full_name }}</div>
+              <div class="text-xs text-lm-subtle dark:text-dm-muted">{{ vt.volunteer.user.username }}</div>
             </td>
             <td class="px-4 py-3">
               <a href="{% url 'task_detailed' vt.task.id %}" class="text-fosdem hover:underline">{{ vt.task.name }}</a>
             </td>
-            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-dm-text">
+            <td class="px-4 py-3 whitespace-nowrap text-lm-muted dark:text-dm-text">
               {{ vt.task.date|date:"D d M" }}, {{ vt.task.start_time|time:"H:i" }}–{{ vt.task.end_time|time:"H:i" }}
             </td>
-            <td class="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-dm-muted text-xs">
+            <td class="px-4 py-3 whitespace-nowrap text-lm-subtle dark:text-dm-muted text-xs">
               {% if vt.requested_at %}{{ vt.requested_at|date:"d M Y H:i" }}{% else %}—{% endif %}
             </td>
             <td class="px-4 py-3 text-right">
@@ -54,7 +54,7 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-dm-muted">
+            <td colspan="5" class="px-4 py-8 text-center text-lm-subtle dark:text-dm-muted">
               {% trans "No pending approvals." %} <span aria-hidden="true">🎉</span>
             </td>
           </tr>

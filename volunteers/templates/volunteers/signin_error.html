@@ -5,12 +5,12 @@
 
 {% block content %}
 <div class="max-w-lg mx-auto">
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-8 text-center">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-8 text-center">
     <div aria-hidden="true" class="text-5xl mb-4">⚠️</div>
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-dm-text mb-3">{% trans "Cannot complete action" %}</h1>
-    <p class="text-gray-600 dark:text-dm-text text-lg">{{ error }}</p>
+    <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text mb-3">{% trans "Cannot complete action" %}</h1>
+    <p class="text-lm-muted dark:text-dm-text text-lg">{{ error }}</p>
     {% if task %}
-    <div class="mt-4 space-y-1 text-gray-500 dark:text-dm-muted text-sm">
+    <div class="mt-4 space-y-1 text-lm-subtle dark:text-dm-muted text-sm">
       <p class="font-semibold">{{ task.name }}</p>
       <p>{{ task.date|date:"l, F j" }} &middot; {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</p>
     </div>

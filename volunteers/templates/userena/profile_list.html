@@ -3,19 +3,19 @@
 {% block title %}{% trans "Volunteers" %} — FOSDEM{% endblock %}
 {% block content %}
 <div class="space-y-6">
-  <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Volunteers" %}</h1>
+  <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Volunteers" %}</h1>
 
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
     {% for profile in profile_list %}
     <a href="{% url 'userena_profile_detail' profile.user.username %}"
-       class="bg-white dark:bg-dm-soft rounded-xl shadow hover:shadow-md transition-shadow p-4 flex flex-col items-center text-center gap-2 group">
+       class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow hover:shadow-md transition-shadow p-4 flex flex-col items-center text-center gap-2 group">
       <img src="{{ profile.get_mugshot_url }}" alt="" role="presentation"
            class="w-16 h-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600 group-hover:ring-fosdem transition-all" />
       <div>
-        <p class="text-sm font-semibold text-gray-900 dark:text-dm-text group-hover:text-fosdem transition-colors">
+        <p class="text-sm font-semibold text-lm-text dark:text-dm-text group-hover:text-fosdem transition-colors">
           {{ profile.user.first_name }} {{ profile.user.last_name }}
         </p>
-        <p class="text-xs text-gray-500 dark:text-dm-muted">{{ profile.user.username }}</p>
+        <p class="text-xs text-lm-subtle dark:text-dm-muted">{{ profile.user.username }}</p>
       </div>
     </a>
     {% endfor %}
@@ -25,16 +25,16 @@
   <div class="flex items-center justify-center gap-3 pt-4">
     {% if page_obj.has_previous %}
     <a href="{% url 'userena_profile_list_paginated' page_obj.previous_page_number %}"
-       class="px-4 py-2 rounded-lg bg-white dark:bg-dm-soft border border-gray-300 dark:border-dm-border text-sm hover:border-fosdem hover:text-fosdem transition-colors">
+       class="px-4 py-2 rounded-lg bg-lm-bg dark:bg-dm-soft border border-gray-300 dark:border-dm-border text-sm hover:border-fosdem hover:text-fosdem transition-colors">
       ← {% trans "Previous" %}
     </a>
     {% endif %}
-    <span class="text-sm text-gray-500 dark:text-dm-muted">
+    <span class="text-sm text-lm-subtle dark:text-dm-muted">
       {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
     </span>
     {% if page_obj.has_next %}
     <a href="{% url 'userena_profile_list_paginated' page_obj.next_page_number %}"
-       class="px-4 py-2 rounded-lg bg-white dark:bg-dm-soft border border-gray-300 dark:border-dm-border text-sm hover:border-fosdem hover:text-fosdem transition-colors">
+       class="px-4 py-2 rounded-lg bg-lm-bg dark:bg-dm-soft border border-gray-300 dark:border-dm-border text-sm hover:border-fosdem hover:text-fosdem transition-colors">
       {% trans "Next" %} →
     </a>
     {% endif %}

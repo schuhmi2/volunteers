@@ -8,13 +8,13 @@
 <div class="space-y-6">
 
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Schedule" %}</h1>
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Schedule" %}</h1>
     <div class="flex items-center gap-3">
       {% if profile_user %}
       <img src="{{ volunteer.get_mugshot_url }}" alt="" class="w-10 h-10 rounded-full ring-2 ring-fosdem" />
-      <span class="font-semibold text-gray-900 dark:text-dm-text">{{ profile_user.first_name }} {{ profile_user.last_name }}</span>
+      <span class="font-semibold text-lm-text dark:text-dm-text">{{ profile_user.first_name }} {{ profile_user.last_name }}</span>
       {% else %}
-      <span class="font-semibold text-gray-900 dark:text-dm-text">{{ user.first_name }} {{ user.last_name }}</span>
+      <span class="font-semibold text-lm-text dark:text-dm-text">{{ user.first_name }} {{ user.last_name }}</span>
       {% endif %}
     </div>
   </div>
@@ -26,29 +26,29 @@
   {% endif %}
   {% csrf_token %}
 
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-dm-nav">
+        <thead class="bg-lm-soft dark:bg-dm-nav">
           <tr>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Task" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Attending" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Talk" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Location" %}</th>
-            {% if enable_task_signin %}<th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Check-in" %}</th>{% endif %}
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Task" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Attending" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Talk" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Location" %}</th>
+            {% if enable_task_signin %}<th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Check-in" %}</th>{% endif %}
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for task in tasks %}
-          <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover transition-colors">
-            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
+          <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors">
+            <td class="px-4 py-3 whitespace-nowrap text-lm-muted dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
             <td class="px-4 py-3 font-medium"><a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a></td>
-            <td class="px-4 py-3 text-gray-600 dark:text-dm-text">
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text">
               {% for volunteer in task.volunteer_set.all %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
             </td>
-            <td class="px-4 py-3 text-gray-600 dark:text-dm-text">{{ task.talk }}</td>
-            <td class="px-4 py-3 text-gray-600 dark:text-dm-text">{{ task.location }}</td>
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text">{{ task.talk }}</td>
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text">{{ task.location }}</td>
             {% if enable_task_signin %}
             <td class="px-4 py-3">
               {% with info=signin_available|get_item:task.id %}
@@ -66,23 +66,23 @@
                 {% else %}
                   {% with status=signin_status|get_item:task.id %}
                     {% if status == "completed" %}
-                      <span class="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-dm-nav text-gray-600 dark:text-dm-muted text-xs rounded-lg"><span aria-hidden="true">✓</span> Done</span>
+                      <span class="inline-flex items-center px-2 py-1 bg-lm-soft dark:bg-dm-nav text-lm-muted dark:text-dm-muted text-xs rounded-lg"><span aria-hidden="true">✓</span> Done</span>
                     {% elif status == "active" %}
                       <span class="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs rounded-lg"><span aria-hidden="true">●</span> Active</span>
                     {% else %}
-                      <span class="text-gray-400 text-xs">—</span>
+                      <span class="text-lm-subtle text-xs">—</span>
                     {% endif %}
                   {% endwith %}
                 {% endif %}
               {% else %}
-                <span class="text-gray-400 text-xs">—</span>
+                <span class="text-lm-subtle text-xs">—</span>
               {% endif %}
               {% endwith %}
             </td>
             {% endif %}
           </tr>
           {% empty %}
-          <tr><td colspan="{% if enable_task_signin %}6{% else %}5{% endif %}" class="px-4 py-8 text-center text-gray-500 dark:text-dm-muted">No tasks scheduled yet.</td></tr>
+          <tr><td colspan="{% if enable_task_signin %}6{% else %}5{% endif %}" class="px-4 py-8 text-center text-lm-subtle dark:text-dm-muted">No tasks scheduled yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -91,11 +91,11 @@
 
   {% if tasks %}
   <div class="space-y-4 mt-6">
-    <h2 class="text-xl font-bold text-gray-900 dark:text-dm-text">Task Descriptions</h2>
+    <h2 class="text-xl font-bold text-lm-text dark:text-dm-text">Task Descriptions</h2>
     {% for task in tasks %}
-    <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-5">
+    <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-5">
       <h3 class="text-lg font-semibold text-fosdem dark:text-fosdem-light mb-2">{{ task.name }}</h3>
-      <p class="text-gray-700 dark:text-dm-text text-sm">{{ task.description|linebreaksbr }}</p>
+      <p class="text-lm-muted dark:text-dm-text text-sm">{{ task.description|linebreaksbr }}</p>
       {% if task.info_url %}
       <a href="{{ task.info_url }}" target="_blank" rel="noopener"
          class="inline-flex items-center gap-1 text-sm text-fosdem hover:underline font-medium mt-1">

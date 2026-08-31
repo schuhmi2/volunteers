@@ -3,9 +3,9 @@
 {% block title %}Privacy Policy Agreement — FOSDEM Volunteers{% endblock %}
 {% block content %}
 <div class="max-w-md mx-auto">
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow-lg p-8">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-dm-text mb-2">Privacy Policy Agreement</h1>
-    <p class="text-gray-600 dark:text-dm-text text-sm mb-4">You must accept our updated Privacy Policy to continue.</p>
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow-lg p-8">
+    <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text mb-2">Privacy Policy Agreement</h1>
+    <p class="text-lm-muted dark:text-dm-text text-sm mb-4">You must accept our updated Privacy Policy to continue.</p>
     <a href="{% url 'privacy_policy' %}" target="_blank"
        class="text-fosdem hover:underline text-sm font-medium">Read Privacy Policy ↗<span class="sr-only"> (opens in new tab)</span></a>
 
@@ -13,7 +13,7 @@
       {% csrf_token %}
       <label for="privacy_agree" class="flex items-start gap-3 cursor-pointer">
         <input type="checkbox" id="privacy_agree" required class="mt-0.5 accent-fosdem w-4 h-4">
-        <span class="text-sm text-gray-700 dark:text-dm-text">I have read and agree to the Privacy Policy</span>
+        <span class="text-sm text-lm-muted dark:text-dm-text">I have read and agree to the Privacy Policy</span>
       </label>
       <button type="submit" name="agree" value="yes" id="agree_btn" disabled
               class="w-full bg-fosdem hover:bg-fosdem-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-colors">

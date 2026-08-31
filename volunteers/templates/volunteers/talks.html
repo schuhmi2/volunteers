@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="space-y-6">
-  <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Talks" %}</h1>
+  <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Talks" %}</h1>
 
   <form action="/talks/" method="post" id="talks-form">
     {% csrf_token %}
@@ -16,24 +16,24 @@
     {% with previous=talks|previous:forloop.counter0 %}
 
     {% if talk.track != previous.track %}
-    <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden mb-6">
-      <div class="px-6 py-4 border-b border-gray-100 dark:border-dm-border">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-dm-text">{{ talk.track.title }}</h2>
+    <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden mb-6">
+      <div class="px-6 py-4 border-b border-lm-hair dark:border-dm-border">
+        <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{{ talk.track.title }}</h2>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-dm-nav">
+          <thead class="bg-lm-soft dark:bg-dm-nav">
             <tr>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text w-10">{% trans "Going" %}!</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Title" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Speaker" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text w-10">{% trans "Going" %}!</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Title" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Speaker" %}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
     {% endif %}
 
-          <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover transition-colors">
+          <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors">
             <td class="px-4 py-2.5">
               <input type="checkbox" name="talk" value="{{ talk.id }}"
                      aria-label="{% trans 'Mark as attending' %}: {{ talk.title }}"
@@ -42,8 +42,8 @@
             <td class="px-4 py-2.5 font-medium">
               <a href="{% url 'talk_detailed' talk.id %}" class="text-fosdem hover:underline">{{ talk.title }}</a>
             </td>
-            <td class="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-dm-text">{{ talk.date|date:"D" }}, {{ talk.start_time|time:"H:i" }}–{{ talk.end_time|time:"H:i" }}</td>
-            <td class="px-4 py-2.5 text-gray-600 dark:text-dm-text">{{ talk.speaker }}</td>
+            <td class="px-4 py-2.5 whitespace-nowrap text-lm-muted dark:text-dm-text">{{ talk.date|date:"D" }}, {{ talk.start_time|time:"H:i" }}–{{ talk.end_time|time:"H:i" }}</td>
+            <td class="px-4 py-2.5 text-lm-muted dark:text-dm-text">{{ talk.speaker }}</td>
           </tr>
 
     {% if talk.track != next.track %}

@@ -32,6 +32,18 @@
               /* dark-mode accent — lighter purple like volunteers-doc */
               accent:  '#d96ab8',
             },
+            /* volunteers-doc light palette */
+            lm: {
+              bg:      '#ffffff',
+              nav:     '#f7f7f8',
+              soft:    '#f3f3f5',
+              hover:   '#ebebed',
+              border:  '#e2e2e6',
+              hair:    '#eeeeee',
+              text:    '#1a1a1a',
+              muted:   '#3a3a3a',
+              subtle:  '#6b6b6f',
+            },
             /* volunteers-doc dark palette */
             dm: {
               bg:      '#111114',
@@ -52,10 +64,10 @@
   <script src="{% static 'js/app.js' %}" defer></script>
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 dark:bg-dm-bg text-gray-900 dark:text-dm-text min-h-screen flex flex-col">
+<body class="bg-lm-bg dark:bg-dm-bg text-lm-text dark:text-dm-text min-h-screen flex flex-col">
 
   <!-- Skip navigation -->
-  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-white focus:text-fosdem focus:font-semibold focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-fosdem">Skip to main content</a>
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-lm-bg focus:text-fosdem focus:font-semibold focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-fosdem">Skip to main content</a>
 
   <!-- Navigation -->
   <nav aria-label="Main navigation" class="bg-fosdem dark:bg-fosdem-dark shadow-lg relative z-50">
@@ -87,13 +99,13 @@
                   {% trans 'Admin' %}
                   <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div id="admin-dropdown-menu" class="hidden absolute right-0 mt-1 w-48 bg-white dark:bg-dm-soft rounded-lg shadow-lg border border-gray-200 dark:border-dm-border py-1 z-50">
-                  <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-dm-muted hover:bg-gray-100 dark:hover:bg-dm-nav">{% trans 'Django Admin' %}</a>
-                  <a href="{% url 'approval_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-dm-muted hover:bg-gray-100 dark:hover:bg-dm-nav">{% trans 'Approvals' %}</a>
-                  <a href="{% url 'attendance_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-dm-muted hover:bg-gray-100 dark:hover:bg-dm-nav">{% trans 'Attendance' %}</a>
-                  <a href="{% url 'label_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-dm-muted hover:bg-gray-100 dark:hover:bg-dm-nav">{% trans 'Labels' %}</a>
-                  <a href="{% url 'tshirt_report' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-dm-muted hover:bg-gray-100 dark:hover:bg-dm-nav">{% trans 'T-shirt Report' %}</a>
-                  <a href="{% url 'matrix_ids_export' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-dm-muted hover:bg-gray-100 dark:hover:bg-dm-nav">{% trans 'Matrix IDs' %}</a>
+                <div id="admin-dropdown-menu" class="hidden absolute right-0 mt-1 w-48 bg-lm-bg dark:bg-dm-soft rounded-lg shadow-lg border border-lm-border dark:border-dm-border py-1 z-50">
+                  <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Django Admin' %}</a>
+                  <a href="{% url 'approval_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Approvals' %}</a>
+                  <a href="{% url 'attendance_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Attendance' %}</a>
+                  <a href="{% url 'label_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Labels' %}</a>
+                  <a href="{% url 'tshirt_report' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'T-shirt Report' %}</a>
+                  <a href="{% url 'matrix_ids_export' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Matrix IDs' %}</a>
                 </div>
               </div>
             {% endif %}
@@ -103,7 +115,7 @@
           {% else %}
             <a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Docs' %}<span aria-hidden="true"> ↗</span><span class="sr-only"> ({% trans "opens in new tab" %})</span></a>
             <a href="{% url 'login' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Log in' %}</a>
-            <a href="{% url 'signup' %}" class="bg-white text-fosdem hover:bg-pink-50 px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Sign up' %}</a>
+            <a href="{% url 'signup' %}" class="bg-lm-bg text-fosdem hover:bg-pink-50 px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Sign up' %}</a>
           {% endif %}
           <!-- Dark mode toggle (desktop) -->
           <button id="theme-toggle-desktop" aria-label="Toggle colour theme" class="ml-2 text-white hover:bg-fosdem-dark p-2 rounded-md text-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"><span aria-hidden="true">🌙</span></button>
@@ -187,9 +199,9 @@
   </main>
 
   <!-- Footer -->
-  <footer class="bg-white dark:bg-dm-nav border-t border-gray-200 dark:border-dm-border mt-auto">
+  <footer class="bg-lm-bg dark:bg-dm-nav border-t border-lm-border dark:border-dm-border mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <p class="text-center text-sm text-gray-500 dark:text-dm-muted">
+      <p class="text-center text-sm text-lm-subtle dark:text-dm-muted">
         Built by FOSDEM volunteers for FOSDEM volunteers! &nbsp;·&nbsp;
         <a href="https://github.com/FOSDEM/volunteers" target="_blank" rel="noopener" class="hover:text-fosdem">GitHub<span class="sr-only"> (opens in new tab)</span></a>
         &nbsp;·&nbsp;

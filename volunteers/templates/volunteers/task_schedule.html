@@ -7,7 +7,7 @@
 {% block content %}
 <div class="space-y-6">
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{{ template.name }} {% trans "Schedule" %}</h1>
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{{ template.name }} {% trans "Schedule" %}</h1>
     <form action="{% url 'task_schedule_csv' template.id %}">
       <button type="submit" class="bg-fosdem hover:bg-fosdem-dark text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
         <span aria-hidden="true">⬇</span> Export CSV
@@ -16,27 +16,27 @@
   </div>
 
   {% for task, volunteers in tasks.items %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden">
-    <div class="px-6 py-4 bg-gray-50 dark:bg-dm-nav border-b border-gray-200 dark:border-dm-border">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-dm-text">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+    <div class="px-6 py-4 bg-lm-soft dark:bg-dm-nav border-b border-lm-border dark:border-dm-border">
+      <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">
         {{ task.name }}
-        <span class="text-sm font-normal text-gray-500 dark:text-dm-muted ml-2">({{ task.assigned_volunteers }}/{{ task.nbr_volunteers }})</span>
+        <span class="text-sm font-normal text-lm-subtle dark:text-dm-muted ml-2">({{ task.assigned_volunteers }}/{{ task.nbr_volunteers }})</span>
       </h2>
-      <p class="text-sm text-gray-600 dark:text-dm-text">{{ task.date|date:"l" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }} · {{ task.location }}</p>
+      <p class="text-sm text-lm-muted dark:text-dm-text">{{ task.date|date:"l" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }} · {{ task.location }}</p>
     </div>
-    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+    <div class="divide-y divide-lm-hair dark:divide-gray-700">
       {% for volunteer in volunteers %}
       <div class="flex items-center gap-4 px-6 py-4">
         <img src="{{ volunteer.get_mugshot_url }}" alt="" class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600" />
         <div class="flex-1 min-w-0">
-          <p class="font-semibold text-gray-900 dark:text-dm-text">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</p>
-          <p class="text-sm text-gray-500 dark:text-dm-muted">
+          <p class="font-semibold text-lm-text dark:text-dm-text">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</p>
+          <p class="text-sm text-lm-subtle dark:text-dm-muted">
             @{{ volunteer.user.username }} · {{ volunteer.user.email }}
             {% if volunteer.mobile_nbr %} · {{ volunteer.mobile_nbr }}{% endif %}
           </p>
         </div>
         <div class="text-right">
-          <label for="present-{{ volunteer.id }}" class="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-dm-muted">
+          <label for="present-{{ volunteer.id }}" class="inline-flex items-center gap-1 text-sm text-lm-subtle dark:text-dm-muted">
             <span aria-hidden="true">Present?</span>
             <span class="sr-only">Mark {{ volunteer.user.first_name }} {{ volunteer.user.last_name }} as present</span>
             <input type="checkbox" id="present-{{ volunteer.id }}" name="present_{{ volunteer.id }}" class="accent-fosdem">
@@ -44,7 +44,7 @@
         </div>
       </div>
       {% empty %}
-      <p class="px-6 py-4 text-sm text-gray-500 dark:text-dm-muted">No volunteers assigned.</p>
+      <p class="px-6 py-4 text-sm text-lm-subtle dark:text-dm-muted">No volunteers assigned.</p>
       {% endfor %}
     </div>
   </div>

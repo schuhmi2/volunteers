@@ -6,50 +6,50 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto space-y-6">
-  <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Event Sign On" %}</h1>
+  <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Event Sign On" %}</h1>
 
   {% for title, days in tasks.items %}
   <form action="" method="post">
     {% csrf_token %}
 
-    <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6 mb-4">
+    <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 mb-4">
       {{ form.non_field_errors }}
       <div class="space-y-4">
         {% for field in form %}
         <div>
           {% if field.name == 'privacy_policy' %}
-          <label class="flex items-start gap-2 cursor-pointer text-sm text-gray-700 dark:text-dm-text">
+          <label class="flex items-start gap-2 cursor-pointer text-sm text-lm-muted dark:text-dm-text">
             {{ field }} <span>{{ field.label }}</span>
           </label>
           {% else %}
-          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{{ field.label }}</label>
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-lm-muted dark:text-dm-text mb-1">{{ field.label }}</label>
           {{ field.errors }}
-          <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-dm-border [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-dm-nav [&_input]:text-gray-900 [&_input]:dark:text-dm-text [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem">{{ field }}</div>
+          <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-dm-border [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-lm-bg [&_input]:dark:bg-dm-nav [&_input]:text-lm-text [&_input]:dark:text-dm-text [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem">{{ field }}</div>
           {% endif %}
         </div>
         {% endfor %}
       </div>
     </div>
 
-    <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden mb-4">
-      <div class="px-6 py-4 border-b border-gray-100 dark:border-dm-border">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-dm-text">{% trans title %}</h2>
+    <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden mb-4">
+      <div class="px-6 py-4 border-b border-lm-hair dark:border-dm-border">
+        <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans title %}</h2>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-dm-nav">
+          <thead class="bg-lm-soft dark:bg-dm-nav">
             <tr>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text w-10">{% trans "In" %}!</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Task" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Slots" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text w-10">{% trans "In" %}!</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Task" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Slots" %}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
             {% for day, categories in days.items %}
             {% if categories.items %}
-            <tr class="bg-gray-100 dark:bg-dm-soft">
-              <td colspan="4" class="px-4 py-2 font-semibold text-gray-700 dark:text-dm-text">{{ day|date:"l" }}</td>
+            <tr class="bg-lm-soft dark:bg-dm-soft">
+              <td colspan="4" class="px-4 py-2 font-semibold text-lm-muted dark:text-dm-text">{{ day|date:"l" }}</td>
             </tr>
             {% for category, category_tasks in categories.items %}
             {% if category_tasks %}
@@ -57,7 +57,7 @@
               <td colspan="4" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-fosdem dark:text-fosdem-light">{{ category.name }}</td>
             </tr>
             {% for task in category_tasks %}
-            <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover">
+            <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover">
               <td class="px-4 py-2.5">
                 <input type="checkbox" name="task" value="{{ task.id }}" {{ checked|get_item:task.id }}
                        aria-label="{% trans 'Sign up for' %} {{ task.name }}"
@@ -65,17 +65,17 @@
               </td>
               <td class="px-4 py-2.5 font-medium">
                 {% if attending|get_item:task.id == True %}
-                <span class="text-fosdem">{{ task.name }}</span> <span class="text-xs text-gray-500">(attending)</span>
+                <span class="text-fosdem">{{ task.name }}</span> <span class="text-xs text-lm-subtle">(attending)</span>
                 {% else %}
                 <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>
                 {% endif %}
               </td>
-              <td class="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
+              <td class="px-4 py-2.5 whitespace-nowrap text-lm-muted dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
               <td class="px-4 py-2.5">
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                   {% if task.assigned_volunteers >= task.nbr_volunteers_max %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
                   {% elif task.assigned_volunteers >= task.nbr_volunteers %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                  {% elif task.assigned_volunteers >= task.nbr_volunteers_min %}bg-gray-100 text-gray-800 dark:bg-dm-nav dark:text-dm-text
+                  {% elif task.assigned_volunteers >= task.nbr_volunteers_min %}bg-lm-soft text-lm-text dark:bg-dm-nav dark:text-dm-text
                   {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
                   <span class="sr-only">{% if task.assigned_volunteers >= task.nbr_volunteers_max %}Full — {% elif task.assigned_volunteers >= task.nbr_volunteers %}Staffed — {% elif task.assigned_volunteers >= task.nbr_volunteers_min %}Manageable — {% else %}Needs volunteers — {% endif %}</span>{{ task.assigned_volunteers }}/{{ task.nbr_volunteers }}
                 </span>

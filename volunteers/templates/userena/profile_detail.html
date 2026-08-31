@@ -6,82 +6,82 @@
 
   <!-- Profile nav tabs (own profile) -->
   {% if user.username == profile.user.username %}
-  <nav aria-label="{% trans 'Profile sections' %}" class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-dm-border pb-2">
+  <nav aria-label="{% trans 'Profile sections' %}" class="flex flex-wrap gap-2 border-b border-lm-border dark:border-dm-border pb-2">
     <a href="{% url 'userena_profile_detail' user.username %}"
        aria-current="page"
        class="px-4 py-2 rounded-t-lg text-sm font-medium bg-fosdem text-white">{% trans "View profile" %}</a>
     <a href="{% url 'userena_profile_edit' user.username %}"
-       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "Edit details" %}</a>
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-lm-muted dark:text-dm-text hover:text-fosdem">{% trans "Edit details" %}</a>
     <a href="{% url 'userena_password_change' %}"
-       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "Change password" %}</a>
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-lm-muted dark:text-dm-text hover:text-fosdem">{% trans "Change password" %}</a>
     <a href="{% url 'userena_email_change' %}"
-       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "Change email" %}</a>
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-lm-muted dark:text-dm-text hover:text-fosdem">{% trans "Change email" %}</a>
   </nav>
   {% endif %}
 
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6 flex flex-col sm:flex-row gap-6">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 flex flex-col sm:flex-row gap-6">
     <div class="flex-shrink-0">
       <img src="{{ profile.get_mugshot_url }}" alt="Profile photo"
            class="w-24 h-24 rounded-full object-cover ring-2 ring-fosdem" />
     </div>
     <div class="space-y-3 flex-1">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-dm-text">
+      <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text">
         {{ profile.user.username }}
         {% if profile.user.get_full_name %}
-        <span class="text-gray-500 dark:text-dm-muted font-normal text-lg">({{ profile.user.get_full_name }})</span>
+        <span class="text-lm-subtle dark:text-dm-muted font-normal text-lg">({{ profile.user.get_full_name }})</span>
         {% endif %}
       </h1>
       {% if profile.about_me %}
       <div>
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dm-muted">{% trans "About" %}</span>
-        <p class="text-gray-700 dark:text-dm-text mt-1">{{ profile.about_me }}</p>
+        <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "About" %}</span>
+        <p class="text-lm-muted dark:text-dm-text mt-1">{{ profile.about_me }}</p>
       </div>
       {% endif %}
       {% if profile.tshirt_size and user.username == profile.user.username or profile.tshirt_size and user.is_staff %}
       <div>
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dm-muted">{% trans "T-shirt size" %}</span>
-        <p class="text-gray-700 dark:text-dm-text mt-1">{{ profile.tshirt_size }}</p>
+        <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "T-shirt size" %}</span>
+        <p class="text-lm-muted dark:text-dm-text mt-1">{{ profile.tshirt_size }}</p>
       </div>
       {% endif %}
       {% if profile.pronouns %}
       <div>
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dm-muted">{% trans "Pronouns" %}</span>
-        <p class="text-gray-700 dark:text-dm-text mt-1">{{ profile.pronouns }}</p>
+        <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "Pronouns" %}</span>
+        <p class="text-lm-muted dark:text-dm-text mt-1">{{ profile.pronouns }}</p>
       </div>
       {% endif %}
       {% with languages=profile.spoken_languages.all %}
       {% if languages %}
       <div>
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dm-muted">{% trans "Speaks" %}</span>
-        <p class="text-gray-700 dark:text-dm-text mt-1">
+        <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "Speaks" %}</span>
+        <p class="text-lm-muted dark:text-dm-text mt-1">
           {% for lang in languages %}{{ lang.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </p>
       </div>
       {% endif %}
       {% endwith %}
       <div>
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dm-muted">{% trans "Signed up" %}</span>
-        <p class="text-gray-700 dark:text-dm-text mt-1">{{ profile.signed_up }}</p>
+        <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "Signed up" %}</span>
+        <p class="text-lm-muted dark:text-dm-text mt-1">{{ profile.signed_up }}</p>
       </div>
     </div>
   </div>
 
   <!-- Current edition tasks -->
   {% if tasks %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-dm-text mb-3">{% trans "Tasks this edition" %}</h2>
-    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-3">{% trans "Tasks this edition" %}</h2>
+    <ul class="divide-y divide-lm-hair dark:divide-gray-700">
       {% for task in tasks %}
       <li class="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-        <span class="text-sm font-medium text-gray-900 dark:text-dm-text">{{ task.name }}</span>
-        <span class="text-xs text-gray-500 dark:text-dm-muted">{{ task.date|date:"D d M" }} · {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</span>
-        {% if task.location %}<span class="text-xs text-gray-600 dark:text-dm-muted"><span aria-hidden="true">📍</span> {{ task.location }}</span>{% endif %}
+        <span class="text-sm font-medium text-lm-text dark:text-dm-text">{{ task.name }}</span>
+        <span class="text-xs text-lm-subtle dark:text-dm-muted">{{ task.date|date:"D d M" }} · {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</span>
+        {% if task.location %}<span class="text-xs text-lm-muted dark:text-dm-muted"><span aria-hidden="true">📍</span> {{ task.location }}</span>{% endif %}
       </li>
       {% endfor %}
     </ul>
   </div>
   {% else %}
-  <p class="text-gray-500 dark:text-dm-muted text-sm">
+  <p class="text-lm-subtle dark:text-dm-muted text-sm">
     {% if profile.user.get_full_name %}{{ profile.user.get_full_name }}{% else %}{{ profile.user }}{% endif %}
     hasn't signed up for any tasks this edition yet.
   </p>
@@ -89,28 +89,28 @@
 
   <!-- Volunteering history: past editions -->
   {% if history %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-dm-text mb-4">{% trans "Volunteering history" %}</h2>
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-4">{% trans "Volunteering history" %}</h2>
     <div class="space-y-3">
       {% for entry in history %}
-      <details class="group border border-gray-200 dark:border-dm-border rounded-lg">
-        <summary class="flex items-center justify-between cursor-pointer px-4 py-3 select-none hover:bg-gray-50 dark:hover:bg-dm-nav/50 rounded-lg">
-          <span class="font-medium text-gray-900 dark:text-dm-text">{{ entry.edition.name }}</span>
+      <details class="group border border-lm-border dark:border-dm-border rounded-lg">
+        <summary class="flex items-center justify-between cursor-pointer px-4 py-3 select-none hover:bg-lm-soft dark:hover:bg-dm-nav/50 rounded-lg">
+          <span class="font-medium text-lm-text dark:text-dm-text">{{ entry.edition.name }}</span>
           <span class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 dark:text-dm-muted bg-gray-100 dark:bg-dm-nav px-2 py-0.5 rounded-full">
+            <span class="text-xs text-lm-subtle dark:text-dm-muted bg-lm-soft dark:bg-dm-nav px-2 py-0.5 rounded-full">
               {{ entry.tasks|length }} task{{ entry.tasks|length|pluralize }}
             </span>
-            <svg aria-hidden="true" class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" class="w-4 h-4 text-lm-subtle transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </span>
         </summary>
-        <ul class="divide-y divide-gray-100 dark:divide-gray-700 px-4 pb-3">
+        <ul class="divide-y divide-lm-hair dark:divide-gray-700 px-4 pb-3">
           {% for task in entry.tasks %}
           <li class="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-            <span class="text-sm font-medium text-gray-900 dark:text-dm-text">{{ task.name }}</span>
-            <span class="text-xs text-gray-500 dark:text-dm-muted">{{ task.date|date:"D d M" }} · {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</span>
-            {% if task.location %}<span class="text-xs text-gray-600 dark:text-dm-muted"><span aria-hidden="true">📍</span> {{ task.location }}</span>{% endif %}
+            <span class="text-sm font-medium text-lm-text dark:text-dm-text">{{ task.name }}</span>
+            <span class="text-xs text-lm-subtle dark:text-dm-muted">{{ task.date|date:"D d M" }} · {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</span>
+            {% if task.location %}<span class="text-xs text-lm-muted dark:text-dm-muted"><span aria-hidden="true">📍</span> {{ task.location }}</span>{% endif %}
           </li>
           {% endfor %}
         </ul>

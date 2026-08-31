@@ -5,13 +5,13 @@
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-6">
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "T-shirt Report" %}</h1>
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "T-shirt Report" %}</h1>
 
     {# Edition selector #}
     <form method="get" class="flex items-center gap-2">
-      <label for="edition" class="text-sm font-medium text-gray-700 dark:text-dm-text">{% trans "Edition" %}:</label>
+      <label for="edition" class="text-sm font-medium text-lm-muted dark:text-dm-text">{% trans "Edition" %}:</label>
       <select name="edition" id="edition"
-              class="border border-gray-300 dark:border-dm-border rounded-lg px-3 py-1.5 bg-white dark:bg-dm-nav text-gray-900 dark:text-dm-text text-sm focus:outline-none focus:ring-2 focus:ring-fosdem">
+              class="border border-gray-300 dark:border-dm-border rounded-lg px-3 py-1.5 bg-lm-bg dark:bg-dm-nav text-lm-text dark:text-dm-text text-sm focus:outline-none focus:ring-2 focus:ring-fosdem">
         {% for ed in all_editions %}
         <option value="{{ ed.pk }}" {% if ed.pk == selected_edition.pk %}selected{% endif %}>{{ ed.name }}</option>
         {% endfor %}
@@ -21,36 +21,36 @@
   </div>
 
   {% if selected_edition %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6 space-y-2">
-    <p class="text-sm text-gray-600 dark:text-dm-muted">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 space-y-2">
+    <p class="text-sm text-lm-muted dark:text-dm-muted">
       {% trans "T-shirt days:" %}
       {% for d in tshirt_day_dates %}
-        <strong class="text-gray-900 dark:text-dm-text">{{ d|date:"D d M Y" }}</strong>{% if not forloop.last %}, {% endif %}
+        <strong class="text-lm-text dark:text-dm-text">{{ d|date:"D d M Y" }}</strong>{% if not forloop.last %}, {% endif %}
       {% endfor %}
     </p>
-    <p class="text-xs text-gray-500 dark:text-dm-muted">
+    <p class="text-xs text-lm-subtle dark:text-dm-muted">
       {% trans "Volunteers working on multiple t-shirt days receive one shirt per day. Volunteers with no size set are listed separately." %}
     </p>
   </div>
 
   {# Summary table #}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 dark:border-dm-border">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-dm-text">{% trans "Summary" %}</h2>
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+    <div class="px-6 py-4 border-b border-lm-hair dark:border-dm-border">
+      <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Summary" %}</h2>
     </div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-dm-nav">
+        <thead class="bg-lm-soft dark:bg-dm-nav">
           <tr>
-            <th class="px-6 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Size" %}</th>
-            <th class="px-6 py-3 text-center font-medium text-gray-600 dark:text-dm-text">{% trans "Quantity Needed" %}</th>
+            <th class="px-6 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Size" %}</th>
+            <th class="px-6 py-3 text-center font-medium text-lm-muted dark:text-dm-text">{% trans "Quantity Needed" %}</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for size, count in summary %}
-          <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover">
-            <td class="px-6 py-3 font-medium text-gray-900 dark:text-dm-text">
-              {% if size %}{{ size }}{% else %}<span class="text-gray-400 italic">{% trans "Not set" %}</span>{% endif %}
+          <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover">
+            <td class="px-6 py-3 font-medium text-lm-text dark:text-dm-text">
+              {% if size %}{{ size }}{% else %}<span class="text-lm-subtle italic">{% trans "Not set" %}</span>{% endif %}
             </td>
             <td class="px-6 py-3 text-center">
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-fosdem/10 text-fosdem">{{ count }}</span>
@@ -58,15 +58,15 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="2" class="px-6 py-8 text-center text-gray-500 dark:text-dm-muted">
+            <td colspan="2" class="px-6 py-8 text-center text-lm-subtle dark:text-dm-muted">
               {% trans "No signed-up volunteers found for this edition." %}
             </td>
           </tr>
           {% endfor %}
           {% if summary %}
-          <tr class="bg-gray-50 dark:bg-dm-nav font-semibold">
-            <td class="px-6 py-3 text-gray-900 dark:text-dm-text">{% trans "Total" %}</td>
-            <td class="px-6 py-3 text-center text-gray-900 dark:text-dm-text">{{ total }}</td>
+          <tr class="bg-lm-soft dark:bg-dm-nav font-semibold">
+            <td class="px-6 py-3 text-lm-text dark:text-dm-text">{% trans "Total" %}</td>
+            <td class="px-6 py-3 text-center text-lm-text dark:text-dm-text">{{ total }}</td>
           </tr>
           {% endif %}
         </tbody>
@@ -75,7 +75,7 @@
   </div>
 
   {% else %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6 text-center text-gray-500 dark:text-dm-muted">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 text-center text-lm-subtle dark:text-dm-muted">
     {% trans "No edition selected." %}
   </div>
   {% endif %}

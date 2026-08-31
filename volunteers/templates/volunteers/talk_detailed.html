@@ -6,30 +6,30 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto space-y-6">
-  <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Talk Details" %}</h1>
+  <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Talk Details" %}</h1>
 
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-dm-nav">
+        <thead class="bg-lm-soft dark:bg-dm-nav">
           <tr>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Title" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Volunteers" %}</th>
-            {% if talk.location %}<th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Location" %}</th>{% endif %}
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Title" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Volunteers" %}</th>
+            {% if talk.location %}<th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Location" %}</th>{% endif %}
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           <tr>
-            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-dm-text">{{ talk.date|date:"D" }}, {{ talk.start_time|time:"H:i" }}–{{ talk.end_time|time:"H:i" }}</td>
+            <td class="px-4 py-3 whitespace-nowrap text-lm-muted dark:text-dm-text">{{ talk.date|date:"D" }}, {{ talk.start_time|time:"H:i" }}–{{ talk.end_time|time:"H:i" }}</td>
             <td class="px-4 py-3 font-medium">
               {% if talk.fosdem_url %}<a href="{{ talk.fosdem_url }}" class="text-fosdem hover:underline">{{ talk.title }}</a>
               {% else %}{{ talk.title }}{% endif %}
             </td>
-            <td class="px-4 py-3 text-gray-600 dark:text-dm-text">
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text">
               {% for volunteer in talk.volunteers.all %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
             </td>
-            {% if talk.location %}<td class="px-4 py-3 text-gray-600 dark:text-dm-text">{{ talk.location }}</td>{% endif %}
+            {% if talk.location %}<td class="px-4 py-3 text-lm-muted dark:text-dm-text">{{ talk.location }}</td>{% endif %}
           </tr>
         </tbody>
       </table>

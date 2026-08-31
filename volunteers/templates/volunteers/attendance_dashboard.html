@@ -6,31 +6,31 @@
 {% block content %}
 <div class="space-y-6">
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Attendance Dashboard" %}</h1>
-    <span class="text-sm text-gray-500 dark:text-dm-muted">{{ edition.name }}</span>
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Attendance Dashboard" %}</h1>
+    <span class="text-sm text-lm-subtle dark:text-dm-muted">{{ edition.name }}</span>
   </div>
 
   {% for day, task_list in days.items %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden">
-    <div class="px-4 py-3 bg-gray-50 dark:bg-dm-nav border-b border-gray-200 dark:border-dm-border">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-dm-text">{{ day|date:"l, F j" }}</h2>
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+    <div class="px-4 py-3 bg-lm-soft dark:bg-dm-nav border-b border-lm-border dark:border-dm-border">
+      <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{{ day|date:"l, F j" }}</h2>
     </div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50/50 dark:bg-dm-nav/50">
+        <thead class="bg-lm-soft/50 dark:bg-dm-nav/50">
           <tr>
-            <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Time" %}</th>
-            <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Task" %}</th>
-            <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Location" %}</th>
-            <th class="px-4 py-2 text-center font-medium text-gray-600 dark:text-dm-text">{% trans "Assigned" %}</th>
-            <th class="px-4 py-2 text-center font-medium text-gray-600 dark:text-dm-text">{% trans "Checked In" %}</th>
-            <th class="px-4 py-2 text-center font-medium text-gray-600 dark:text-dm-text">{% trans "Missing" %}</th>
+            <th class="px-4 py-2 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Time" %}</th>
+            <th class="px-4 py-2 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Task" %}</th>
+            <th class="px-4 py-2 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Location" %}</th>
+            <th class="px-4 py-2 text-center font-medium text-lm-muted dark:text-dm-text">{% trans "Assigned" %}</th>
+            <th class="px-4 py-2 text-center font-medium text-lm-muted dark:text-dm-text">{% trans "Checked In" %}</th>
+            <th class="px-4 py-2 text-center font-medium text-lm-muted dark:text-dm-text">{% trans "Missing" %}</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for item in task_list %}
-          <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover transition-colors">
-            <td class="px-4 py-2 whitespace-nowrap text-gray-600 dark:text-dm-text">
+          <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors">
+            <td class="px-4 py-2 whitespace-nowrap text-lm-muted dark:text-dm-text">
               {{ item.task.start_time|time:"H:i" }}–{{ item.task.end_time|time:"H:i" }}
             </td>
             <td class="px-4 py-2 font-medium">
@@ -38,7 +38,7 @@
                 {{ item.task.name }}
               </a>
             </td>
-            <td class="px-4 py-2 text-gray-600 dark:text-dm-text">{{ item.task.location|default:"—" }}</td>
+            <td class="px-4 py-2 text-lm-muted dark:text-dm-text">{{ item.task.location|default:"—" }}</td>
             <td class="px-4 py-2 text-center">
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
                 {{ item.assigned }}
@@ -55,7 +55,7 @@
                 {{ item.missing }}
               </span>
               {% else %}
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-dm-nav text-gray-500 dark:text-dm-muted">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-lm-soft dark:bg-dm-nav text-lm-subtle dark:text-dm-muted">
                 0
               </span>
               {% endif %}
@@ -67,8 +67,8 @@
     </div>
   </div>
   {% empty %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-8 text-center">
-    <p class="text-gray-500 dark:text-dm-muted">{% trans "No tasks found for this edition." %}</p>
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-8 text-center">
+    <p class="text-lm-subtle dark:text-dm-muted">{% trans "No tasks found for this edition." %}</p>
   </div>
   {% endfor %}
 </div>

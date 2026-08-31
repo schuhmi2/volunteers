@@ -6,8 +6,8 @@
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-6">
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Label Printing" %}</h1>
-    <span class="text-sm text-gray-500 dark:text-dm-muted">{{ edition.name }}</span>
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Label Printing" %}</h1>
+    <span class="text-sm text-lm-subtle dark:text-dm-muted">{{ edition.name }}</span>
   </div>
 
   <form method="post" action="{% url 'label_preview' %}" id="label-form">
@@ -17,32 +17,32 @@
     <div class="mb-4">
       <label for="volunteer-search" class="sr-only">{% trans "Search volunteers" %}</label>
       <input type="text" id="volunteer-search" placeholder="{% trans 'Search volunteers...' %}"
-             class="w-full md:w-80 border border-gray-300 dark:border-dm-border rounded-lg px-3 py-2 bg-white dark:bg-dm-nav text-gray-900 dark:text-dm-text focus:outline-none focus:ring-2 focus:ring-fosdem text-sm">
+             class="w-full md:w-80 border border-gray-300 dark:border-dm-border rounded-lg px-3 py-2 bg-lm-bg dark:bg-dm-nav text-lm-text dark:text-dm-text focus:outline-none focus:ring-2 focus:ring-fosdem text-sm">
     </div>
 
-    <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+    <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-dm-nav">
+          <thead class="bg-lm-soft dark:bg-dm-nav">
             <tr>
               <th class="px-4 py-3 text-left w-10">
                 <input type="checkbox" id="select-all" aria-label="{% trans 'Select all volunteers' %}" class="accent-fosdem w-4 h-4 cursor-pointer">
               </th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Name" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Username" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Last Printed" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Name" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Username" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Last Printed" %}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-700" id="volunteer-table-body">
+          <tbody class="divide-y divide-lm-hair dark:divide-gray-700" id="volunteer-table-body">
             {% for volunteer in volunteers %}
-            <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover transition-colors volunteer-row">
+            <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors volunteer-row">
               <td class="px-4 py-2.5">
                 <input type="checkbox" name="volunteer_ids" value="{{ volunteer.id }}"
                        aria-label="{% trans 'Select' %} {{ volunteer.user.first_name }} {{ volunteer.user.last_name }}"
                        class="volunteer-checkbox accent-fosdem w-4 h-4 cursor-pointer">
               </td>
-              <td class="px-4 py-2.5 font-medium text-gray-900 dark:text-dm-text">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</td>
-              <td class="px-4 py-2.5 text-gray-600 dark:text-dm-text">{{ volunteer.user.username }}</td>
+              <td class="px-4 py-2.5 font-medium text-lm-text dark:text-dm-text">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</td>
+              <td class="px-4 py-2.5 text-lm-muted dark:text-dm-text">{{ volunteer.user.username }}</td>
               <td class="px-4 py-2.5">
                 {% if volunteer.id in last_prints %}
                 <span class="inline-flex items-center gap-1 text-xs">
@@ -51,13 +51,13 @@
                   {{ last_prints|get_item:volunteer.id|date:"d M Y H:i" }}
                 </span>
                 {% else %}
-                <span class="text-gray-400 dark:text-dm-muted text-xs">{% trans "Never" %}</span>
+                <span class="text-lm-subtle dark:text-dm-muted text-xs">{% trans "Never" %}</span>
                 {% endif %}
               </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="4" class="px-4 py-8 text-center text-gray-500 dark:text-dm-muted">
+              <td colspan="4" class="px-4 py-8 text-center text-lm-subtle dark:text-dm-muted">
                 {% trans "No volunteers with tasks in the current edition." %}
               </td>
             </tr>
@@ -69,7 +69,7 @@
 
     {% if volunteers %}
     <div class="flex items-center justify-between pt-4">
-      <span class="text-sm text-gray-500 dark:text-dm-muted" id="selection-count">0 selected</span>
+      <span class="text-sm text-lm-subtle dark:text-dm-muted" id="selection-count">0 selected</span>
       <button type="submit"
               class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow disabled:opacity-50 disabled:cursor-not-allowed"
               id="generate-btn" disabled>

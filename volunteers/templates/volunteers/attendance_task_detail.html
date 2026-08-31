@@ -8,8 +8,8 @@
   <div class="flex items-center justify-between flex-wrap gap-3">
     <div>
       <a href="{% url 'attendance_dashboard' %}" class="text-sm text-fosdem hover:underline">&larr; {% trans "Back to Dashboard" %}</a>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-dm-text mt-1">{{ task.name }}</h1>
-      <p class="text-gray-500 dark:text-dm-muted text-sm">
+      <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text mt-1">{{ task.name }}</h1>
+      <p class="text-lm-subtle dark:text-dm-muted text-sm">
         {{ task.date|date:"l, F j" }} &middot; {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}
         {% if task.location %}&middot; <span aria-hidden="true">📍</span> {{ task.location }}{% endif %}
       </p>
@@ -28,46 +28,46 @@
   </div>
 
   <!-- Volunteer List -->
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-dm-nav">
+        <thead class="bg-lm-soft dark:bg-dm-nav">
           <tr>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Volunteer" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Status" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Checked In" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Checked Out" %}</th>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Actions" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Volunteer" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Status" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Checked In" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Checked Out" %}</th>
+            <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Actions" %}</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for item in volunteers_data %}
-          <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover transition-colors">
-            <td class="px-4 py-3 font-medium text-gray-900 dark:text-dm-text">
+          <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors">
+            <td class="px-4 py-3 font-medium text-lm-text dark:text-dm-text">
               {{ item.volunteer.user.first_name }} {{ item.volunteer.user.last_name }}
-              <span class="text-xs text-gray-500 dark:text-dm-muted ml-1">({{ item.volunteer.user.username }})</span>
+              <span class="text-xs text-lm-subtle dark:text-dm-muted ml-1">({{ item.volunteer.user.username }})</span>
             </td>
             <td class="px-4 py-3">
               {% if item.status == "active" %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"><span aria-hidden="true">●</span> {% trans "Active" %}</span>
               {% elif item.status == "completed" %}
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-dm-nav text-gray-600 dark:text-dm-muted"><span aria-hidden="true">✓</span> {% trans "Done" %}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-lm-soft dark:bg-dm-nav text-lm-muted dark:text-dm-muted"><span aria-hidden="true">✓</span> {% trans "Done" %}</span>
               {% elif item.status == "not_arrived" %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"><span aria-hidden="true">⏳</span> {% trans "Waiting" %}</span>
               {% else %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"><span aria-hidden="true">✗</span> {% trans "No Record" %}</span>
               {% endif %}
             </td>
-            <td class="px-4 py-3 text-gray-600 dark:text-dm-text text-xs">
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text text-xs">
               {% if item.attendance and item.attendance.signed_in_at %}
                 {{ item.attendance.signed_in_at|time:"H:i" }}
-                {% if item.attendance.manually_marked_by %}<span class="text-gray-400">(manual)</span>{% endif %}
+                {% if item.attendance.manually_marked_by %}<span class="text-lm-subtle">(manual)</span>{% endif %}
               {% else %}—{% endif %}
             </td>
-            <td class="px-4 py-3 text-gray-600 dark:text-dm-text text-xs">
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text text-xs">
               {% if item.attendance and item.attendance.signed_out_at %}
                 {{ item.attendance.signed_out_at|time:"H:i" }}
-                {% if item.attendance.manually_marked_by %}<span class="text-gray-400">(manual)</span>{% endif %}
+                {% if item.attendance.manually_marked_by %}<span class="text-lm-subtle">(manual)</span>{% endif %}
               {% else %}—{% endif %}
             </td>
             <td class="px-4 py-3">
@@ -107,7 +107,7 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-dm-muted">{% trans "No volunteers assigned to this task." %}</td>
+            <td colspan="5" class="px-4 py-8 text-center text-lm-subtle dark:text-dm-muted">{% trans "No volunteers assigned to this task." %}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -117,15 +117,15 @@
 
   <!-- Transfer Runner -->
   {% if available_runners %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-dm-text mb-4">{% trans "Transfer Runner" %}</h2>
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-4">{% trans "Transfer Runner" %}</h2>
     <form method="post" action="{% url 'transfer_runner' %}" class="flex items-end gap-3 flex-wrap">
       {% csrf_token %}
       <input type="hidden" name="task_id" value="{{ task.id }}">
       <div class="flex-1 min-w-[200px]">
-        <label for="runner-select" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{% trans "Select volunteer" %}</label>
+        <label for="runner-select" class="block text-sm font-medium text-lm-muted dark:text-dm-text mb-1">{% trans "Select volunteer" %}</label>
         <select name="volunteer_id" id="runner-select"
-                class="w-full rounded-lg border border-gray-300 dark:border-dm-border bg-white dark:bg-dm-nav px-3 py-2 text-sm text-gray-900 dark:text-dm-text focus:ring-2 focus:ring-fosdem">
+                class="w-full rounded-lg border border-gray-300 dark:border-dm-border bg-lm-bg dark:bg-dm-nav px-3 py-2 text-sm text-lm-text dark:text-dm-text focus:ring-2 focus:ring-fosdem">
           {% for vol in available_runners %}
           <option value="{{ vol.id }}">{{ vol.user.first_name }} {{ vol.user.last_name }} ({{ vol.user.username }})</option>
           {% endfor %}

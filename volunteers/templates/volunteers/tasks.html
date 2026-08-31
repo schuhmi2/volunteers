@@ -8,7 +8,7 @@
 <div class="space-y-6">
 
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Tasks" %}</h1>
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Tasks" %}</h1>
     {% if user.is_authenticated %}
     <a href="{% url 'task_list_detailed' user.username %}"
        class="text-fosdem hover:underline text-sm font-medium">View your schedule →</a>
@@ -37,14 +37,14 @@
           </thead>
           <tbody class="divide-y divide-red-200 dark:divide-red-800">
             {% for task in task_set %}
-            <tr class="bg-white dark:bg-dm-soft">
+            <tr class="bg-lm-bg dark:bg-dm-soft">
               <td class="px-3 py-2">
                 {% if user.is_authenticated %}
                 <form method="post" action="{% url 'task_toggle' task.id %}" class="toggle-form">
                   {% csrf_token %}
                   <button type="submit"
                           class="task-toggle-btn inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium transition-colors
-                            {% if checked|get_item:task.id %}bg-fosdem text-white hover:bg-red-600{% else %}border border-gray-300 dark:border-dm-border text-gray-600 dark:text-dm-text hover:bg-fosdem hover:text-white hover:border-fosdem{% endif %}"
+                            {% if checked|get_item:task.id %}bg-fosdem text-white hover:bg-red-600{% else %}border border-gray-300 dark:border-dm-border text-lm-muted dark:text-dm-text hover:bg-fosdem hover:text-white hover:border-fosdem{% endif %}"
                           data-task-id="{{ task.id }}"
                           data-status="{% if task.id in pending_task_ids %}pending{% elif checked|get_item:task.id %}added{% else %}removed{% endif %}">
                     {% if task.id in pending_task_ids %}<span aria-hidden="true">⏳</span> {% trans "Pending" %}{% elif checked|get_item:task.id %}<span aria-hidden="true">✓</span> {% trans "Signed up" %}{% else %}{% trans "Sign up" %}{% endif %}
@@ -55,7 +55,7 @@
               <td class="px-3 py-2 font-medium">
                 <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>
               </td>
-              <td class="px-3 py-2 whitespace-nowrap text-gray-600 dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
+              <td class="px-3 py-2 whitespace-nowrap text-lm-muted dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
               <td class="px-3 py-2">
                 <span class="task-slots inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                   {% if task.status == 'OK' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
@@ -65,7 +65,7 @@
                   <span class="sr-only">{% if task.status == 'FULL' %}Full — {% elif task.status == 'OK' %}Staffed — {% else %}Needs volunteers — {% endif %}</span>{{ task.assigned_volunteers }}/{{ task.nbr_volunteers }}
                 </span>
               </td>
-              <td class="px-3 py-2 text-gray-600 dark:text-dm-text">{{ task.location }}</td>
+              <td class="px-3 py-2 text-lm-muted dark:text-dm-text">{{ task.location }}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -89,32 +89,32 @@
   {% endif %}
 
   {% for title, days in tasks.items %}
-  <div class="bg-white dark:bg-dm-soft rounded-xl shadow overflow-hidden mb-6">
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden mb-6">
     <button type="button"
             data-collapse-toggle="section-{{ forloop.counter }}"
             aria-expanded="true"
             aria-controls="section-{{ forloop.counter }}"
-            class="w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-lg text-gray-900 dark:text-dm-text hover:bg-gray-50 dark:hover:bg-dm-nav transition-colors">
+            class="w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-lg text-lm-text dark:text-dm-text hover:bg-lm-soft dark:hover:bg-dm-nav transition-colors">
       <span>{% trans title %}</span>
-      <span data-collapse-icon class="text-gray-400 text-sm">▼</span>
+      <span data-collapse-icon class="text-lm-subtle text-sm">▼</span>
     </button>
     <div id="section-{{ forloop.counter }}">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-dm-nav">
+          <thead class="bg-lm-soft dark:bg-dm-nav">
             <tr>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text w-28"></th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Task" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Slots" %}</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-dm-text">{% trans "Location" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text w-28"></th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Task" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text whitespace-nowrap">{% trans "When" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Slots" %}</th>
+              <th class="px-4 py-3 text-left font-medium text-lm-muted dark:text-dm-text">{% trans "Location" %}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
             {% for day, categories in days.items %}
             {% if categories.items %}
-            <tr class="bg-gray-100 dark:bg-dm-soft">
-              <td colspan="5" class="px-4 py-2 font-semibold text-gray-700 dark:text-dm-text">{{ day|date:"l" }}</td>
+            <tr class="bg-lm-soft dark:bg-dm-soft">
+              <td colspan="5" class="px-4 py-2 font-semibold text-lm-muted dark:text-dm-text">{{ day|date:"l" }}</td>
             </tr>
             {% for category, category_tasks in categories.items %}
             {% if category_tasks %}
@@ -122,7 +122,7 @@
               <td colspan="5" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-fosdem dark:text-fosdem-light">{{ category.name }}</td>
             </tr>
             {% for task in category_tasks %}
-            <tr class="hover:bg-gray-50 dark:hover:bg-dm-hover transition-colors" id="task-row-{{ task.id }}">
+            <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors" id="task-row-{{ task.id }}">
               <td class="px-4 py-2.5">
                 {% if user.is_authenticated %}
                 <form method="post" action="{% url 'task_toggle' task.id %}" class="toggle-form">
@@ -140,12 +140,12 @@
                     <span aria-hidden="true">✓</span> {% trans "Signed up" %}
                   </button>
                   {% elif task.status == 'FULL' %}
-                  <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-400 dark:bg-dm-nav dark:text-dm-muted cursor-not-allowed">
+                  <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-lm-soft text-lm-subtle dark:bg-dm-nav dark:text-dm-muted cursor-not-allowed">
                     {% trans "Full" %}
                   </span>
                   {% else %}
                   <button type="submit"
-                          class="task-toggle-btn inline-flex items-center px-3 py-1 rounded-md text-xs font-medium transition-colors border border-gray-300 dark:border-dm-border text-gray-600 dark:text-dm-text hover:bg-fosdem hover:text-white hover:border-fosdem"
+                          class="task-toggle-btn inline-flex items-center px-3 py-1 rounded-md text-xs font-medium transition-colors border border-gray-300 dark:border-dm-border text-lm-muted dark:text-dm-text hover:bg-fosdem hover:text-white hover:border-fosdem"
                           data-task-id="{{ task.id }}" data-status="removed">
                     {% trans "Sign up" %}
                   </button>
@@ -156,7 +156,7 @@
               <td class="px-4 py-2.5 font-medium">
                 {% if attending|get_item:task.id == True %}
                 <span class="text-fosdem">{{ task.name }}</span>
-                <span class="text-xs text-gray-500 dark:text-dm-muted ml-1">(attending)</span>
+                <span class="text-xs text-lm-subtle dark:text-dm-muted ml-1">(attending)</span>
                 {% else %}
                 <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a>
                 {% endif %}
@@ -164,7 +164,7 @@
                 <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"><span aria-hidden="true">🔒</span><span class="sr-only">Approval required</span></span>
                 {% endif %}
               </td>
-              <td class="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-dm-text">
+              <td class="px-4 py-2.5 whitespace-nowrap text-lm-muted dark:text-dm-text">
                 {{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}
               </td>
               <td class="px-4 py-2.5">
@@ -180,7 +180,7 @@
                 <span class="task-pending ml-1 text-xs text-yellow-600 dark:text-yellow-400" data-task-id="{{ task.id }}"><span aria-hidden="true">(+{{ task.pending_volunteers }} ⏳)</span><span class="sr-only">({{ task.pending_volunteers }} pending approval)</span></span>
                 {% endif %}
               </td>
-              <td class="px-4 py-2.5 text-gray-600 dark:text-dm-text">{{ task.location }}</td>
+              <td class="px-4 py-2.5 text-lm-muted dark:text-dm-text">{{ task.location }}</td>
             </tr>
             {% endfor %}
             {% endif %}
@@ -236,7 +236,7 @@
       btn.className += ' bg-yellow-100 text-yellow-800 hover:bg-red-100 hover:text-red-700';
       btn.innerHTML = '<span aria-hidden="true">⏳</span> Pending';
     } else {
-      btn.className += ' border border-gray-300 text-gray-600 hover:bg-fosdem hover:text-white hover:border-fosdem';
+      btn.className += ' border border-gray-300 text-lm-muted hover:bg-fosdem hover:text-white hover:border-fosdem';
       btn.innerHTML = 'Sign up';
     }
   }
