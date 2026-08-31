@@ -895,6 +895,7 @@ class TaskAttendance(models.Model):
     signed_in_at = models.DateTimeField(null=True, blank=True)
     signed_out_at = models.DateTimeField(null=True, blank=True)
     signin_token = models.UUIDField(default=uuid.uuid4, unique=True)
+    signout_token = models.UUIDField(default=uuid.uuid4, unique=True)
     reminder_sent_at = models.DateTimeField(null=True, blank=True)
     signout_link_sent_at = models.DateTimeField(null=True, blank=True)
     manually_marked_by = models.ForeignKey(

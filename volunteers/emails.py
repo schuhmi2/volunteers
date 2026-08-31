@@ -34,7 +34,7 @@ def send_signout_link_email(attendance):
     """Send an email with a sign-out link after a volunteer signs in."""
     volunteer = attendance.volunteer_task.volunteer
     task = attendance.volunteer_task.task
-    signout_url = _build_signin_url(attendance.signin_token, action='signout')
+    signout_url = _build_signin_url(attendance.signout_token, action='signout')
 
     subject = f'[FOSDEM Volunteers] Signed in: {task.name}'
     body = (

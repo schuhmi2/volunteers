@@ -178,13 +178,13 @@ def task_schedule(request, template_id):
     return render(request, 'volunteers/task_schedule.html', context)
 
 
-@login_required
+@user_passes_test(lambda u: u.is_staff)
 def task_schedule_csv(request, template_id):
     template = TaskTemplate.objects.filter(id=template_id)[0]
     tasks = Task.objects.annotate(volunteers__count=Count("volunteer")).filter(template=template, edition=Edition.get_current()).order_by('date', 'start_time', 'end_time')
     response = HttpResponse(content_type='text/csv')
     filename = "schedule_%s.csv" % template.name
-    response['Content-Disposition'] = 'attachment; filename=%s' % filename
+    response['Content-Disposition'] = 'attachment; filename="%s"' % filename.replace('"', '_')
 
     writer = csv.writer(response)
     writer.writerow(['Task', 'Volunteers', 'Day', 'Start', 'End', 'Documentation', 'Volunteer', 'Nick', 'Email', 'Mobile', 'Matrix_id'])
@@ -1162,7 +1162,7 @@ def task_signin_token(request, token):
 
 def task_signout_token(request, token):
     """Token-based sign-out (no login required). Used from email links."""
-    attendance = get_object_or_404(TaskAttendance, signin_token=token)
+    attendance = get_object_or_404(TaskAttendance, signout_token=token)
     task = attendance.volunteer_task.task
 
     if not attendance.signed_in_at:
