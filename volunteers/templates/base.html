@@ -71,12 +71,13 @@
 
   <!-- Navigation -->
   <nav aria-label="Main navigation" class="bg-fosdem dark:bg-fosdem-dark shadow-lg relative z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+    <div class="px-4 sm:px-6">
+      <div class="flex items-center justify-between h-14">
 
         <!-- Logo -->
         <div class="flex-shrink-0">
-          <a href="{% url 'promo' %}" class="text-white font-bold text-xl tracking-wide hover:text-pink-200 transition-colors">
+          <a href="{% url 'promo' %}" class="flex items-center gap-3 text-white font-bold text-xl tracking-wide hover:text-pink-200 transition-colors">
+            <img src="{% static 'images/FOSDEM-cog.svg' %}" alt="" aria-hidden="true" class="h-10 w-10 brightness-0 invert">
             FOSDEM <span class="font-light">Volunteers</span>
           </a>
         </div>
