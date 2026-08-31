@@ -4,18 +4,19 @@
 {% block content %}
 <div class="max-w-2xl mx-auto space-y-6">
 
-  <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
+  <nav aria-label="{% trans 'Profile sections' %}" class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-dm-border pb-2">
     <a href="{% url 'userena_profile_detail' user.username %}"
-       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "View profile" %}</a>
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "View profile" %}</a>
     <a href="{% url 'userena_profile_edit' user.username %}"
+       aria-current="page"
        class="px-4 py-2 rounded-t-lg text-sm font-medium bg-fosdem text-white">{% trans "Edit details" %}</a>
     <a href="{% url 'userena_password_change' %}"
-       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "Change password" %}</a>
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "Change password" %}</a>
     <a href="{% url 'userena_email_change' %}"
-       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "Change email" %}</a>
-  </div>
+       class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "Change email" %}</a>
+  </nav>
 
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6">
     <div class="flex justify-center mb-6">
       <img src="{{ profile.get_mugshot_url }}" alt="Current profile photo"
            class="w-24 h-24 rounded-full object-cover ring-2 ring-fosdem" />
@@ -26,12 +27,13 @@
       <div>
         {% if field.name == 'spoken_languages' %}
         {# Searchable multi-select for languages #}
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
-        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
-        <input type="text" id="lang-search" placeholder="Filter languages…"
-               class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mb-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem text-sm" />
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{{ field.label }}</label>
+        {% if field.help_text %}<p class="text-gray-600 dark:text-dm-muted text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        <label for="lang-search-filter" class="sr-only">{% trans "Filter languages" %}</label>
+        <input type="text" id="lang-search-filter" placeholder="Filter languages…"
+               class="w-full border border-gray-300 dark:border-dm-border rounded-lg px-3 py-2 mb-1 bg-white dark:bg-dm-nav text-gray-900 dark:text-dm-text focus:outline-none focus:ring-2 focus:ring-fosdem text-sm" />
         <select name="{{ field.html_name }}" id="{{ field.id_for_label }}" multiple size="8"
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem text-sm">
+                class="w-full border border-gray-300 dark:border-dm-border rounded-lg bg-white dark:bg-dm-nav text-gray-900 dark:text-dm-text focus:outline-none focus:ring-2 focus:ring-fosdem text-sm">
           {% for choice_val, choice_label in field.field.choices %}
           <option value="{{ choice_val }}"
             {% if choice_val in field.value %}selected{% endif %}>
@@ -41,7 +43,7 @@
         </select>
         <script>
           (function(){
-            var inp = document.getElementById('lang-search');
+            var inp = document.getElementById('lang-search-filter');
             var sel = document.getElementById('{{ field.id_for_label }}');
             var opts = Array.from(sel.options);
             inp.addEventListener('input', function(){
@@ -54,17 +56,17 @@
         </script>
         {% elif field.name == 'mobile_nbr' %}
         {# Phone number with + prefix mask #}
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{{ field.label }}</label>
         {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
-        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-dm-muted text-xs mb-1">{{ field.help_text }}</p>{% endif %}
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium select-none pointer-events-none">+</span>
+          <span aria-hidden="true" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dm-muted font-medium select-none pointer-events-none">+</span>
           <input type="tel" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
                  value="{{ field.value|default:'' }}" maxlength="30"
                  placeholder="32123456789"
-                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-7 pr-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem">
+                 class="w-full border border-gray-300 dark:border-dm-border rounded-lg pl-7 pr-3 py-2 bg-white dark:bg-dm-nav text-gray-900 dark:text-dm-text focus:outline-none focus:ring-2 focus:ring-fosdem">
         </div>
-        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">International format required (e.g. +32123456789)</p>
+        <p class="text-gray-500 dark:text-dm-muted text-xs mt-1">International format required (e.g. +32123456789)</p>
         <script>
           (function(){
             var inp = document.getElementById('{{ field.id_for_label }}');
@@ -79,17 +81,17 @@
         </script>
         {% elif field.name == 'matrix_id' %}
         {# Matrix ID with @:server mask #}
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{{ field.label }}</label>
         {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
-        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-dm-muted text-xs mb-1">{{ field.help_text }}</p>{% endif %}
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium select-none pointer-events-none">@</span>
+          <span aria-hidden="true" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dm-muted font-medium select-none pointer-events-none">@</span>
           <input type="text" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
                  value="{{ field.value|default:'' }}" maxlength="255"
                  placeholder="username:matrix.org"
-                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-7 pr-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem">
+                 class="w-full border border-gray-300 dark:border-dm-border rounded-lg pl-7 pr-3 py-2 bg-white dark:bg-dm-nav text-gray-900 dark:text-dm-text focus:outline-none focus:ring-2 focus:ring-fosdem">
         </div>
-        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">Format: @username:homeserver.tld (e.g. @yourname:matrix.org)</p>
+        <p class="text-gray-500 dark:text-dm-muted text-xs mt-1">Format: @username:homeserver.tld (e.g. @yourname:matrix.org)</p>
         <script>
           (function(){
             var inp = document.getElementById('{{ field.id_for_label }}');
@@ -104,9 +106,9 @@
         </script>
         {% elif field.name == 'pronouns' %}
         {# Text input with datalist suggestions #}
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{{ field.label }}</label>
         {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
-        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-dm-muted text-xs mb-1">{{ field.help_text }}</p>{% endif %}
         <datalist id="pronouns-suggestions">
           <option value="she/her">
           <option value="he/him">
@@ -119,29 +121,29 @@
                value="{{ field.value|default:'' }}" maxlength="50"
                list="pronouns-suggestions" autocomplete="off"
                placeholder="e.g. she/her, he/him, they/them"
-               class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem">
+               class="w-full border border-gray-300 dark:border-dm-border rounded-lg px-3 py-2 bg-white dark:bg-dm-nav text-gray-900 dark:text-dm-text focus:outline-none focus:ring-2 focus:ring-fosdem">
         {% elif field.name == 'mugshot' %}
         {# Mugshot file input with clear checkbox inline #}
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{{ field.label }}</label>
         {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
-        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        {% if field.help_text %}<p class="text-gray-500 dark:text-dm-muted text-xs mb-1">{{ field.help_text }}</p>{% endif %}
         {% if field.value %}
-        <div class="flex items-center gap-2 mb-2 text-sm text-gray-600 dark:text-gray-400">
+        <div class="flex items-center gap-2 mb-2 text-sm text-gray-600 dark:text-dm-muted">
           <span>{% trans "Current file:" %} {{ field.value }}</span>
         </div>
         <div class="flex items-center gap-2 mb-2">
           <input type="checkbox" name="{{ field.html_name }}-clear" id="{{ field.html_name }}-clear_id"
-                 class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-fosdem focus:ring-fosdem">
-          <label for="{{ field.html_name }}-clear_id" class="text-sm text-gray-700 dark:text-gray-300">{% trans "Clear" %}</label>
+                 class="w-4 h-4 rounded border-gray-300 dark:border-dm-border text-fosdem focus:ring-fosdem">
+          <label for="{{ field.html_name }}-clear_id" class="text-sm text-gray-700 dark:text-dm-text">{% trans "Clear" %}</label>
         </div>
         {% endif %}
         <input type="file" name="{{ field.html_name }}" id="{{ field.id_for_label }}" accept="image/*"
-               class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-fosdem text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-fosdem file:text-white hover:file:bg-fosdem-dark">
+               class="w-full border border-gray-300 dark:border-dm-border rounded-lg px-3 py-2 bg-white dark:bg-dm-nav text-gray-900 dark:text-dm-text focus:outline-none focus:ring-2 focus:ring-fosdem text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-fosdem file:text-white hover:file:bg-fosdem-dark">
         {% else %}
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{{ field.label }}</label>
         {% if field.errors %}<p class="text-red-600 dark:text-red-400 text-xs mb-1">{{ field.errors|striptags }}</p>{% endif %}
-        {% if field.help_text %}<p class="text-gray-500 dark:text-gray-400 text-xs mb-1">{{ field.help_text }}</p>{% endif %}
-        <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-gray-600 [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-gray-700 [&_input]:text-gray-900 [&_input]:dark:text-white [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem [&_textarea]:w-full [&_textarea]:border [&_textarea]:border-gray-300 [&_textarea]:dark:border-gray-600 [&_textarea]:rounded-lg [&_textarea]:px-3 [&_textarea]:py-2 [&_textarea]:bg-white [&_textarea]:dark:bg-gray-700 [&_textarea]:text-gray-900 [&_textarea]:dark:text-white [&_textarea]:focus:outline-none [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-fosdem [&_select]:w-full [&_select]:border [&_select]:border-gray-300 [&_select]:dark:border-gray-600 [&_select]:rounded-lg [&_select]:px-3 [&_select]:py-2 [&_select]:bg-white [&_select]:dark:bg-gray-700 [&_select]:text-gray-900 [&_select]:dark:text-white [&_select]:focus:outline-none [&_select]:focus:ring-2 [&_select]:focus:ring-fosdem">{{ field }}</div>
+        {% if field.help_text %}<p class="text-gray-500 dark:text-dm-muted text-xs mb-1">{{ field.help_text }}</p>{% endif %}
+        <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-dm-border [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-dm-nav [&_input]:text-gray-900 [&_input]:dark:text-dm-text [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem [&_textarea]:w-full [&_textarea]:border [&_textarea]:border-gray-300 [&_textarea]:dark:border-dm-border [&_textarea]:rounded-lg [&_textarea]:px-3 [&_textarea]:py-2 [&_textarea]:bg-white [&_textarea]:dark:bg-dm-nav [&_textarea]:text-gray-900 [&_textarea]:dark:text-dm-text [&_textarea]:focus:outline-none [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-fosdem [&_select]:w-full [&_select]:border [&_select]:border-gray-300 [&_select]:dark:border-dm-border [&_select]:rounded-lg [&_select]:px-3 [&_select]:py-2 [&_select]:bg-white [&_select]:dark:bg-dm-nav [&_select]:text-gray-900 [&_select]:dark:text-dm-text [&_select]:focus:outline-none [&_select]:focus:ring-2 [&_select]:focus:ring-fosdem">{{ field }}</div>
         {% endif %}
       </div>
       {% endfor %}

@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Sign In" %} — FOSDEM Volunteers{% endblock %}
+{% block title %}{% trans "Log In" %} — FOSDEM Volunteers{% endblock %}
 {% block content %}
 <div class="max-w-md mx-auto">
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">{% trans "Sign In" %}</h1>
+  <div class="bg-white dark:bg-dm-soft rounded-xl shadow-lg p-8">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-dm-text mb-6 text-center">{% trans "Log In" %}</h1>
     <form action="" method="post" class="space-y-4">
       {% csrf_token %}
       {{ form.non_field_errors }}
       {% for field in form %}
       <div>
         {% if field.name == 'remember_me' %}
-        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-dm-text">
           {{ field }} {{ field.label }}
         </label>
         {% else %}
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-dm-text mb-1">{{ field.label }}</label>
         {{ field.errors }}
-        <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-gray-600 [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-gray-700 [&_input]:text-gray-900 [&_input]:dark:text-white [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem">{{ field }}</div>
+        <div class="[&_input]:w-full [&_input]:border [&_input]:border-gray-300 [&_input]:dark:border-dm-border [&_input]:rounded-lg [&_input]:px-3 [&_input]:py-2 [&_input]:bg-white [&_input]:dark:bg-dm-nav [&_input]:text-gray-900 [&_input]:dark:text-dm-text [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-fosdem">{{ field }}</div>
         {% endif %}
       </div>
       {% endfor %}
       {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
-      <button type="submit" class="w-full bg-fosdem hover:bg-fosdem-dark text-white font-semibold py-2.5 rounded-lg transition-colors">{% trans "Sign In" %}</button>
+      <button type="submit" class="w-full bg-fosdem hover:bg-fosdem-dark text-white font-semibold py-2.5 rounded-lg transition-colors">{% trans "Log In" %}</button>
     </form>
-    <p class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+    <p class="mt-4 text-center text-sm text-gray-500 dark:text-dm-muted">
       <a href="{% url 'userena_password_reset' %}" class="text-fosdem hover:underline">{% trans "Forgot your password?" %}</a>
     </p>
   </div>

@@ -5,19 +5,19 @@
 
 {% block content %}
 <div class="max-w-lg mx-auto">
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center">
-    <div class="text-5xl mb-4">✅</div>
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{% trans "You are now signed in!" %}</h1>
-    <div class="space-y-2 text-gray-600 dark:text-gray-300">
+  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-8 text-center">
+    <div aria-hidden="true" class="text-5xl mb-4">✅</div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-dm-text mb-3">{% trans "You are now checked in!" %}</h1>
+    <div class="space-y-2 text-gray-600 dark:text-dm-text">
       <p class="text-lg font-semibold text-fosdem">{{ task.name }}</p>
       <p>{{ task.date|date:"l, F j" }} &middot; {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</p>
       {% if task.location %}
-      <p>📍 {{ task.location }}</p>
+      <p><span aria-hidden="true">📍</span> {{ task.location }}</p>
       {% endif %}
     </div>
-    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-      <p class="text-sm text-gray-500 dark:text-gray-400">
-        {% trans "You will be automatically signed out when the task ends. If you need to leave early, use the sign-out link sent to your email." %}
+    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dm-border">
+      <p class="text-sm text-gray-500 dark:text-dm-muted">
+        {% trans "You will be automatically checked out when the task ends. If you need to leave early, use the check-out link sent to your email." %}
       </p>
     </div>
     {% if user.is_authenticated %}

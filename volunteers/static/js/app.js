@@ -20,22 +20,31 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     // ── Theme Toggle ──────────────────────────────────────────────────────
-    const toggleBtn = document.getElementById('theme-toggle');
-    if (toggleBtn) {
-      const updateIcon = (theme) => {
-        toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-        toggleBtn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
-      };
-      updateIcon(localStorage.getItem('theme') || 'light');
+    const toggleBtns = [
+      document.getElementById('theme-toggle-desktop'),
+      document.getElementById('theme-toggle-mobile'),
+    ].filter(Boolean);
 
-      toggleBtn.addEventListener('click', function () {
+    const updateIcons = (theme) => {
+      const isDark = theme === 'dark';
+      const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+      toggleBtns.forEach((btn) => {
+        const icon = btn.querySelector('[aria-hidden]');
+        if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+        btn.setAttribute('aria-label', label);
+      });
+    };
+    updateIcons(localStorage.getItem('theme') || 'light');
+
+    toggleBtns.forEach((btn) => {
+      btn.addEventListener('click', function () {
         const current = html.classList.contains('dark') ? 'dark' : 'light';
         const next = current === 'dark' ? 'light' : 'dark';
         applyTheme(next);
         localStorage.setItem('theme', next);
-        updateIcon(next);
+        updateIcons(next);
       });
-    }
+    });
 
     // ── Mobile Menu ───────────────────────────────────────────────────────
     const menuBtn = document.getElementById('mobile-menu-btn');
@@ -45,6 +54,8 @@
         const isOpen = !mobileMenu.classList.contains('hidden');
         mobileMenu.classList.toggle('hidden', isOpen);
         menuBtn.setAttribute('aria-expanded', String(!isOpen));
+        const srLabel = menuBtn.querySelector('.sr-only');
+        if (srLabel) srLabel.textContent = isOpen ? 'Open menu' : 'Close menu';
       });
     }
 
@@ -57,11 +68,19 @@
 
     // ── Collapsible sections ──────────────────────────────────────────────
     document.querySelectorAll('[data-collapse-toggle]').forEach(function (btn) {
+      // Set initial aria-expanded based on whether the target is currently hidden
+      const initialTargetId = btn.getAttribute('data-collapse-toggle');
+      const initialTarget = document.getElementById(initialTargetId);
+      if (initialTarget) {
+        btn.setAttribute('aria-expanded', String(!initialTarget.classList.contains('hidden')));
+        btn.setAttribute('aria-controls', initialTargetId);
+      }
       btn.addEventListener('click', function () {
         const targetId = btn.getAttribute('data-collapse-toggle');
         const target = document.getElementById(targetId);
         if (!target) return;
         const hidden = target.classList.toggle('hidden');
+        btn.setAttribute('aria-expanded', String(!hidden));
         const icon = btn.querySelector('[data-collapse-icon]');
         if (icon) icon.textContent = hidden ? '▶' : '▼';
       });
@@ -92,13 +111,26 @@
     if (adminBtn && adminMenu) {
       adminBtn.addEventListener('click', function (e) {
         e.stopPropagation();
+        const expanding = adminMenu.classList.contains('hidden');
         adminMenu.classList.toggle('hidden');
+        adminBtn.setAttribute('aria-expanded', String(expanding));
       });
       // Close dropdown when clicking outside
       document.addEventListener('click', function (e) {
         if (!adminMenu.classList.contains('hidden') && !adminMenu.contains(e.target)) {
           adminMenu.classList.add('hidden');
+          adminBtn.setAttribute('aria-expanded', 'false');
         }
+      });
+      // Close on Escape
+      [adminBtn, adminMenu].forEach(function(el) {
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            adminMenu.classList.add('hidden');
+            adminBtn.setAttribute('aria-expanded', 'false');
+            adminBtn.focus();
+          }
+        });
       });
     }
   });

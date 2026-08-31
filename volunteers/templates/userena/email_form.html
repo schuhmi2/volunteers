@@ -3,14 +3,14 @@
 {% block title %}{% trans "Change Email" %} — FOSDEM Volunteers{% endblock %}
 {% block content %}
 <div class="max-w-2xl mx-auto space-y-6">
-  <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
-    <a href="{% url 'userena_profile_detail' user.username %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "View profile" %}</a>
-    <a href="{% url 'userena_profile_edit' user.username %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "Edit details" %}</a>
-    <a href="{% url 'userena_password_change' %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-fosdem">{% trans "Change password" %}</a>
-    <a href="{% url 'userena_email_change' %}" class="px-4 py-2 rounded-t-lg text-sm font-medium bg-fosdem text-white">{% trans "Change email" %}</a>
-  </div>
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-4">{% trans "Change Email Address" %}</h1>
+  <nav aria-label="{% trans 'Profile sections' %}" class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-dm-border pb-2">
+    <a href="{% url 'userena_profile_detail' user.username %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "View profile" %}</a>
+    <a href="{% url 'userena_profile_edit' user.username %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "Edit details" %}</a>
+    <a href="{% url 'userena_password_change' %}" class="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-600 dark:text-dm-text hover:text-fosdem">{% trans "Change password" %}</a>
+    <a href="{% url 'userena_email_change' %}" aria-current="page" class="px-4 py-2 rounded-t-lg text-sm font-medium bg-fosdem text-white">{% trans "Change email" %}</a>
+  </nav>
+  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6">
+    <h1 class="text-xl font-bold text-gray-900 dark:text-dm-text mb-4">{% trans "Change Email Address" %}</h1>
     <form method="post" class="space-y-4">
       {% csrf_token %}
       {{ form.as_p }}

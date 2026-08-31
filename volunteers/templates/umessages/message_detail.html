@@ -4,7 +4,7 @@
 {% block content %}
 <div class="max-w-3xl mx-auto space-y-6">
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Conversation with {{ recipient }}</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-dm-text">Conversation with {{ recipient }}</h1>
     <a href="{% url 'userena_umessages_compose_to' recipient.username %}"
        class="bg-fosdem hover:bg-fosdem-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
       {% trans "Reply" %}
@@ -14,11 +14,12 @@
   <div class="space-y-4">
     {% for message in message_list %}
     <div class="flex gap-3 {% if message.sender == user %}flex-row-reverse{% endif %}">
-      <img src="{{ message.sender.profile.get_mugshot_url }}" alt=""
+      <img src="{{ message.sender.profile.get_mugshot_url }}"
+           alt="{{ message.sender.get_full_name|default:message.sender.username }}"
            class="w-10 h-10 rounded-full object-cover flex-shrink-0" />
       <div class="max-w-lg {% if message.sender == user %}items-end{% endif %} flex flex-col">
         <div class="rounded-xl px-4 py-3 text-sm
-          {% if message.sender == user %}bg-fosdem text-white{% else %}bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow{% endif %}">
+          {% if message.sender == user %}bg-fosdem text-white{% else %}bg-white dark:bg-dm-soft text-gray-800 dark:text-dm-text shadow{% endif %}">
           {{ message }}
         </div>
         <p class="text-xs text-gray-400 mt-1 px-1">{{ message.sent_at }}</p>

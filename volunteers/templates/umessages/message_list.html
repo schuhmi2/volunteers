@@ -5,7 +5,7 @@
 <div class="max-w-3xl mx-auto space-y-6">
   {% get_unread_message_count_for user as unread_message_count %}
   <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-dm-text">
       Messages
       {% if unread_message_count %}<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-fosdem text-white">{{ unread_message_count }}</span>{% endif %}
     </h1>
@@ -15,33 +15,33 @@
     </a>
   </div>
 
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow divide-y divide-gray-100 dark:divide-gray-700">
+  <div class="bg-white dark:bg-dm-soft rounded-xl shadow divide-y divide-gray-100 dark:divide-gray-700">
     {% for message in message_list %}
     {% if message.from_user == user %}
     {% get_unread_message_count_between user and message.to_user as unread_between_count %}
     <a href="{% url 'userena_umessages_detail' message.to_user.username %}"
-       class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+       class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-dm-hover transition-colors">
       <img src="{{ message.to_user.profile.get_mugshot_url }}" alt="" class="w-12 h-12 rounded-full object-cover" />
       <div class="flex-1 min-w-0">
-        <p class="font-semibold text-gray-900 dark:text-white">{{ message.to_user }}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ message.latest_message }}</p>
+        <p class="font-semibold text-gray-900 dark:text-dm-text">{{ message.to_user }}</p>
+        <p class="text-sm text-gray-500 dark:text-dm-muted truncate">{{ message.latest_message }}</p>
       </div>
       {% if unread_between_count %}<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-fosdem text-white">{{ unread_between_count }}</span>{% endif %}
     </a>
     {% else %}
     {% get_unread_message_count_between user and message.from_user as unread_between_count %}
     <a href="{% url 'userena_umessages_detail' message.from_user.username %}"
-       class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+       class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-dm-hover transition-colors">
       <img src="{{ message.from_user.profile.get_mugshot_url }}" alt="" class="w-12 h-12 rounded-full object-cover" />
       <div class="flex-1 min-w-0">
-        <p class="font-semibold text-gray-900 dark:text-white">{{ message.from_user }}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ message.latest_message }}</p>
+        <p class="font-semibold text-gray-900 dark:text-dm-text">{{ message.from_user }}</p>
+        <p class="text-sm text-gray-500 dark:text-dm-muted truncate">{{ message.latest_message }}</p>
       </div>
       {% if unread_between_count %}<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-fosdem text-white">{{ unread_between_count }}</span>{% endif %}
     </a>
     {% endif %}
     {% empty %}
-    <p class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No messages yet.</p>
+    <p class="px-6 py-8 text-center text-gray-500 dark:text-dm-muted">No messages yet.</p>
     {% endfor %}
   </div>
 </div>

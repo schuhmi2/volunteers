@@ -6,11 +6,11 @@
 
 {% block content %}
 <div class="space-y-6">
-  <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Task Categories" %}</h1>
+  <h1 class="text-3xl font-bold text-gray-900 dark:text-dm-text">{% trans "Task Categories" %}</h1>
 
   {% for category, templates in categories.items %}
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">{{ category.name }}</h2>
+  <div class="bg-white dark:bg-dm-soft rounded-xl shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-dm-text mb-3">{{ category.name }}</h2>
     <ul class="space-y-2">
       {% for template in templates %}
       <li>

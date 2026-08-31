@@ -1118,7 +1118,7 @@ def task_signin_token(request, token):
 
     if not edition.enable_task_signin:
         return render(request, 'volunteers/signin_error.html', {
-            'error': 'Task sign-in is not enabled for this edition.'
+            'error': 'Task check-in is not enabled for this edition.'
         })
 
     now = timezone.now()
@@ -1128,7 +1128,7 @@ def task_signin_token(request, token):
 
     if now < earliest_signin:
         return render(request, 'volunteers/signin_error.html', {
-            'error': f'Too early to sign in. Sign-in opens at {(task_start - timedelta(minutes=15)).strftime("%H:%M")}.',
+            'error': f'Too early to check in. Check-in opens at {(task_start - timedelta(minutes=15)).strftime("%H:%M")}.',
             'task': task,
         })
 
@@ -1140,7 +1140,7 @@ def task_signin_token(request, token):
 
     if attendance.signed_in_at:
         return render(request, 'volunteers/signin_error.html', {
-            'error': 'You have already signed in for this task.',
+            'error': 'You have already checked in for this task.',
             'task': task,
         })
 
@@ -1167,13 +1167,13 @@ def task_signout_token(request, token):
 
     if not attendance.signed_in_at:
         return render(request, 'volunteers/signin_error.html', {
-            'error': 'You have not signed in for this task yet.',
+            'error': 'You have not checked in for this task yet.',
             'task': task,
         })
 
     if attendance.signed_out_at:
         return render(request, 'volunteers/signin_error.html', {
-            'error': 'You have already signed out of this task.',
+            'error': 'You have already checked out of this task.',
             'task': task,
         })
 
@@ -1196,7 +1196,7 @@ def task_signin(request, vt_id):
 
     if not edition.enable_task_signin:
         return render(request, 'volunteers/signin_error.html', {
-            'error': 'Task sign-in is not enabled for this edition.'
+            'error': 'Task check-in is not enabled for this edition.'
         })
 
     # Get or create attendance record
@@ -1209,7 +1209,7 @@ def task_signin(request, vt_id):
 
     if now < earliest_signin:
         return render(request, 'volunteers/signin_error.html', {
-            'error': f'Too early to sign in. Sign-in opens at {(task_start - timedelta(minutes=15)).strftime("%H:%M")}.',
+            'error': f'Too early to check in. Check-in opens at {(task_start - timedelta(minutes=15)).strftime("%H:%M")}.',
             'task': task,
         })
 
@@ -1221,7 +1221,7 @@ def task_signin(request, vt_id):
 
     if attendance.signed_in_at:
         return render(request, 'volunteers/signin_error.html', {
-            'error': 'You have already signed in for this task.',
+            'error': 'You have already checked in for this task.',
             'task': task,
         })
 
@@ -1235,9 +1235,9 @@ def task_signin(request, vt_id):
             attendance.signout_link_sent_at = now
             attendance.save(update_fields=['signout_link_sent_at'])
         else:
-            messages.warning(request, _('You are signed in, but the confirmation email could not be sent.'))
+            messages.warning(request, _('You are checked in, but the confirmation email could not be sent.'))
 
-    messages.success(request, _('You are now signed in for "%s".') % task.name)
+    messages.success(request, _('You are now checked in for "%s".') % task.name)
     return render(request, 'volunteers/signin_confirm.html', {
         'task': task,
         'attendance': attendance,
@@ -1255,20 +1255,20 @@ def task_signout(request, vt_id):
 
     if not attendance.signed_in_at:
         return render(request, 'volunteers/signin_error.html', {
-            'error': 'You have not signed in for this task yet.',
+            'error': 'You have not checked in for this task yet.',
             'task': task,
         })
 
     if attendance.signed_out_at:
         return render(request, 'volunteers/signin_error.html', {
-            'error': 'You have already signed out of this task.',
+            'error': 'You have already checked out of this task.',
             'task': task,
         })
 
     attendance.signed_out_at = timezone.now()
     attendance.save(update_fields=['signed_out_at'])
 
-    messages.success(request, _('You have signed out of "%s".') % task.name)
+    messages.success(request, _('You have checked out of "%s".') % task.name)
     return render(request, 'volunteers/signout_confirm.html', {
         'task': task,
         'attendance': attendance,
@@ -1286,7 +1286,7 @@ def attendance_dashboard(request):
         return redirect('task_list')
 
     if not edition.enable_task_signin:
-        messages.warning(request, _('Task sign-in is not enabled for this edition.'))
+        messages.warning(request, _('Task check-in is not enabled for this edition.'))
         return redirect('task_list')
 
     tasks = (
@@ -1337,7 +1337,7 @@ def attendance_task_detail(request, task_id):
     edition = task.edition
 
     if not edition.enable_task_signin:
-        messages.warning(request, _('Task sign-in is not enabled for this edition.'))
+        messages.warning(request, _('Task check-in is not enabled for this edition.'))
         return redirect('task_list')
 
     volunteer_tasks = (
@@ -1399,12 +1399,12 @@ def attendance_mark(request):
         attendance.signed_in_at = now
         attendance.manually_marked_by = request.user
         attendance.save(update_fields=['signed_in_at', 'manually_marked_by'])
-        messages.success(request, _('Manually signed in %s.') % vt.volunteer.user.get_full_name())
+        messages.success(request, _('Manually checked in %s.') % vt.volunteer.user.get_full_name())
     elif action == 'signout':
         attendance.signed_out_at = now
         attendance.manually_marked_by = request.user
         attendance.save(update_fields=['signed_out_at', 'manually_marked_by'])
-        messages.success(request, _('Manually signed out %s.') % vt.volunteer.user.get_full_name())
+        messages.success(request, _('Manually checked out %s.') % vt.volunteer.user.get_full_name())
 
     return redirect('attendance_task_detail', task_id=vt.task.id)
 
