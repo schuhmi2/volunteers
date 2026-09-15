@@ -24,12 +24,12 @@
         <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for vt in pending %}
           <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover">
-            <td class="px-4 py-3">
-              <div class="font-medium text-lm-text dark:text-dm-text">{{ vt.volunteer.user.get_full_name }}</div>
-              <div class="text-xs text-lm-subtle dark:text-dm-muted">{{ vt.volunteer.user.username }}</div>
+            <td class="px-4 py-3 min-w-0 max-w-xs">
+              <div class="font-medium text-lm-text dark:text-dm-text truncate" title="{{ vt.volunteer.user.get_full_name }}">{{ vt.volunteer.user.get_full_name }}</div>
+              <div class="text-xs text-lm-subtle dark:text-dm-muted truncate" title="{{ vt.volunteer.user.username }}">{{ vt.volunteer.user.username }}</div>
             </td>
-            <td class="px-4 py-3">
-              <a href="{% url 'task_detailed' vt.task.id %}" class="text-fosdem hover:underline">{{ vt.task.name }}</a>
+            <td class="px-4 py-3 min-w-0 max-w-xs">
+              <a href="{% url 'task_detailed' vt.task.id %}" class="text-fosdem hover:underline truncate block" title="{{ vt.task.name }}">{{ vt.task.name }}</a>
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-lm-muted dark:text-dm-text">
               {{ vt.task.date|date:"D d M" }}, {{ vt.task.start_time|time:"H:i" }}–{{ vt.task.end_time|time:"H:i" }}

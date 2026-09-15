@@ -8,8 +8,8 @@
   <div class="flex items-center justify-between flex-wrap gap-3">
     <div>
       <a href="{% url 'attendance_dashboard' %}" class="text-sm text-fosdem hover:underline">&larr; {% trans "Back to Dashboard" %}</a>
-      <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text mt-1">{{ task.name }}</h1>
-      <p class="text-lm-subtle dark:text-dm-muted text-sm">
+      <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text mt-1 truncate" title="{{ task.name }}">{{ task.name }}</h1>
+      <p class="text-lm-subtle dark:text-dm-muted text-sm truncate">
         {{ task.date|date:"l, F j" }} &middot; {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}
         {% if task.location %}&middot; <span aria-hidden="true">📍</span> {{ task.location }}{% endif %}
       </p>
@@ -43,9 +43,11 @@
         <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for item in volunteers_data %}
           <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors">
-            <td class="px-4 py-3 font-medium text-lm-text dark:text-dm-text">
-              {{ item.volunteer.user.first_name }} {{ item.volunteer.user.last_name }}
-              <span class="text-xs text-lm-subtle dark:text-dm-muted ml-1">({{ item.volunteer.user.username }})</span>
+            <td class="px-4 py-3 font-medium text-lm-text dark:text-dm-text min-w-0 max-w-xs">
+              <div class="flex items-baseline gap-1 min-w-0">
+                <span class="truncate" title="{{ item.volunteer.user.first_name }} {{ item.volunteer.user.last_name }}">{{ item.volunteer.user.first_name }} {{ item.volunteer.user.last_name }}</span>
+                <span class="text-xs text-lm-subtle dark:text-dm-muted flex-shrink-0">({{ item.volunteer.user.username }})</span>
+              </div>
             </td>
             <td class="px-4 py-3">
               {% if item.status == "active" %}

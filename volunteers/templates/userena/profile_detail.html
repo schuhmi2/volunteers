@@ -24,17 +24,18 @@
       <img src="{{ profile.get_mugshot_url }}" alt="Profile photo"
            class="w-24 h-24 rounded-full object-cover ring-2 ring-fosdem" />
     </div>
-    <div class="space-y-3 flex-1">
-      <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text">
+    <div class="space-y-3 flex-1 min-w-0">
+      <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text truncate"
+          title="{{ profile.user.username }}{% if profile.user.get_full_name %} ({{ profile.user.get_full_name }}){% endif %}">
         {{ profile.user.username }}
         {% if profile.user.get_full_name %}
         <span class="text-lm-subtle dark:text-dm-muted font-normal text-lg">({{ profile.user.get_full_name }})</span>
         {% endif %}
       </h1>
       {% if profile.about_me %}
-      <div>
+      <div class="min-w-0">
         <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "About" %}</span>
-        <p class="text-lm-muted dark:text-dm-text mt-1">{{ profile.about_me }}</p>
+        <p class="text-lm-muted dark:text-dm-text mt-1 break-words whitespace-pre-wrap max-h-48 overflow-y-auto pr-1">{{ profile.about_me }}</p>
       </div>
       {% endif %}
       {% if profile.tshirt_size and user.username == profile.user.username or profile.tshirt_size and user.is_staff %}
@@ -51,9 +52,9 @@
       {% endif %}
       {% with languages=profile.spoken_languages.all %}
       {% if languages %}
-      <div>
+      <div class="min-w-0">
         <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "Speaks" %}</span>
-        <p class="text-lm-muted dark:text-dm-text mt-1">
+        <p class="text-lm-muted dark:text-dm-text mt-1 flex flex-wrap gap-x-1 break-words max-h-24 overflow-y-auto pr-1">
           {% for lang in languages %}{{ lang.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </p>
       </div>
@@ -72,10 +73,10 @@
     <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-3">{% trans "Tasks this edition" %}</h2>
     <ul class="divide-y divide-lm-hair dark:divide-gray-700">
       {% for task in tasks %}
-      <li class="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-        <span class="text-sm font-medium text-lm-text dark:text-dm-text">{{ task.name }}</span>
+      <li class="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 min-w-0">
+        <span class="text-sm font-medium text-lm-text dark:text-dm-text truncate max-w-xs" title="{{ task.name }}">{{ task.name }}</span>
         <span class="text-xs text-lm-subtle dark:text-dm-muted">{{ task.date|date:"D d M" }} · {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</span>
-        {% if task.location %}<span class="text-xs text-lm-muted dark:text-dm-muted"><span aria-hidden="true">📍</span> {{ task.location }}</span>{% endif %}
+        {% if task.location %}<span class="text-xs text-lm-muted dark:text-dm-muted truncate max-w-[10rem]" title="{{ task.location }}"><span aria-hidden="true">📍</span> {{ task.location }}</span>{% endif %}
       </li>
       {% endfor %}
     </ul>
@@ -94,9 +95,9 @@
     <div class="space-y-3">
       {% for entry in history %}
       <details class="group border border-lm-border dark:border-dm-border rounded-lg">
-        <summary class="flex items-center justify-between cursor-pointer px-4 py-3 select-none hover:bg-lm-soft dark:hover:bg-dm-nav/50 rounded-lg">
-          <span class="font-medium text-lm-text dark:text-dm-text">{{ entry.edition.name }}</span>
-          <span class="flex items-center gap-2">
+        <summary class="flex items-center justify-between gap-3 cursor-pointer px-4 py-3 select-none hover:bg-lm-soft dark:hover:bg-dm-nav/50 rounded-lg">
+          <span class="font-medium text-lm-text dark:text-dm-text truncate max-w-xs" title="{{ entry.edition.name }}">{{ entry.edition.name }}</span>
+          <span class="flex items-center gap-2 flex-shrink-0">
             <span class="text-xs text-lm-subtle dark:text-dm-muted bg-lm-soft dark:bg-dm-nav px-2 py-0.5 rounded-full">
               {{ entry.tasks|length }} task{{ entry.tasks|length|pluralize }}
             </span>
@@ -107,10 +108,10 @@
         </summary>
         <ul class="divide-y divide-lm-hair dark:divide-gray-700 px-4 pb-3">
           {% for task in entry.tasks %}
-          <li class="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-            <span class="text-sm font-medium text-lm-text dark:text-dm-text">{{ task.name }}</span>
+          <li class="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 min-w-0">
+            <span class="text-sm font-medium text-lm-text dark:text-dm-text truncate max-w-xs" title="{{ task.name }}">{{ task.name }}</span>
             <span class="text-xs text-lm-subtle dark:text-dm-muted">{{ task.date|date:"D d M" }} · {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</span>
-            {% if task.location %}<span class="text-xs text-lm-muted dark:text-dm-muted"><span aria-hidden="true">📍</span> {{ task.location }}</span>{% endif %}
+            {% if task.location %}<span class="text-xs text-lm-muted dark:text-dm-muted truncate max-w-[10rem]" title="{{ task.location }}"><span aria-hidden="true">📍</span> {{ task.location }}</span>{% endif %}
           </li>
           {% endfor %}
         </ul>

@@ -175,7 +175,7 @@
   {% if messages %}
   <div aria-live="polite" aria-atomic="false" class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
     {% for message in messages %}
-    <div role="alert" class="flex items-start gap-3 rounded-lg px-4 py-3 text-sm font-medium
+    <div role="alert" class="flex items-start gap-3 rounded-lg px-4 py-3 text-sm font-medium min-w-0
       {% if message.tags == 'error' %}bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200
       {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200
       {% elif message.tags == 'success' %}bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200
@@ -186,7 +186,7 @@
         {% elif message.tags == 'success' %}✅
         {% else %}ℹ️{% endif %}
       </span>
-      <span class="flex-1">{{ message }}</span>
+      <span class="flex-1 min-w-0 truncate" title="{{ message }}">{{ message }}</span>
       <button data-dismiss-alert aria-label="Dismiss" class="ml-auto text-current opacity-70 hover:opacity-100 font-bold text-base leading-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-current rounded">&times;</button>
     </div>
     {% endfor %}

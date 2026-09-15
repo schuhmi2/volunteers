@@ -12,9 +12,9 @@
     <div class="flex items-center gap-3">
       {% if profile_user %}
       <img src="{{ volunteer.get_mugshot_url }}" alt="" class="w-10 h-10 rounded-full ring-2 ring-fosdem" />
-      <span class="font-semibold text-lm-text dark:text-dm-text">{{ profile_user.first_name }} {{ profile_user.last_name }}</span>
+      <span class="font-semibold text-lm-text dark:text-dm-text truncate min-w-0" title="{{ profile_user.first_name }} {{ profile_user.last_name }}">{{ profile_user.first_name }} {{ profile_user.last_name }}</span>
       {% else %}
-      <span class="font-semibold text-lm-text dark:text-dm-text">{{ user.first_name }} {{ user.last_name }}</span>
+      <span class="font-semibold text-lm-text dark:text-dm-text truncate min-w-0" title="{{ user.first_name }} {{ user.last_name }}">{{ user.first_name }} {{ user.last_name }}</span>
       {% endif %}
     </div>
   </div>
@@ -43,12 +43,30 @@
           {% for task in tasks %}
           <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors">
             <td class="px-4 py-3 whitespace-nowrap text-lm-muted dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
-            <td class="px-4 py-3 font-medium"><a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline">{{ task.name }}</a></td>
-            <td class="px-4 py-3 text-lm-muted dark:text-dm-text">
-              {% for volunteer in task.volunteer_set.all %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            <td class="px-4 py-3 font-medium min-w-0 max-w-xs"><a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline truncate block" title="{{ task.name }}">{{ task.name }}</a></td>
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-xs">
+              {% with attendees=task.volunteer_set.all %}
+              {% if attendees|length > 2 %}
+              <details class="group">
+                <summary class="cursor-pointer select-none text-sm font-medium text-lm-text dark:text-dm-text hover:text-fosdem inline-flex items-center gap-1">
+                  {{ attendees|length }} {% trans "attending" %}
+                  <svg aria-hidden="true" class="w-3 h-3 text-lm-subtle transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </summary>
+                <ul class="mt-1 space-y-0.5">
+                  {% for volunteer in attendees %}
+                  <li class="truncate" title="{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</li>
+                  {% endfor %}
+                </ul>
+              </details>
+              {% else %}
+              <span class="truncate block" title="{% for volunteer in attendees %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}">{% for volunteer in attendees %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+              {% endif %}
+              {% endwith %}
             </td>
-            <td class="px-4 py-3 text-lm-muted dark:text-dm-text">{{ task.talk }}</td>
-            <td class="px-4 py-3 text-lm-muted dark:text-dm-text">{{ task.location }}</td>
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-[10rem] truncate" title="{{ task.talk }}">{{ task.talk }}</td>
+            <td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-[10rem] truncate" title="{{ task.location }}">{{ task.location }}</td>
             {% if enable_task_signin %}
             <td class="px-4 py-3">
               {% with info=signin_available|get_item:task.id %}
@@ -94,7 +112,7 @@
     <h2 class="text-xl font-bold text-lm-text dark:text-dm-text">Task Descriptions</h2>
     {% for task in tasks %}
     <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-5">
-      <h3 class="text-lg font-semibold text-fosdem dark:text-fosdem-light mb-2">{{ task.name }}</h3>
+      <h3 class="text-lg font-semibold text-fosdem dark:text-fosdem-light mb-2 truncate" title="{{ task.name }}">{{ task.name }}</h3>
       <p class="text-lm-muted dark:text-dm-text text-sm">{{ task.description|linebreaksbr }}</p>
       {% if task.info_url %}
       <a href="{{ task.info_url }}" target="_blank" rel="noopener"
