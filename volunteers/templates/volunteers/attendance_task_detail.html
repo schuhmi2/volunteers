@@ -94,16 +94,30 @@
                   </button>
                 </form>
                 {% endif %}
-                {% if signin_matrix_enabled or signin_email_enabled %}
                 <form method="post" action="{% url 'summon_runner' %}" class="inline">
                   {% csrf_token %}
                   <input type="hidden" name="volunteer_id" value="{{ item.volunteer.id }}">
                   <input type="hidden" name="task_id" value="{{ task.id }}">
-                  <button type="submit" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors">
-                    <span aria-hidden="true">🏃</span> {% trans "Summon" %}
+                  <input type="hidden" name="method" value="email">
+                  <button type="submit"
+                          {% if not signin_email_enabled or not item.volunteer.user.email %}disabled{% endif %}
+                          title="{% if not signin_email_enabled %}{% trans 'Email notifications are not enabled.' %}{% elif not item.volunteer.user.email %}{% trans 'No email address configured for this volunteer.' %}{% else %}{% trans 'Summon by email' %}{% endif %}"
+                          class="px-2 py-1 text-xs rounded transition-colors {% if signin_email_enabled and item.volunteer.user.email %}bg-blue-600 hover:bg-blue-700 text-white{% else %}bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed{% endif %}">
+                    <span aria-hidden="true">✉️</span> {% trans "Email" %}
                   </button>
                 </form>
-                {% endif %}
+                <form method="post" action="{% url 'summon_runner' %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="volunteer_id" value="{{ item.volunteer.id }}">
+                  <input type="hidden" name="task_id" value="{{ task.id }}">
+                  <input type="hidden" name="method" value="matrix">
+                  <button type="submit"
+                          {% if not signin_matrix_enabled or not item.volunteer.matrix_id %}disabled{% endif %}
+                          title="{% if not signin_matrix_enabled %}{% trans 'Matrix notifications are not enabled.' %}{% elif not item.volunteer.matrix_id %}{% trans 'No Matrix ID configured for this volunteer.' %}{% else %}{% trans 'Summon by Matrix' %}{% endif %}"
+                          class="px-2 py-1 text-xs rounded transition-colors {% if signin_matrix_enabled and item.volunteer.matrix_id %}bg-blue-600 hover:bg-blue-700 text-white{% else %}bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed{% endif %}">
+                    <span aria-hidden="true">🏃</span> {% trans "Matrix" %}
+                  </button>
+                </form>
               </div>
             </td>
           </tr>

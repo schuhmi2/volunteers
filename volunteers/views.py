@@ -1530,24 +1530,38 @@ def attendance_assign_volunteer(request, task_id):
 
 @user_passes_test(lambda u: u.is_superuser)
 def summon_runner(request):
-    """POST: Send Matrix message or email to summon a runner. Requires SIGNIN_MATRIX_ENABLED or SIGNIN_EMAIL_ENABLED."""
+    """POST: Send a Matrix message or email to summon a runner.
+
+    Requires 'method' (matrix|email) plus the corresponding config/setting
+    and, for matrix, the volunteer having a matrix_id configured.
+    """
     if request.method != 'POST':
         return redirect('attendance_dashboard')
 
     volunteer_id = request.POST.get('volunteer_id')
     task_id = request.POST.get('task_id')
+    method = request.POST.get('method')
     volunteer = get_object_or_404(Volunteer, id=volunteer_id)
     task = get_object_or_404(Task, id=task_id)
 
     sent = False
 
-    # Try Matrix first
-    if getattr(settings, 'SIGNIN_MATRIX_ENABLED', False):
+    if method == 'matrix':
+        if not getattr(settings, 'SIGNIN_MATRIX_ENABLED', False):
+            messages.error(request, _('Matrix notifications are not enabled.'))
+            return redirect('attendance_task_detail', task_id=task.id)
+        if not volunteer.matrix_id:
+            messages.error(request, _('%s has no Matrix ID configured.') % volunteer.user.get_full_name())
+            return redirect('attendance_task_detail', task_id=task.id)
         from .matrix_bot import summon_runner_matrix
         sent = summon_runner_matrix(volunteer, task.location or task.name)
-
-    # Fallback to email
-    if not sent and getattr(settings, 'SIGNIN_EMAIL_ENABLED', False) and volunteer.user.email:
+    elif method == 'email':
+        if not getattr(settings, 'SIGNIN_EMAIL_ENABLED', False):
+            messages.error(request, _('Email notifications are not enabled.'))
+            return redirect('attendance_task_detail', task_id=task.id)
+        if not volunteer.user.email:
+            messages.error(request, _('%s has no email address configured.') % volunteer.user.get_full_name())
+            return redirect('attendance_task_detail', task_id=task.id)
         try:
             from django.core.mail import EmailMultiAlternatives
             subject = f'[FOSDEM Volunteers] You are needed: {task.name}'
@@ -1567,13 +1581,17 @@ def summon_runner(request):
             sent = True
         except Exception:
             messages.warning(request, _('Email notification could not be sent.'))
+    else:
+        messages.error(request, _('Unknown summon method.'))
+        return redirect('attendance_task_detail', task_id=task.id)
 
     if sent:
         messages.success(request, _('Runner summoned: %s') % volunteer.user.get_full_name())
     else:
-        messages.error(request, _('Could not summon runner. No Matrix or email available.'))
+        messages.error(request, _('Could not summon runner.'))
 
     return redirect('attendance_task_detail', task_id=task.id)
+
 
 
 @user_passes_test(lambda u: u.is_superuser)
