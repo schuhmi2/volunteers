@@ -57,7 +57,7 @@
               </td>
               <td class="px-3 py-2 whitespace-nowrap text-lm-muted dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
               <td class="px-3 py-2">
-                <span class="task-slots inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                <span class="task-slots inline-flex items-center justify-center w-14 px-2 py-0.5 rounded text-xs font-medium
                   {% if task.status == 'OK' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
                   {% elif task.status == 'FULL' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
                   {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}"
@@ -168,7 +168,7 @@
                 {{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}
               </td>
               <td class="px-4 py-2.5">
-                <span class="task-slots inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                <span class="task-slots inline-flex items-center justify-center w-14 px-2 py-0.5 rounded text-xs font-medium
                   {% if task.status_color == 'green' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
                   {% elif task.status_color == 'blue' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
                   {% elif task.status_color == 'red' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
