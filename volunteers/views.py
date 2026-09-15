@@ -72,6 +72,13 @@ def talk_detailed(request, talk_id):
 def task_detailed(request, task_id):
     task = get_object_or_404(Task, id=task_id)
     context = {'task': task}
+    # Only admins can see the named list of volunteers on this task; everyone
+    # else only sees a count (see template). This matches the privacy policy's
+    # "current-edition tasks visible only to self + admin" rule.
+    can_view_volunteer_names = bool(
+        request.user.is_authenticated and request.user.is_superuser
+    )
+    context['can_view_volunteer_names'] = can_view_volunteer_names
     if request.user.is_authenticated and request.user.is_superuser:
         # Provide list of all volunteers for admin assignment dropdown
         assigned_volunteer_ids = task.volunteers.values_list('id', flat=True)
