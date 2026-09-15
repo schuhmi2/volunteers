@@ -54,6 +54,7 @@ urlpatterns = [
     path('admin-attendance/task/<int:task_id>/', attendance_task_detail, name='attendance_task_detail'),
     path('admin-attendance/mark/', attendance_mark, name='attendance_mark'),
     path('admin-attendance/transfer-runner/', transfer_runner, name='transfer_runner'),
+    path('admin-attendance/task/<int:task_id>/assign/', attendance_assign_volunteer, name='attendance_assign_volunteer'),
     path('admin-attendance/summon/', summon_runner, name='summon_runner'),
     path('admin-attendance/need-volunteers/', need_volunteers_matrix, name='need_volunteers_matrix'),
     path('talk/<int:talk_id>/', talk_detailed, name='talk_detailed'),

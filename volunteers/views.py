@@ -1399,13 +1399,27 @@ def attendance_task_detail(request, task_id):
             'status': attendance.status if attendance else 'no_record',
         })
 
-    # Get available runners for transfer dropdown (volunteers not on this task)
+    # Volunteers currently on "Runner" duty in a slot that overlaps this task's
+    # time window, so an admin can quickly move them over to help staff this task.
     assigned_ids = volunteer_tasks.values_list('volunteer_id', flat=True)
+    runner_tasks = Task.objects.filter(
+        edition=edition,
+        name__iexact='Runner',
+        date=task.date,
+        start_time__lt=task.end_time,
+        end_time__gt=task.start_time,
+    ).exclude(id=task.id)
     available_runners = (
+        VolunteerTask.objects.filter(task__in=runner_tasks, status='approved')
+        .exclude(volunteer_id__in=assigned_ids)
+        .select_related('volunteer__user', 'task')
+        .order_by('task__start_time', 'volunteer__user__first_name', 'volunteer__user__last_name')
+    )
+
+    # Any other volunteer, as a manual backup option (always available).
+    all_volunteers = (
         Volunteer.objects.select_related('user')
-        .filter(tasks__edition=edition)
         .exclude(id__in=assigned_ids)
-        .distinct()
         .order_by('user__first_name', 'user__last_name')
     )
 
@@ -1414,6 +1428,7 @@ def attendance_task_detail(request, task_id):
         'edition': edition,
         'volunteers_data': volunteers_data,
         'available_runners': available_runners,
+        'all_volunteers': all_volunteers,
         'signin_email_enabled': getattr(settings, 'SIGNIN_EMAIL_ENABLED', False),
         'signin_matrix_enabled': getattr(settings, 'SIGNIN_MATRIX_ENABLED', False),
     }
@@ -1450,23 +1465,59 @@ def attendance_mark(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def transfer_runner(request):
-    """POST: Assign a runner volunteer to a task."""
+    """POST: Move a volunteer currently on Runner duty over to this task."""
     if request.method != 'POST':
         return redirect('attendance_dashboard')
 
     task_id = request.POST.get('task_id')
-    volunteer_id = request.POST.get('volunteer_id')
+    runner_vt_id = request.POST.get('runner_vt_id')
 
     task = get_object_or_404(Task, id=task_id)
+    runner_vt = get_object_or_404(VolunteerTask, id=runner_vt_id)
+    volunteer = runner_vt.volunteer
+
+    if VolunteerTask.objects.filter(task=task, volunteer=volunteer).exists():
+        messages.info(request, _('%s is already assigned to this task.') % volunteer.user.get_full_name())
+        return redirect('attendance_task_detail', task_id=task.id)
+
+    # Move the volunteer off Runner duty and onto this task, fresh attendance record.
+    runner_task = runner_vt.task
+    runner_vt.delete()
+    vt = VolunteerTask.objects.create(task=task, volunteer=volunteer, status='approved')
+    TaskAttendance.objects.create(volunteer_task=vt)
+
+    messages.success(
+        request,
+        _('%(name)s has been moved from "%(runner_task)s" to "%(task)s".') % {
+            'name': volunteer.user.get_full_name(),
+            'runner_task': runner_task.name,
+            'task': task.name,
+        }
+    )
+
+    return redirect('attendance_task_detail', task_id=task.id)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def attendance_assign_volunteer(request, task_id):
+    """POST: Manually assign any volunteer to this task as a backup option."""
+    if request.method != 'POST':
+        return redirect('attendance_dashboard')
+
+    task = get_object_or_404(Task, id=task_id)
+    volunteer_id = request.POST.get('volunteer_id')
+    if not volunteer_id:
+        messages.error(request, _('Please select a volunteer.'))
+        return redirect('attendance_task_detail', task_id=task.id)
+
     volunteer = get_object_or_404(Volunteer, id=volunteer_id)
 
-    vt, created = VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer)
+    vt, created = VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer, defaults={'status': 'approved'})
     if created:
-        # Create attendance record
-        attendance = TaskAttendance.objects.create(volunteer_task=vt)
+        TaskAttendance.objects.create(volunteer_task=vt)
         messages.success(
             request,
-            _('%(name)s has been assigned as runner to "%(task)s".') % {
+            _('%(name)s has been assigned to "%(task)s".') % {
                 'name': volunteer.user.get_full_name(),
                 'task': task.name,
             }

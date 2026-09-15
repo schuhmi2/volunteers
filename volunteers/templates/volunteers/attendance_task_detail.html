@@ -117,24 +117,52 @@
     </div>
   </div>
 
-  <!-- Transfer Runner -->
-  {% if available_runners %}
+  <!-- Available Runners -->
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
-    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-4">{% trans "Transfer Runner" %}</h2>
-    <form method="post" action="{% url 'transfer_runner' %}" class="flex items-end gap-3 flex-wrap">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-1">{% trans "Available Runners" %}</h2>
+    <p class="text-sm text-lm-subtle dark:text-dm-muted mb-4">{% trans "Volunteers currently on Runner duty during this task's time slot. Move one over to help staff this task." %}</p>
+    {% if available_runners %}
+    <div class="divide-y divide-lm-hair dark:divide-gray-700">
+      {% for runner_vt in available_runners %}
+      <div class="flex items-center justify-between gap-3 py-2 flex-wrap">
+        <div class="min-w-0">
+          <span class="font-medium text-lm-text dark:text-dm-text">{{ runner_vt.volunteer.user.first_name }} {{ runner_vt.volunteer.user.last_name }}</span>
+          <span class="text-xs text-lm-subtle dark:text-dm-muted">({{ runner_vt.volunteer.user.username }})</span>
+          <span class="text-xs text-lm-subtle dark:text-dm-muted"> &middot; {% trans "Runner" %} {{ runner_vt.task.start_time|time:"H:i" }}–{{ runner_vt.task.end_time|time:"H:i" }}</span>
+        </div>
+        <form method="post" action="{% url 'transfer_runner' %}" class="inline">
+          {% csrf_token %}
+          <input type="hidden" name="task_id" value="{{ task.id }}">
+          <input type="hidden" name="runner_vt_id" value="{{ runner_vt.id }}">
+          <button type="submit" class="px-3 py-1.5 bg-fosdem hover:bg-fosdem-dark text-white font-medium text-xs rounded-lg transition-colors">
+            {% trans "Move here" %}
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-lm-subtle dark:text-dm-muted italic">{% trans "No runners are currently available for this time slot." %}</p>
+    {% endif %}
+  </div>
+
+  <!-- Manual Backup Assignment -->
+  {% if all_volunteers %}
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-4">{% trans "Add Volunteer (backup)" %}</h2>
+    <form method="post" action="{% url 'attendance_assign_volunteer' task.id %}" class="flex items-end gap-3 flex-wrap">
       {% csrf_token %}
-      <input type="hidden" name="task_id" value="{{ task.id }}">
       <div class="flex-1 min-w-[200px]">
-        <label for="runner-select" class="block text-sm font-medium text-lm-muted dark:text-dm-text mb-1">{% trans "Select volunteer" %}</label>
-        <select name="volunteer_id" id="runner-select"
+        <label for="backup-volunteer-select" class="block text-sm font-medium text-lm-muted dark:text-dm-text mb-1">{% trans "Select volunteer" %}</label>
+        <select name="volunteer_id" id="backup-volunteer-select"
                 class="w-full rounded-lg border border-gray-300 dark:border-dm-border bg-lm-bg dark:bg-dm-nav px-3 py-2 text-sm text-lm-text dark:text-dm-text focus:ring-2 focus:ring-fosdem">
-          {% for vol in available_runners %}
+          {% for vol in all_volunteers %}
           <option value="{{ vol.id }}">{{ vol.user.first_name }} {{ vol.user.last_name }} ({{ vol.user.username }})</option>
           {% endfor %}
         </select>
       </div>
       <button type="submit" class="px-4 py-2 bg-fosdem hover:bg-fosdem-dark text-white font-medium text-sm rounded-lg transition-colors">
-        {% trans "Assign as Runner" %}
+        {% trans "Assign" %}
       </button>
     </form>
   </div>
