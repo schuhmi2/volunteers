@@ -1326,6 +1326,10 @@ def attendance_dashboard(request):
         .order_by('date', 'start_time', 'name')
     )
 
+    now = timezone.localtime(timezone.now())
+    today = now.date()
+    current_time = now.time()
+
     # Group tasks by day with attendance counts
     days = {}
     for task in tasks:
@@ -1345,12 +1349,17 @@ def attendance_dashboard(request):
         ).count()
         missing = assigned - signed_in - completed
 
+        is_active = task.date == today and task.start_time <= current_time <= task.end_time
+        is_unstaffed = is_active and assigned > 0 and signed_in == 0
+
         days[day].append({
             'task': task,
             'assigned': assigned,
             'signed_in': signed_in,
             'completed': completed,
             'missing': max(0, missing),
+            'is_active': is_active,
+            'is_unstaffed': is_unstaffed,
         })
 
     context = {

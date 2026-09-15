@@ -29,7 +29,7 @@
         </thead>
         <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for item in task_list %}
-          <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors">
+          <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors {% if item.is_unstaffed %}bg-red-50 dark:bg-red-950/40{% elif item.is_active %}bg-amber-50 dark:bg-amber-950/30{% endif %}">
             <td class="px-4 py-2 whitespace-nowrap text-lm-muted dark:text-dm-text">
               {{ item.task.start_time|time:"H:i" }}–{{ item.task.end_time|time:"H:i" }}
             </td>
@@ -37,6 +37,20 @@
               <a href="{% url 'attendance_task_detail' item.task.id %}" class="text-fosdem hover:underline">
                 {{ item.task.name }}
               </a>
+              {% if item.is_active %}
+              <span class="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300">
+                <span class="relative flex h-2 w-2" aria-hidden="true">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                {% trans "Active now" %}
+              </span>
+              {% endif %}
+              {% if item.is_unstaffed %}
+              <span class="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
+                <span aria-hidden="true">⚠</span> {% trans "No one checked in" %}
+              </span>
+              {% endif %}
             </td>
             <td class="px-4 py-2 text-lm-muted dark:text-dm-text">{{ item.task.location|default:"—" }}</td>
             <td class="px-4 py-2 text-center">
