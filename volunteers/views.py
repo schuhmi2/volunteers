@@ -79,6 +79,14 @@ def task_detailed(request, task_id):
         request.user.is_authenticated and request.user.is_superuser
     )
     context['can_view_volunteer_names'] = can_view_volunteer_names
+    # Let the volunteer know their own signup status for this task.
+    context['own_signup_status'] = None
+    if request.user.is_authenticated:
+        volunteer = getattr(request.user, 'volunteer', None)
+        if volunteer:
+            own_vt = VolunteerTask.objects.filter(task=task, volunteer=volunteer).first()
+            if own_vt:
+                context['own_signup_status'] = own_vt.status
     if request.user.is_authenticated and request.user.is_superuser:
         # Provide list of all volunteers for admin assignment dropdown
         assigned_volunteer_ids = task.volunteers.values_list('id', flat=True)

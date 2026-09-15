@@ -6,7 +6,22 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto space-y-6">
-  <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Task Details" %}</h1>
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Task Details" %}</h1>
+    {% if own_signup_status == 'approved' %}
+    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+      <span aria-hidden="true">✓</span> {% trans "You're signed up for this task" %}
+    </span>
+    {% elif own_signup_status == 'pending' %}
+    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+      <span aria-hidden="true">⏳</span> {% trans "Your signup is pending approval" %}
+    </span>
+    {% elif own_signup_status == 'denied' %}
+    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+      <span aria-hidden="true">✕</span> {% trans "Your signup was denied" %}
+    </span>
+    {% endif %}
+  </div>
 
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
     <div class="overflow-x-auto">
@@ -50,7 +65,16 @@
               {% endif %}
               {% endwith %}
               {% else %}
-              {{ task.volunteer_set.count }}/{{ task.nbr_volunteers }}
+              <span class="task-slots inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                {% if task.status_color == 'green' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                {% elif task.status_color == 'blue' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                {% elif task.status_color == 'red' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                {% else %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200{% endif %}">
+                <span class="sr-only">{% if task.status_color == 'blue' %}Full — {% elif task.status_color == 'green' %}Staffed — {% elif task.status_color == 'red' %}Needs volunteers — {% else %}Manageable — {% endif %}</span>{{ task.assigned_volunteers }}/{{ task.nbr_volunteers }}
+              </span>
+              {% if task.pending_volunteers %}
+              <span class="ml-1 text-xs text-yellow-600 dark:text-yellow-400"><span aria-hidden="true">(+{{ task.pending_volunteers }} ⏳)</span><span class="sr-only">({{ task.pending_volunteers }} pending approval)</span></span>
+              {% endif %}
               {% endif %}
             </td>
             <td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-[10rem] truncate" title="{{ task.talk }}">
