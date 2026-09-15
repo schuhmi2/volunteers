@@ -43,11 +43,11 @@
                 <form method="post" action="{% url 'task_toggle' task.id %}" class="toggle-form">
                   {% csrf_token %}
                   <button type="submit"
-                          class="task-toggle-btn inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium transition-colors
+                          class="task-toggle-btn inline-flex items-center justify-center w-28 py-1 rounded-md text-xs font-medium transition-colors
                             {% if checked|get_item:task.id %}bg-fosdem text-white hover:bg-red-600{% else %}border border-gray-300 dark:border-dm-border text-lm-muted dark:text-dm-text hover:bg-fosdem hover:text-white hover:border-fosdem{% endif %}"
                           data-task-id="{{ task.id }}"
                           data-status="{% if task.id in pending_task_ids %}pending{% elif checked|get_item:task.id %}added{% else %}removed{% endif %}">
-                    {% if task.id in pending_task_ids %}<span aria-hidden="true">⏳</span> {% trans "Pending" %}{% elif checked|get_item:task.id %}<span aria-hidden="true">✓</span> {% trans "Signed up" %}{% else %}{% trans "Sign up" %}{% endif %}
+                    {% if task.id in pending_task_ids %}{% trans "Pending" %}{% elif checked|get_item:task.id %}{% trans "Signed up" %}{% else %}{% trans "Sign up" %}{% endif %}
                   </button>
                 </form>
                 {% endif %}
@@ -129,23 +129,23 @@
                   {% csrf_token %}
                   {% if task.id in pending_task_ids %}
                   <button type="submit"
-                          class="task-toggle-btn inline-flex items-center px-3 py-1 rounded-md text-xs font-medium transition-colors bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 hover:bg-red-100 hover:text-red-700"
+                          class="task-toggle-btn inline-flex items-center justify-center w-28 py-1 rounded-md text-xs font-medium transition-colors bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 hover:bg-red-100 hover:text-red-700"
                           data-task-id="{{ task.id }}" data-status="pending">
-                    <span aria-hidden="true">⏳</span> {% trans "Pending" %}
+                    {% trans "Pending" %}
                   </button>
                   {% elif checked|get_item:task.id %}
                   <button type="submit"
-                          class="task-toggle-btn inline-flex items-center px-3 py-1 rounded-md text-xs font-medium transition-colors bg-fosdem text-white hover:bg-red-600"
+                          class="task-toggle-btn inline-flex items-center justify-center w-28 py-1 rounded-md text-xs font-medium transition-colors bg-fosdem text-white hover:bg-red-600"
                           data-task-id="{{ task.id }}" data-status="added">
-                    <span aria-hidden="true">✓</span> {% trans "Signed up" %}
+                    {% trans "Signed up" %}
                   </button>
                   {% elif task.status == 'FULL' %}
-                  <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-lm-soft text-lm-subtle dark:bg-dm-nav dark:text-dm-muted cursor-not-allowed">
+                  <span class="inline-flex items-center justify-center w-28 py-1 rounded-md text-xs font-medium bg-lm-soft text-lm-subtle dark:bg-dm-nav dark:text-dm-muted cursor-not-allowed">
                     {% trans "Full" %}
                   </span>
                   {% else %}
                   <button type="submit"
-                          class="task-toggle-btn inline-flex items-center px-3 py-1 rounded-md text-xs font-medium transition-colors border border-gray-300 dark:border-dm-border text-lm-muted dark:text-dm-text hover:bg-fosdem hover:text-white hover:border-fosdem"
+                          class="task-toggle-btn inline-flex items-center justify-center w-28 py-1 rounded-md text-xs font-medium transition-colors border border-gray-300 dark:border-dm-border text-lm-muted dark:text-dm-text hover:bg-fosdem hover:text-white hover:border-fosdem"
                           data-task-id="{{ task.id }}" data-status="removed">
                     {% trans "Sign up" %}
                   </button>
@@ -228,16 +228,16 @@
   function updateButton(btn, status) {
     btn.setAttribute('data-status', status);
     // Reset classes
-    btn.className = 'task-toggle-btn inline-flex items-center px-3 py-1 rounded-md text-xs font-medium transition-colors';
+    btn.className = 'task-toggle-btn inline-flex items-center justify-center w-28 py-1 rounded-md text-xs font-medium transition-colors';
     if (status === 'added') {
       btn.className += ' bg-fosdem text-white hover:bg-red-600';
-      btn.innerHTML = '<span aria-hidden="true">✓</span> Signed up';
+      btn.textContent = 'Signed up';
     } else if (status === 'pending') {
       btn.className += ' bg-yellow-100 text-yellow-800 hover:bg-red-100 hover:text-red-700';
-      btn.innerHTML = '<span aria-hidden="true">⏳</span> Pending';
+      btn.textContent = 'Pending';
     } else {
       btn.className += ' border border-gray-300 text-lm-muted hover:bg-fosdem hover:text-white hover:border-fosdem';
-      btn.innerHTML = 'Sign up';
+      btn.textContent = 'Sign up';
     }
   }
 
