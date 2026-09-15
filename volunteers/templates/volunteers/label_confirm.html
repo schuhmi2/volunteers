@@ -24,10 +24,10 @@
     <ul class="space-y-1">
       {% for volunteer in volunteers %}
       {% if volunteer.id in reprint_info %}
-      <li class="text-sm text-yellow-800 dark:text-yellow-300">
-        <strong>{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</strong>
-        ({{ volunteer.user.username }})
-        — {% trans "last printed:" %} {{ reprint_info|get_item:volunteer.id|date:"d M Y H:i" }}
+      <li class="text-sm text-yellow-800 dark:text-yellow-300 flex items-baseline gap-1 min-w-0">
+        <strong class="truncate max-w-xs" title="{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</strong>
+        <span class="shrink-0">({{ volunteer.user.username }})
+        — {% trans "last printed:" %} {{ reprint_info|get_item:volunteer.id|date:"d M Y H:i" }}</span>
       </li>
       {% endif %}
       {% endfor %}
@@ -48,7 +48,7 @@
         <tbody class="divide-y divide-lm-hair dark:divide-gray-700">
           {% for volunteer in volunteers %}
           <tr>
-            <td class="px-4 py-2.5 font-medium text-lm-text dark:text-dm-text">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</td>
+            <td class="px-4 py-2.5 font-medium text-lm-text dark:text-dm-text min-w-0 max-w-xs truncate" title="{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</td>
             <td class="px-4 py-2.5 text-lm-muted dark:text-dm-text">{{ volunteer.user.username }}</td>
             <td class="px-4 py-2.5">
               {% if volunteer.id in reprint_info %}
