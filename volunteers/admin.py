@@ -539,10 +539,15 @@ class VolunteerStatusAdmin(admin.ModelAdmin):
     list_filter = [EditionFilter]
 
 
+class LanguageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'native_name', 'iso_code')
+    search_fields = ('name', 'native_name', 'iso_code')
+
+
 admin.site.register(Edition, EditionAdmin)
 admin.site.register(Track, TrackAdmin)
 admin.site.register(Talk, TalkAdmin)
-admin.site.register(Language)
+admin.site.register(Language, LanguageAdmin)
 admin.site.register(TaskCategory, TaskCategoryAdmin)
 admin.site.register(TaskTemplate, TaskTemplateAdmin)
 admin.site.register(Task, TaskAdmin)

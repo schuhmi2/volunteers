@@ -538,7 +538,20 @@ class Language(models.Model):
         return self.name
 
     name = models.CharField(max_length=128)
+    native_name = models.CharField(max_length=128, blank=True, default='')
     iso_code = models.CharField(max_length=2)
+
+    @property
+    def display_name(self):
+        """Native name with the English name in brackets, for UI display."""
+        if self.native_name and self.native_name != self.name:
+            return f'{self.native_name} ({self.name})'
+        return self.name
+
+    @property
+    def label_name(self):
+        """Native name only (falling back to the English name), for printed labels."""
+        return self.native_name or self.name
 
 
 """

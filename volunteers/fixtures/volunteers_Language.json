@@ -4,7 +4,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ab",
-            "name": "Abkhaz"
+            "name": "Abkhaz",
+            "native_name": "Аҧсуа бызшәа"
         }
     },
     {
@@ -12,7 +13,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "aa",
-            "name": "Afar"
+            "name": "Afar",
+            "native_name": "Afaraf"
         }
     },
     {
@@ -20,7 +22,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "af",
-            "name": "Afrikaans"
+            "name": "Afrikaans",
+            "native_name": "Afrikaans"
         }
     },
     {
@@ -28,7 +31,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ak",
-            "name": "Akan"
+            "name": "Akan",
+            "native_name": "Akan"
         }
     },
     {
@@ -36,7 +40,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sq",
-            "name": "Albanian"
+            "name": "Albanian",
+            "native_name": "Shqip"
         }
     },
     {
@@ -44,7 +49,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "am",
-            "name": "Amharic"
+            "name": "Amharic",
+            "native_name": "አማርኛ"
         }
     },
     {
@@ -52,7 +58,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ar",
-            "name": "Arabic"
+            "name": "Arabic",
+            "native_name": "العربية"
         }
     },
     {
@@ -60,7 +67,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "an",
-            "name": "Aragonese"
+            "name": "Aragonese",
+            "native_name": "Aragonés"
         }
     },
     {
@@ -68,7 +76,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "hy",
-            "name": "Armenian"
+            "name": "Armenian",
+            "native_name": "Հայերեն"
         }
     },
     {
@@ -76,7 +85,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "as",
-            "name": "Assamese"
+            "name": "Assamese",
+            "native_name": "অসমীয়া"
         }
     },
     {
@@ -84,7 +94,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "av",
-            "name": "Avaric"
+            "name": "Avaric",
+            "native_name": "Авар мацӀ"
         }
     },
     {
@@ -92,7 +103,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ae",
-            "name": "Avestan"
+            "name": "Avestan",
+            "native_name": "Avesta"
         }
     },
     {
@@ -100,7 +112,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ay",
-            "name": "Aymara"
+            "name": "Aymara",
+            "native_name": "Aymar aru"
         }
     },
     {
@@ -108,7 +121,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "az",
-            "name": "Azerbaijani"
+            "name": "Azerbaijani",
+            "native_name": "Azərbaycan dili"
         }
     },
     {
@@ -116,7 +130,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "bm",
-            "name": "Bambara"
+            "name": "Bambara",
+            "native_name": "Bamanankan"
         }
     },
     {
@@ -124,7 +139,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ba",
-            "name": "Bashkir"
+            "name": "Bashkir",
+            "native_name": "Башҡорт теле"
         }
     },
     {
@@ -132,7 +148,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "eu",
-            "name": "Basque"
+            "name": "Basque",
+            "native_name": "Euskara"
         }
     },
     {
@@ -140,7 +157,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "be",
-            "name": "Belarusian"
+            "name": "Belarusian",
+            "native_name": "Беларуская мова"
         }
     },
     {
@@ -148,7 +166,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "bn",
-            "name": "Bengali"
+            "name": "Bengali",
+            "native_name": "বাংলা"
         }
     },
     {
@@ -156,7 +175,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "bh",
-            "name": "Bihari"
+            "name": "Bihari",
+            "native_name": "भोजपुरी"
         }
     },
     {
@@ -164,7 +184,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "bi",
-            "name": "Bislama"
+            "name": "Bislama",
+            "native_name": "Bislama"
         }
     },
     {
@@ -172,7 +193,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "bs",
-            "name": "Bosnian"
+            "name": "Bosnian",
+            "native_name": "Bosanski jezik"
         }
     },
     {
@@ -180,7 +202,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "br",
-            "name": "Breton"
+            "name": "Breton",
+            "native_name": "Brezhoneg"
         }
     },
     {
@@ -188,7 +211,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "bg",
-            "name": "Bulgarian"
+            "name": "Bulgarian",
+            "native_name": "Български език"
         }
     },
     {
@@ -196,7 +220,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "my",
-            "name": "Burmese"
+            "name": "Burmese",
+            "native_name": "ဗမာစာ"
         }
     },
     {
@@ -204,7 +229,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ca",
-            "name": "Catalan; Valencian"
+            "name": "Catalan; Valencian",
+            "native_name": "Català"
         }
     },
     {
@@ -212,7 +238,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ch",
-            "name": "Chamorro"
+            "name": "Chamorro",
+            "native_name": "Chamoru"
         }
     },
     {
@@ -220,7 +247,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ce",
-            "name": "Chechen"
+            "name": "Chechen",
+            "native_name": "Нохчийн мотт"
         }
     },
     {
@@ -228,7 +256,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ny",
-            "name": "Chichewa; Chewa; Nyanja"
+            "name": "Chichewa; Chewa; Nyanja",
+            "native_name": "ChiCheŵa"
         }
     },
     {
@@ -236,7 +265,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "zh",
-            "name": "Chinese"
+            "name": "Chinese",
+            "native_name": "中文"
         }
     },
     {
@@ -244,7 +274,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "cv",
-            "name": "Chuvash"
+            "name": "Chuvash",
+            "native_name": "Чӑваш чӗлхи"
         }
     },
     {
@@ -252,7 +283,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "kw",
-            "name": "Cornish"
+            "name": "Cornish",
+            "native_name": "Kernewek"
         }
     },
     {
@@ -260,7 +292,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "co",
-            "name": "Corsican"
+            "name": "Corsican",
+            "native_name": "Corsu"
         }
     },
     {
@@ -268,7 +301,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "cr",
-            "name": "Cree"
+            "name": "Cree",
+            "native_name": "ᓀᐦᐃᔭᐍᐏᐣ"
         }
     },
     {
@@ -276,7 +310,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "hr",
-            "name": "Croatian"
+            "name": "Croatian",
+            "native_name": "Hrvatski jezik"
         }
     },
     {
@@ -284,7 +319,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "cs",
-            "name": "Czech"
+            "name": "Czech",
+            "native_name": "Čeština"
         }
     },
     {
@@ -292,7 +328,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "da",
-            "name": "Danish"
+            "name": "Danish",
+            "native_name": "Dansk"
         }
     },
     {
@@ -300,7 +337,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "dv",
-            "name": "Divehi; Dhivehi; Maldivian;"
+            "name": "Divehi; Dhivehi; Maldivian;",
+            "native_name": "ދިވެހި"
         }
     },
     {
@@ -308,7 +346,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "nl",
-            "name": "Dutch"
+            "name": "Dutch",
+            "native_name": "Nederlands"
         }
     },
     {
@@ -316,7 +355,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "en",
-            "name": "English"
+            "name": "English",
+            "native_name": "English"
         }
     },
     {
@@ -324,7 +364,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "eo",
-            "name": "Esperanto"
+            "name": "Esperanto",
+            "native_name": "Esperanto"
         }
     },
     {
@@ -332,7 +373,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "et",
-            "name": "Estonian"
+            "name": "Estonian",
+            "native_name": "Eesti keel"
         }
     },
     {
@@ -340,7 +382,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ee",
-            "name": "Ewe"
+            "name": "Ewe",
+            "native_name": "Eʋegbe"
         }
     },
     {
@@ -348,7 +391,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "fo",
-            "name": "Faroese"
+            "name": "Faroese",
+            "native_name": "Føroyskt"
         }
     },
     {
@@ -356,7 +400,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "fj",
-            "name": "Fijian"
+            "name": "Fijian",
+            "native_name": "Vosa Vakaviti"
         }
     },
     {
@@ -364,7 +409,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "fi",
-            "name": "Finnish"
+            "name": "Finnish",
+            "native_name": "Suomen kieli"
         }
     },
     {
@@ -372,7 +418,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "fr",
-            "name": "French"
+            "name": "French",
+            "native_name": "Français"
         }
     },
     {
@@ -380,7 +427,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ff",
-            "name": "Fula; Fulah; Pulaar; Pular"
+            "name": "Fula; Fulah; Pulaar; Pular",
+            "native_name": "Fulfulde"
         }
     },
     {
@@ -388,7 +436,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "gl",
-            "name": "Galician"
+            "name": "Galician",
+            "native_name": "Galego"
         }
     },
     {
@@ -396,7 +445,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ka",
-            "name": "Georgian"
+            "name": "Georgian",
+            "native_name": "ქართული"
         }
     },
     {
@@ -404,7 +454,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "de",
-            "name": "German"
+            "name": "German",
+            "native_name": "Deutsch"
         }
     },
     {
@@ -412,7 +463,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "el",
-            "name": "Greek, Modern"
+            "name": "Greek, Modern",
+            "native_name": "Ελληνικά"
         }
     },
     {
@@ -420,7 +472,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "gn",
-            "name": "Guaraní"
+            "name": "Guaraní",
+            "native_name": "Avañe'ẽ"
         }
     },
     {
@@ -428,7 +481,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "gu",
-            "name": "Gujarati"
+            "name": "Gujarati",
+            "native_name": "ગુજરાતી"
         }
     },
     {
@@ -436,7 +490,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ht",
-            "name": "Haitian; Haitian Creole"
+            "name": "Haitian; Haitian Creole",
+            "native_name": "Kreyòl ayisyen"
         }
     },
     {
@@ -444,7 +499,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ha",
-            "name": "Hausa"
+            "name": "Hausa",
+            "native_name": "هَوُسَ"
         }
     },
     {
@@ -452,7 +508,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "he",
-            "name": "Hebrew (modern)"
+            "name": "Hebrew (modern)",
+            "native_name": "עברית"
         }
     },
     {
@@ -460,7 +517,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "hz",
-            "name": "Herero"
+            "name": "Herero",
+            "native_name": "Otjiherero"
         }
     },
     {
@@ -468,7 +526,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "hi",
-            "name": "Hindi"
+            "name": "Hindi",
+            "native_name": "हिन्दी"
         }
     },
     {
@@ -476,7 +535,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ho",
-            "name": "Hiri Motu"
+            "name": "Hiri Motu",
+            "native_name": "Hiri Motu"
         }
     },
     {
@@ -484,7 +544,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "hu",
-            "name": "Hungarian"
+            "name": "Hungarian",
+            "native_name": "Magyar"
         }
     },
     {
@@ -492,7 +553,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ia",
-            "name": "Interlingua"
+            "name": "Interlingua",
+            "native_name": "Interlingua"
         }
     },
     {
@@ -500,7 +562,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "id",
-            "name": "Indonesian"
+            "name": "Indonesian",
+            "native_name": "Bahasa Indonesia"
         }
     },
     {
@@ -508,7 +571,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ie",
-            "name": "Interlingue"
+            "name": "Interlingue",
+            "native_name": "Interlingue"
         }
     },
     {
@@ -516,7 +580,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ga",
-            "name": "Irish"
+            "name": "Irish",
+            "native_name": "Gaeilge"
         }
     },
     {
@@ -524,7 +589,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ig",
-            "name": "Igbo"
+            "name": "Igbo",
+            "native_name": "Asụsụ Igbo"
         }
     },
     {
@@ -532,7 +598,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ik",
-            "name": "Inupiaq"
+            "name": "Inupiaq",
+            "native_name": "Iñupiaq"
         }
     },
     {
@@ -540,7 +607,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "io",
-            "name": "Ido"
+            "name": "Ido",
+            "native_name": "Ido"
         }
     },
     {
@@ -548,7 +616,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "is",
-            "name": "Icelandic"
+            "name": "Icelandic",
+            "native_name": "Íslenska"
         }
     },
     {
@@ -556,7 +625,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "it",
-            "name": "Italian"
+            "name": "Italian",
+            "native_name": "Italiano"
         }
     },
     {
@@ -564,7 +634,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "iu",
-            "name": "Inuktitut"
+            "name": "Inuktitut",
+            "native_name": "ᐃᓄᒃᑎᑐᑦ"
         }
     },
     {
@@ -572,7 +643,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ja",
-            "name": "Japanese"
+            "name": "Japanese",
+            "native_name": "日本語"
         }
     },
     {
@@ -580,7 +652,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "jv",
-            "name": "Javanese"
+            "name": "Javanese",
+            "native_name": "Basa Jawa"
         }
     },
     {
@@ -588,7 +661,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "kl",
-            "name": "Kalaallisut, Greenlandic"
+            "name": "Kalaallisut, Greenlandic",
+            "native_name": "Kalaallisut"
         }
     },
     {
@@ -596,7 +670,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "kn",
-            "name": "Kannada"
+            "name": "Kannada",
+            "native_name": "ಕನ್ನಡ"
         }
     },
     {
@@ -604,7 +679,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "kr",
-            "name": "Kanuri"
+            "name": "Kanuri",
+            "native_name": "Kanuri"
         }
     },
     {
@@ -612,7 +688,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ks",
-            "name": "Kashmiri"
+            "name": "Kashmiri",
+            "native_name": "कश्मीरी"
         }
     },
     {
@@ -620,7 +697,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "kk",
-            "name": "Kazakh"
+            "name": "Kazakh",
+            "native_name": "Қазақ тілі"
         }
     },
     {
@@ -628,7 +706,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "km",
-            "name": "Khmer"
+            "name": "Khmer",
+            "native_name": "ខ្មែរ"
         }
     },
     {
@@ -636,7 +715,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ki",
-            "name": "Kikuyu, Gikuyu"
+            "name": "Kikuyu, Gikuyu",
+            "native_name": "Gĩkũyũ"
         }
     },
     {
@@ -644,7 +724,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "rw",
-            "name": "Kinyarwanda"
+            "name": "Kinyarwanda",
+            "native_name": "Ikinyarwanda"
         }
     },
     {
@@ -652,7 +733,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ky",
-            "name": "Kirghiz, Kyrgyz"
+            "name": "Kirghiz, Kyrgyz",
+            "native_name": "Кыргызча"
         }
     },
     {
@@ -660,7 +742,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "kv",
-            "name": "Komi"
+            "name": "Komi",
+            "native_name": "Коми кыв"
         }
     },
     {
@@ -668,7 +751,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "kg",
-            "name": "Kongo"
+            "name": "Kongo",
+            "native_name": "Kikongo"
         }
     },
     {
@@ -676,7 +760,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ko",
-            "name": "Korean"
+            "name": "Korean",
+            "native_name": "한국어"
         }
     },
     {
@@ -684,7 +769,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ku",
-            "name": "Kurdish"
+            "name": "Kurdish",
+            "native_name": "Kurdî"
         }
     },
     {
@@ -692,7 +778,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "kj",
-            "name": "Kwanyama, Kuanyama"
+            "name": "Kwanyama, Kuanyama",
+            "native_name": "Kuanyama"
         }
     },
     {
@@ -700,7 +787,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "la",
-            "name": "Latin"
+            "name": "Latin",
+            "native_name": "Lingua latina"
         }
     },
     {
@@ -708,7 +796,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "lb",
-            "name": "Luxembourgish, Letzeburgesch"
+            "name": "Luxembourgish, Letzeburgesch",
+            "native_name": "Lëtzebuergesch"
         }
     },
     {
@@ -716,7 +805,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "lg",
-            "name": "Luganda"
+            "name": "Luganda",
+            "native_name": "Luganda"
         }
     },
     {
@@ -724,7 +814,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "li",
-            "name": "Limburgish, Limburgan, Limburger"
+            "name": "Limburgish, Limburgan, Limburger",
+            "native_name": "Limburgs"
         }
     },
     {
@@ -732,7 +823,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ln",
-            "name": "Lingala"
+            "name": "Lingala",
+            "native_name": "Lingála"
         }
     },
     {
@@ -740,7 +832,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "lo",
-            "name": "Lao"
+            "name": "Lao",
+            "native_name": "ພາສາລາວ"
         }
     },
     {
@@ -748,7 +841,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "lt",
-            "name": "Lithuanian"
+            "name": "Lithuanian",
+            "native_name": "Lietuvių kalba"
         }
     },
     {
@@ -756,7 +850,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "lu",
-            "name": "Luba-Katanga"
+            "name": "Luba-Katanga",
+            "native_name": "Tshiluba"
         }
     },
     {
@@ -764,7 +859,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "lv",
-            "name": "Latvian"
+            "name": "Latvian",
+            "native_name": "Latviešu valoda"
         }
     },
     {
@@ -772,7 +868,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "gv",
-            "name": "Manx"
+            "name": "Manx",
+            "native_name": "Gaelg"
         }
     },
     {
@@ -780,7 +877,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "mk",
-            "name": "Macedonian"
+            "name": "Macedonian",
+            "native_name": "Македонски јазик"
         }
     },
     {
@@ -788,7 +886,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "mg",
-            "name": "Malagasy"
+            "name": "Malagasy",
+            "native_name": "Fiteny malagasy"
         }
     },
     {
@@ -796,7 +895,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ms",
-            "name": "Malay"
+            "name": "Malay",
+            "native_name": "Bahasa Melayu"
         }
     },
     {
@@ -804,7 +904,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ml",
-            "name": "Malayalam"
+            "name": "Malayalam",
+            "native_name": "മലയാളം"
         }
     },
     {
@@ -812,7 +913,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "mt",
-            "name": "Maltese"
+            "name": "Maltese",
+            "native_name": "Malti"
         }
     },
     {
@@ -820,7 +922,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "mi",
-            "name": "Māori"
+            "name": "Māori",
+            "native_name": "Te reo Māori"
         }
     },
     {
@@ -828,7 +931,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "mr",
-            "name": "Marathi (Marāṭhī)"
+            "name": "Marathi (Marāṭhī)",
+            "native_name": "मराठी"
         }
     },
     {
@@ -836,7 +940,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "mh",
-            "name": "Marshallese"
+            "name": "Marshallese",
+            "native_name": "Kajin M̧ajeļ"
         }
     },
     {
@@ -844,7 +949,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "mn",
-            "name": "Mongolian"
+            "name": "Mongolian",
+            "native_name": "Монгол хэл"
         }
     },
     {
@@ -852,7 +958,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "na",
-            "name": "Nauru"
+            "name": "Nauru",
+            "native_name": "Dorerin Naoero"
         }
     },
     {
@@ -860,7 +967,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "nv",
-            "name": "Navajo, Navaho"
+            "name": "Navajo, Navaho",
+            "native_name": "Diné bizaad"
         }
     },
     {
@@ -868,7 +976,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "nb",
-            "name": "Norwegian Bokmål"
+            "name": "Norwegian Bokmål",
+            "native_name": "Norsk Bokmål"
         }
     },
     {
@@ -876,7 +985,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "nd",
-            "name": "North Ndebele"
+            "name": "North Ndebele",
+            "native_name": "IsiNdebele"
         }
     },
     {
@@ -884,7 +994,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ne",
-            "name": "Nepali"
+            "name": "Nepali",
+            "native_name": "नेपाली"
         }
     },
     {
@@ -892,7 +1003,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ng",
-            "name": "Ndonga"
+            "name": "Ndonga",
+            "native_name": "Owambo"
         }
     },
     {
@@ -900,7 +1012,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "nn",
-            "name": "Norwegian Nynorsk"
+            "name": "Norwegian Nynorsk",
+            "native_name": "Norsk Nynorsk"
         }
     },
     {
@@ -908,7 +1021,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "no",
-            "name": "Norwegian"
+            "name": "Norwegian",
+            "native_name": "Norsk"
         }
     },
     {
@@ -916,7 +1030,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ii",
-            "name": "Nuosu"
+            "name": "Nuosu",
+            "native_name": "ꆈꌠ꒿ Nuosuhxop"
         }
     },
     {
@@ -924,7 +1039,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "nr",
-            "name": "South Ndebele"
+            "name": "South Ndebele",
+            "native_name": "IsiNdebele"
         }
     },
     {
@@ -932,7 +1048,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "oc",
-            "name": "Occitan"
+            "name": "Occitan",
+            "native_name": "Occitan"
         }
     },
     {
@@ -940,7 +1057,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "oj",
-            "name": "Ojibwe, Ojibwa"
+            "name": "Ojibwe, Ojibwa",
+            "native_name": "ᐊᓂᔑᓈᐯᒧᐎᓐ"
         }
     },
     {
@@ -948,7 +1066,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "cu",
-            "name": "Old Church Slavonic, Church Slavic, Church Slavonic, Old Bulgarian, Old Slavonic"
+            "name": "Old Church Slavonic, Church Slavic, Church Slavonic, Old Bulgarian, Old Slavonic",
+            "native_name": "Ѩзыкъ словѣньскъ"
         }
     },
     {
@@ -956,7 +1075,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "om",
-            "name": "Oromo"
+            "name": "Oromo",
+            "native_name": "Afaan Oromoo"
         }
     },
     {
@@ -964,7 +1084,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "or",
-            "name": "Oriya"
+            "name": "Oriya",
+            "native_name": "ଓଡ଼ିଆ"
         }
     },
     {
@@ -972,7 +1093,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "os",
-            "name": "Ossetian, Ossetic"
+            "name": "Ossetian, Ossetic",
+            "native_name": "Ирон æвзаг"
         }
     },
     {
@@ -980,7 +1102,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "pa",
-            "name": "Panjabi, Punjabi"
+            "name": "Panjabi, Punjabi",
+            "native_name": "ਪੰਜਾਬੀ"
         }
     },
     {
@@ -988,7 +1111,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "pi",
-            "name": "Pāli"
+            "name": "Pāli",
+            "native_name": "पाऴि"
         }
     },
     {
@@ -996,7 +1120,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "fa",
-            "name": "Persian"
+            "name": "Persian",
+            "native_name": "فارسی"
         }
     },
     {
@@ -1004,7 +1129,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "pl",
-            "name": "Polish"
+            "name": "Polish",
+            "native_name": "Język polski"
         }
     },
     {
@@ -1012,7 +1138,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ps",
-            "name": "Pashto, Pushto"
+            "name": "Pashto, Pushto",
+            "native_name": "پښتو"
         }
     },
     {
@@ -1020,7 +1147,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "pt",
-            "name": "Portuguese"
+            "name": "Portuguese",
+            "native_name": "Português"
         }
     },
     {
@@ -1028,7 +1156,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "qu",
-            "name": "Quechua"
+            "name": "Quechua",
+            "native_name": "Runa Simi"
         }
     },
     {
@@ -1036,7 +1165,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "rm",
-            "name": "Romansh"
+            "name": "Romansh",
+            "native_name": "Rumantsch Grischun"
         }
     },
     {
@@ -1044,7 +1174,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "rn",
-            "name": "Kirundi"
+            "name": "Kirundi",
+            "native_name": "Ikirundi"
         }
     },
     {
@@ -1052,7 +1183,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ro",
-            "name": "Romanian, Moldavian, Moldovan"
+            "name": "Romanian, Moldavian, Moldovan",
+            "native_name": "Limba română"
         }
     },
     {
@@ -1060,7 +1192,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ru",
-            "name": "Russian"
+            "name": "Russian",
+            "native_name": "Русский"
         }
     },
     {
@@ -1068,7 +1201,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sa",
-            "name": "Sanskrit (Saṃskṛta)"
+            "name": "Sanskrit (Saṃskṛta)",
+            "native_name": "संस्कृतम्"
         }
     },
     {
@@ -1076,7 +1210,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sc",
-            "name": "Sardinian"
+            "name": "Sardinian",
+            "native_name": "Sardu"
         }
     },
     {
@@ -1084,7 +1219,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sd",
-            "name": "Sindhi"
+            "name": "Sindhi",
+            "native_name": "सिन्धी"
         }
     },
     {
@@ -1092,7 +1228,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "se",
-            "name": "Northern Sami"
+            "name": "Northern Sami",
+            "native_name": "Davvisámegiella"
         }
     },
     {
@@ -1100,7 +1237,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sm",
-            "name": "Samoan"
+            "name": "Samoan",
+            "native_name": "Gagana fa'a Samoa"
         }
     },
     {
@@ -1108,7 +1246,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sg",
-            "name": "Sango"
+            "name": "Sango",
+            "native_name": "Yângâ tî sängö"
         }
     },
     {
@@ -1116,7 +1255,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sr",
-            "name": "Serbian"
+            "name": "Serbian",
+            "native_name": "Српски језик"
         }
     },
     {
@@ -1124,7 +1264,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "gd",
-            "name": "Scottish Gaelic; Gaelic"
+            "name": "Scottish Gaelic; Gaelic",
+            "native_name": "Gàidhlig"
         }
     },
     {
@@ -1132,7 +1273,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sn",
-            "name": "Shona"
+            "name": "Shona",
+            "native_name": "ChiShona"
         }
     },
     {
@@ -1140,7 +1282,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "si",
-            "name": "Sinhala, Sinhalese"
+            "name": "Sinhala, Sinhalese",
+            "native_name": "සිංහල"
         }
     },
     {
@@ -1148,7 +1291,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sk",
-            "name": "Slovak"
+            "name": "Slovak",
+            "native_name": "Slovenčina"
         }
     },
     {
@@ -1156,7 +1300,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sl",
-            "name": "Slovene"
+            "name": "Slovene",
+            "native_name": "Slovenski jezik"
         }
     },
     {
@@ -1164,7 +1309,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "so",
-            "name": "Somali"
+            "name": "Somali",
+            "native_name": "Soomaaliga"
         }
     },
     {
@@ -1172,7 +1318,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "st",
-            "name": "Southern Sotho"
+            "name": "Southern Sotho",
+            "native_name": "Sesotho"
         }
     },
     {
@@ -1180,7 +1327,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "es",
-            "name": "Spanish; Castilian"
+            "name": "Spanish; Castilian",
+            "native_name": "Español"
         }
     },
     {
@@ -1188,7 +1336,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "su",
-            "name": "Sundanese"
+            "name": "Sundanese",
+            "native_name": "Basa Sunda"
         }
     },
     {
@@ -1196,7 +1345,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sw",
-            "name": "Swahili"
+            "name": "Swahili",
+            "native_name": "Kiswahili"
         }
     },
     {
@@ -1204,7 +1354,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ss",
-            "name": "Swati"
+            "name": "Swati",
+            "native_name": "SiSwati"
         }
     },
     {
@@ -1212,7 +1363,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "sv",
-            "name": "Swedish"
+            "name": "Swedish",
+            "native_name": "Svenska"
         }
     },
     {
@@ -1220,7 +1372,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ta",
-            "name": "Tamil"
+            "name": "Tamil",
+            "native_name": "தமிழ்"
         }
     },
     {
@@ -1228,7 +1381,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "te",
-            "name": "Telugu"
+            "name": "Telugu",
+            "native_name": "తెలుగు"
         }
     },
     {
@@ -1236,7 +1390,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "tg",
-            "name": "Tajik"
+            "name": "Tajik",
+            "native_name": "Тоҷикӣ"
         }
     },
     {
@@ -1244,7 +1399,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "th",
-            "name": "Thai"
+            "name": "Thai",
+            "native_name": "ไทย"
         }
     },
     {
@@ -1252,7 +1408,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ti",
-            "name": "Tigrinya"
+            "name": "Tigrinya",
+            "native_name": "ትግርኛ"
         }
     },
     {
@@ -1260,7 +1417,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "bo",
-            "name": "Tibetan Standard, Tibetan, Central"
+            "name": "Tibetan Standard, Tibetan, Central",
+            "native_name": "བོད་ཡིག"
         }
     },
     {
@@ -1268,7 +1426,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "tk",
-            "name": "Turkmen"
+            "name": "Turkmen",
+            "native_name": "Türkmençe"
         }
     },
     {
@@ -1276,7 +1435,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "tl",
-            "name": "Tagalog"
+            "name": "Tagalog",
+            "native_name": "Wikang Tagalog"
         }
     },
     {
@@ -1284,7 +1444,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "tn",
-            "name": "Tswana"
+            "name": "Tswana",
+            "native_name": "Setswana"
         }
     },
     {
@@ -1292,7 +1453,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "to",
-            "name": "Tonga (Tonga Islands)"
+            "name": "Tonga (Tonga Islands)",
+            "native_name": "Faka Tonga"
         }
     },
     {
@@ -1300,7 +1462,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "tr",
-            "name": "Turkish"
+            "name": "Turkish",
+            "native_name": "Türkçe"
         }
     },
     {
@@ -1308,7 +1471,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ts",
-            "name": "Tsonga"
+            "name": "Tsonga",
+            "native_name": "Xitsonga"
         }
     },
     {
@@ -1316,7 +1480,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "tt",
-            "name": "Tatar"
+            "name": "Tatar",
+            "native_name": "Татар теле"
         }
     },
     {
@@ -1324,7 +1489,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "tw",
-            "name": "Twi"
+            "name": "Twi",
+            "native_name": "Twi"
         }
     },
     {
@@ -1332,7 +1498,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ty",
-            "name": "Tahitian"
+            "name": "Tahitian",
+            "native_name": "Reo Tahiti"
         }
     },
     {
@@ -1340,7 +1507,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ug",
-            "name": "Uighur, Uyghur"
+            "name": "Uighur, Uyghur",
+            "native_name": "ئۇيغۇرچە"
         }
     },
     {
@@ -1348,7 +1516,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "uk",
-            "name": "Ukrainian"
+            "name": "Ukrainian",
+            "native_name": "Українська"
         }
     },
     {
@@ -1356,7 +1525,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ur",
-            "name": "Urdu"
+            "name": "Urdu",
+            "native_name": "اردو"
         }
     },
     {
@@ -1364,7 +1534,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "uz",
-            "name": "Uzbek"
+            "name": "Uzbek",
+            "native_name": "Oʻzbek"
         }
     },
     {
@@ -1372,7 +1543,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "ve",
-            "name": "Venda"
+            "name": "Venda",
+            "native_name": "Tshivenḓa"
         }
     },
     {
@@ -1380,7 +1552,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "vi",
-            "name": "Vietnamese"
+            "name": "Vietnamese",
+            "native_name": "Tiếng Việt"
         }
     },
     {
@@ -1388,7 +1561,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "vo",
-            "name": "Volapük"
+            "name": "Volapük",
+            "native_name": "Volapük"
         }
     },
     {
@@ -1396,7 +1570,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "wa",
-            "name": "Walloon"
+            "name": "Walloon",
+            "native_name": "Walon"
         }
     },
     {
@@ -1404,7 +1579,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "cy",
-            "name": "Welsh"
+            "name": "Welsh",
+            "native_name": "Cymraeg"
         }
     },
     {
@@ -1412,7 +1588,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "wo",
-            "name": "Wolof"
+            "name": "Wolof",
+            "native_name": "Wolof"
         }
     },
     {
@@ -1420,7 +1597,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "fy",
-            "name": "Western Frisian"
+            "name": "Western Frisian",
+            "native_name": "Frysk"
         }
     },
     {
@@ -1428,7 +1606,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "xh",
-            "name": "Xhosa"
+            "name": "Xhosa",
+            "native_name": "IsiXhosa"
         }
     },
     {
@@ -1436,7 +1615,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "yi",
-            "name": "Yiddish"
+            "name": "Yiddish",
+            "native_name": "ייִדיש"
         }
     },
     {
@@ -1444,7 +1624,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "yo",
-            "name": "Yoruba"
+            "name": "Yoruba",
+            "native_name": "Yorùbá"
         }
     },
     {
@@ -1452,7 +1633,8 @@
         "model": "volunteers.language",
         "fields": {
             "iso_code": "za",
-            "name": "Zhuang, Chuang"
+            "name": "Zhuang, Chuang",
+            "native_name": "Saɯ cueŋƅ"
         }
     }
 ]

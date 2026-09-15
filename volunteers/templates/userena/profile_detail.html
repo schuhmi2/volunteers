@@ -55,7 +55,7 @@
       <div class="min-w-0">
         <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "Speaks" %}</span>
         <p class="text-lm-muted dark:text-dm-text mt-1 flex flex-wrap gap-x-1 break-words max-h-24 overflow-y-auto pr-1">
-          {% for lang in languages %}{{ lang.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          {% for lang in languages %}{{ lang.display_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </p>
       </div>
       {% endif %}

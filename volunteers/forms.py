@@ -160,12 +160,17 @@ def validate_matrix_id(value):
     matrix_id_pattern = r'^@[a-zA-Z0-9._=-]+:[a-zA-Z0-9.-]+$'
     if not re.match(matrix_id_pattern, value):
         raise ValidationError('Invalid Matrix ID format. The format is @username:homeserver.tld')
+class LanguageMultipleChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return obj.display_name
+
+
 class EditProfileForm(forms.ModelForm):
     """ Base form used for fields that are always required """
     first_name = forms.CharField(label=_('First name'), max_length=30, required=True)
     last_name = forms.CharField(label=_('Last name'), max_length=30, required=True)
 
-    spoken_languages = forms.ModelMultipleChoiceField(
+    spoken_languages = LanguageMultipleChoiceField(
         queryset=Language.objects.all().order_by('name'),
         required=False,
         label=_('Spoken languages'),

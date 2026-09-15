@@ -22,3 +22,10 @@ volunteers.db
 coverage.xml
 .vscode
 deployment/playbook/.ansible_vault
+
+# Bundled label-print fonts (and their license files) are downloaded on
+# demand (see volunteers/fonts_manifest.py / `manage.py download_fonts`)
+# rather than committed.
+volunteers/static/fonts/*.ttf
+volunteers/static/fonts/OFL-*.txt
+volunteers/static/fonts/DejaVuSans-LICENSE.txt

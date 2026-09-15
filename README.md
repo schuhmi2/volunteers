@@ -49,22 +49,35 @@ After cloning the repo do these steps:
    ./manage.py collectstatic
    ```
 
-6) create a superuser:
+6) download the fonts used for printing volunteer labels in non-Latin scripts
+   (optional -- this also happens automatically the first time a label PDF
+   is generated, but running it up front avoids a delay on first use):
+   ```
+   ./manage.py download_fonts
+   ```
+   See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for details.
+
+7) create a superuser:
    ```
    ./manage.py createsuperuser
    ```
 
-7) run a development server:
+8) run a development server:
    ```
    ./manage.py runserver
    ```
    which should give you: http://localhost:8000/
-8) in the admin interface http://localhost:8000/admin/ - make sure you create an edition before adding any other things
+9) in the admin interface http://localhost:8000/admin/ - make sure you create an edition before adding any other things
 
 
 Production setup 
 ================
 See [the playbook instructions](deployment/playbook/README.md) for more information.
+
+
+Third-party assets
+===================
+See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for bundled third-party assets and their licenses.
 
 
 AI Disclosure
