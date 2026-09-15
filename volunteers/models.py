@@ -201,6 +201,58 @@ class Edition(models.Model):
 
 
 """
+A location represents a physical (or virtual) place at FOSDEM, e.g. a room,
+building, or online space. It stores an optional mapping to the matching
+nav.fosdem.org (c3nav) location slug, so pages can link out to a map.
+
+The name<->slug mapping cannot reliably be derived automatically (not every
+location is a real room, and slugs occasionally change), so it is curated:
+seeded by a one-off scrape of the FOSDEM schedule archive
+(see `scrape_fosdem_rooms` management command), then maintained by hand via
+the Django admin.
+"""
+
+
+class Location(models.Model):
+    class Meta:
+        verbose_name = _('Location')
+        verbose_name_plural = _('Locations')
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    name = models.CharField(max_length=128, unique=True)
+    building = models.CharField(max_length=50, blank=True, null=True, help_text="Building code, e.g. 'H', 'K', 'AW', 'U'.")
+    nav_slug = models.SlugField(
+        max_length=100, blank=True, null=True,
+        help_text="Slug used on nav.fosdem.org, e.g. 'janson' for https://nav.fosdem.org/l/janson/. Leave blank if this location isn't a mappable room."
+    )
+    notes = models.CharField(max_length=255, blank=True, null=True, help_text="Optional free-text note, e.g. why no map link exists.")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def nav_url(self):
+        if self.nav_slug:
+            return "https://nav.fosdem.org/l/%s/" % self.nav_slug
+        return None
+
+    @classmethod
+    def get_or_create_for_name(cls, name):
+        """Resolve (and lazily create) the Location matching a raw location string.
+
+        Used by task/talk import so new/unrecognized location names don't
+        break imports - they just get a Location row without a nav_slug,
+        left for a maintainer to fill in via the admin.
+        """
+        name = (name or '').strip()
+        if not name:
+            return None
+        location, _created = cls.objects.get_or_create(name=name)
+        return location
+
+
+"""
 A track is a collection of talks, grouped around one single
 concept or subject.
 """
@@ -240,6 +292,10 @@ class Talk(models.Model):
     description = models.TextField()
     fosdem_url = models.TextField(null=True)
     location = models.CharField(max_length=128, null=True, blank=True)
+    location_ref = models.ForeignKey(
+        Location, null=True, blank=True, on_delete=models.SET_NULL,
+        help_text="Resolved Location matching the 'location' text, used for the nav.fosdem.org map link."
+    )
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -278,6 +334,7 @@ class Talk(models.Model):
         talk.description = xml.find('description').text or ''
         talk.fosdem_url = xml.find('url').text
         talk.location = xml.find('room').text
+        talk.location_ref = Location.get_or_create_for_name(talk.location)
         talk.date = day_date
         (talk.start_time, talk.end_time) = (talk_start, talk_end)
         persons = xml.find('persons')
@@ -390,6 +447,10 @@ class Task(models.Model):
     fosdem_url = models.TextField(null=True, blank=True)
     info_url = models.URLField(null=True, blank=True, help_text="Link to volunteer documentation for this task")
     location = models.CharField(null=True, max_length=30)
+    location_ref = models.ForeignKey(
+        Location, null=True, blank=True, on_delete=models.SET_NULL,
+        help_text="Resolved Location matching the 'location' text, used for the nav.fosdem.org map link."
+    )
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -457,6 +518,7 @@ class Task(models.Model):
         task.name = '%s: %s' % (task_type, talk.title)
         task.fosdem_url = talk.fosdem_url
         task.location = talk.location
+        task.location_ref = talk.location_ref or Location.get_or_create_for_name(talk.location)
         task.date = talk.date
         task.start_time = talk.start_time
         task.end_time = talk.end_time
@@ -494,6 +556,7 @@ class Task(models.Model):
             task.location = location_elem.text
         else:
             task.location = ''
+        task.location_ref = Location.get_or_create_for_name(task.location)
         day_offset = int(xml.find('day').text)
         task.date = edition.start_date + datetime.timedelta(days=day_offset)
         task.start_time = parse_time(xml.find('start_time').text)

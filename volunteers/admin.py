@@ -17,6 +17,7 @@ from volunteers.models import Edition
 from volunteers.models import Track
 from volunteers.models import Talk
 from volunteers.models import Language
+from volunteers.models import Location
 from volunteers.models import TaskCategory
 from volunteers.models import TaskTemplate
 from volunteers.models import Task
@@ -284,11 +285,25 @@ class TrackAdmin(admin.ModelAdmin):
     list_filter = [EditionFilter]
 
 
+class LocationAdmin(admin.ModelAdmin):
+    fields = ['name', 'building', 'nav_slug', 'notes']
+    list_display = ['name', 'building', 'nav_slug', 'has_map_link', 'updated_at']
+    list_editable = ['building', 'nav_slug']
+    list_filter = ['building']
+    search_fields = ['name', 'building', 'nav_slug']
+    readonly_fields = []
+
+    @admin.display(boolean=True, description='Has map link')
+    def has_map_link(self, obj):
+        return bool(obj.nav_slug)
+
+
 class TalkAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {'fields': ['track', 'speaker', 'title']}),
         (None, {'fields': ['description', 'fosdem_url']}),
         (None, {'fields': ['date', 'start_time', 'end_time']}),
+        (None, {'fields': ['location', 'location_ref']}),
     ]
     list_display = ['link', 'title', 'track', 'date', 'start_time']
     list_editable = ['title', 'track', 'date', 'start_time']
@@ -319,14 +334,14 @@ class VolunteerTaskAdmin(admin.ModelAdmin):
 class TaskAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {'fields': ['edition', 'name', 'nbr_volunteers', 'nbr_volunteers_min', 'nbr_volunteers_max', 'date',
-                           'start_time', 'end_time', 'location']}),
+                           'start_time', 'end_time', 'location', 'location_ref']}),
         (None, {'fields': ['talk', 'template']}),
         (None, {'fields': ['description', 'info_url', 'fosdem_url']}),
         ('Approval', {'fields': ['requires_approval'], 'description': 'Leave blank to inherit from template. Set to override.'}),
     ]
 #    inlines = (VolunteerTaskInline,)
     list_display = ['link', 'edition', 'name', 'date', 'start_time', 'end_time', 'assigned_volunteers',
-                    'nbr_volunteers', 'nbr_volunteers_min', 'nbr_volunteers_max', 'location']
+                    'nbr_volunteers', 'nbr_volunteers_min', 'nbr_volunteers_max', 'location', 'location_ref']
     list_editable = ['name', 'date', 'start_time', 'end_time', 'nbr_volunteers', 'nbr_volunteers_min',
                      'nbr_volunteers_max', 'location']
     list_filter = [EditionFilter, DayListFilter, 'template', 'talk__track']
@@ -548,6 +563,7 @@ admin.site.register(Edition, EditionAdmin)
 admin.site.register(Track, TrackAdmin)
 admin.site.register(Talk, TalkAdmin)
 admin.site.register(Language, LanguageAdmin)
+admin.site.register(Location, LocationAdmin)
 admin.site.register(TaskCategory, TaskCategoryAdmin)
 admin.site.register(TaskTemplate, TaskTemplateAdmin)
 admin.site.register(Task, TaskAdmin)

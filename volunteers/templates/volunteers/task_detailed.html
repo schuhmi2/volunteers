@@ -81,7 +81,7 @@
               {% if task.fosdem_url %}<a href="{{ task.fosdem_url }}" class="text-fosdem hover:underline">{{ task.talk }}</a>
               {% else %}{{ task.talk }}{% endif %}
             </td>
-            {% if task.location %}<td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-[10rem] truncate" title="{{ task.location }}">{{ task.location }}</td>{% endif %}
+            {% if task.location %}<td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-[10rem] truncate" title="{{ task.location }}">{% if task.location_ref.nav_url %}<a href="{{ task.location_ref.nav_url }}" target="_blank" rel="noopener noreferrer" class="text-fosdem dark:text-fosdem-accent underline decoration-1 underline-offset-2 hover:decoration-2 font-medium inline-flex items-center gap-0.5">{{ task.location }}<svg class="inline w-3 h-3 shrink-0 align-text-top" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M12.293 3.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L13.586 8H8a1 1 0 010-2h5.586l-1.293-1.293a1 1 0 010-1.414z"/><path d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H4V7h3a1 1 0 000-2H4z"/></svg></a>{% else %}{{ task.location }}{% endif %}</td>{% endif %}
           </tr>
         </tbody>
       </table>
