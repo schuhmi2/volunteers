@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
-from volunteers.models import Volunteer, VolunteerTask, TaskCategory, Language, VolunteerLanguage
+from volunteers.models import Volunteer, VolunteerTask, TaskCategory, Language, VolunteerLanguage, CURRENT_PRIVACY_POLICY_VERSION
 from django.contrib.auth.forms import AuthenticationForm
 
 User = get_user_model()
@@ -151,7 +151,12 @@ class SignupForm(forms.ModelForm):
 
         # Set acceptance timestamp
         if self.cleaned_data.get('privacy_policy'):
-            vol = Volunteer.objects.create(user=new_user, privacy_policy_accepted_at=timezone.now(), email_confirmed=False)
+            vol = Volunteer.objects.create(
+                user=new_user,
+                privacy_policy_accepted_at=timezone.now(),
+                privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+                email_confirmed=False,
+            )
             vol.save()
 
         return new_user

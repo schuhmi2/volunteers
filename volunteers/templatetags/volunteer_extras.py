@@ -1,6 +1,16 @@
 from django import template
+from django.utils.safestring import mark_safe
 
 register = template.Library()
+
+@register.filter
+def obfuscate_email(email):
+    """
+    Renders an email address as HTML numeric character entities so it displays
+    normally to users but is not easily scraped by bots reading raw HTML/text.
+    Intentionally does not produce a mailto: link (non-clickable).
+    """
+    return mark_safe(''.join('&#%d;' % ord(char) for char in email))
 
 @register.filter
 def get_item(container, key):

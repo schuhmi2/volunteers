@@ -1,6 +1,9 @@
 from django.shortcuts import redirect
 from django.urls import reverse
 
+from volunteers.models import CURRENT_PRIVACY_POLICY_VERSION
+
+
 class EnforcePrivacyPolicyMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -8,7 +11,10 @@ class EnforcePrivacyPolicyMiddleware:
     def __call__(self, request):
         if request.user.is_authenticated:
             v = getattr(request.user, 'volunteer', None)
-            if v and not v.privacy_policy_accepted_at:
+            if v and (
+                not v.privacy_policy_accepted_at
+                or v.privacy_policy_version < CURRENT_PRIVACY_POLICY_VERSION
+            ):
                 allowed = {
                     reverse('privacy_policy'),
                     reverse('privacy_policy_consent'), 

@@ -23,6 +23,12 @@ from django.template.loader import render_to_string
 
 from PIL import Image
 
+# Bump this whenever the privacy policy (static/privacy_policy.html) changes
+# in a way that requires existing users to re-read and re-accept it. Users
+# whose Volunteer.privacy_policy_version is lower than this are redirected
+# to the consent page again (see middleware.EnforcePrivacyPolicyMiddleware).
+CURRENT_PRIVACY_POLICY_VERSION = 2
+
 # Parse dates, times, DRY
 def parse_datetime(date_str, format='%Y-%m-%d'):
     return datetime.datetime.strptime(date_str, format)
@@ -594,6 +600,10 @@ class Volunteer(models.Model):
                                           blank=True, max_length=256, help_text="We need this to link your volunteers account from Pentabarf to participate in heralding/hosting a digital edition.")
     matrix_id = models.CharField('Matrix ID', null=True, blank=True, max_length=256, help_text='If you have a matrix account (mxid), you can specify it here. This is required for the virtual infodesk. The format is @username:homeserver.tld')
     privacy_policy_accepted_at = models.DateTimeField(null=True, blank=True)
+    privacy_policy_version = models.PositiveIntegerField(
+        default=1,
+        help_text='Version of the privacy policy this volunteer last accepted.',
+    )
     mugshot = models.ImageField(upload_to='mugshots/', blank=True, null=True)
     email_confirmed = models.BooleanField(null=False, default=False)
     privacy = models.CharField(max_length=16, null=True, blank=True)

@@ -3,7 +3,7 @@ from datetime import timedelta
 import datetime as _dt
 
 from .models import Volunteer, VolunteerTask, VolunteerTalk, TaskCategory, TaskTemplate, Task, Track, \
-    Talk, Edition, EmailConfirmation, LabelPrintLog, TaskAttendance
+    Talk, Edition, EmailConfirmation, LabelPrintLog, TaskAttendance, CURRENT_PRIVACY_POLICY_VERSION
 from .forms import EditProfileForm, SignupForm, EventSignupForm, EmailChangeForm, ResendActivationForm
 
 from django.contrib import messages
@@ -456,6 +456,12 @@ def render_to_pdf(request, template_src, context_dict):
 
 @login_required
 def task_list_detailed(request, username):
+    # Detailed current-edition schedule is personal information (which
+    # tasks/times/locations a specific volunteer is assigned); only the
+    # volunteer themselves or an admin may view it.
+    if request.user.username != username and not request.user.is_superuser:
+        raise PermissionDenied("you are not allowed to view another user's task schedule")
+
     context = {}
     edition = Edition.get_current()
     current_tasks = Task.objects.filter(edition=edition).order_by('date', 'start_time', 'end_time')
@@ -698,24 +704,30 @@ def profile_detail(request, username,
     except profile_model.DoesNotExist:
         profile = Volunteer.objects.create(user=user)
 
-    # Build volunteering history: past editions with their tasks, newest first
-    past_editions = Edition.objects.filter(
-        task__volunteertask__volunteer=profile
-    ).exclude(
-        pk=current_edition.pk if current_edition else None
-    ).distinct().order_by('-start_date')
-
+    # Build volunteering history: past editions with their tasks, newest first.
+    # Restricted to the profile owner and admins -- it discloses a volunteer's
+    # multi-year attendance pattern (dates/times/locations), which other
+    # logged-in volunteers should not be able to browse.
     history = []
-    for edition in past_editions:
-        edition_tasks = Task.objects.filter(
-            edition=edition,
-            volunteertask__volunteer=profile,
-        ).order_by('date', 'start_time')
-        history.append({'edition': edition, 'tasks': edition_tasks})
+    if request.user == user or request.user.is_superuser:
+        past_editions = Edition.objects.filter(
+            task__volunteertask__volunteer=profile
+        ).exclude(
+            pk=current_edition.pk if current_edition else None
+        ).distinct().order_by('-start_date')
+
+        for edition in past_editions:
+            edition_tasks = Task.objects.filter(
+                edition=edition,
+                volunteertask__volunteer=profile,
+            ).order_by('date', 'start_time')
+            history.append({'edition': edition, 'tasks': edition_tasks})
 
     if not extra_context: extra_context = dict()
     extra_context['profile'] = profile
-    extra_context['tasks'] = current_tasks.filter(volunteers__user=user)
+    can_view_tasks = request.user == user or request.user.is_superuser
+    extra_context['can_view_current_tasks'] = can_view_tasks
+    extra_context['tasks'] = current_tasks.filter(volunteers__user=user) if can_view_tasks else current_tasks.none()
     extra_context['history'] = history
     extra_context['hide_email'] = True
     extra_context['username'] = profile.user.username
@@ -757,17 +769,20 @@ class ProfileListView(ListView):
 @login_required
 def privacy_policy_consent(request):
     v = getattr(request.user, 'volunteer', None)
-    
-    if v and v.privacy_policy_accepted_at:
+
+    needs_consent = not v or not v.privacy_policy_accepted_at or v.privacy_policy_version < CURRENT_PRIVACY_POLICY_VERSION
+    if not needs_consent:
         return redirect('task_list')
-    
+
     if request.method == 'POST' and request.POST.get('agree') == 'yes' and v:
         from django.utils import timezone
         v.privacy_policy_accepted_at = timezone.now()
-        v.save(update_fields=['privacy_policy_accepted_at'])
+        v.privacy_policy_version = CURRENT_PRIVACY_POLICY_VERSION
+        v.save(update_fields=['privacy_policy_accepted_at', 'privacy_policy_version'])
         return redirect('task_list')
-    
-    return render(request, 'volunteers/privacy_policy_consent.html')
+
+    is_reconsent = bool(v and v.privacy_policy_accepted_at)
+    return render(request, 'volunteers/privacy_policy_consent.html', {'is_reconsent': is_reconsent})
 
 
 @login_required

@@ -1,28 +1,200 @@
 {% extends "base.html" %}
+{% load volunteer_extras %}
 {% block title %}Privacy Policy — FOSDEM Volunteers{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto">
   <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text mb-8">Privacy Policy</h1>
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-8 prose dark:prose-invert max-w-none text-lm-muted dark:text-dm-text">
+    <p class="text-sm text-lm-subtle dark:text-dm-muted">Last updated: September 2026 (version 2)</p>
     <p>
       FOSDEM Volunteers collects and stores personal data that you provide during registration in order
       to coordinate volunteers for the FOSDEM conference. This data is used solely for the purpose of
       volunteer management.
     </p>
-    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Data collected</h2>
-    <ul class="list-disc list-inside space-y-1">
-      <li>Name and username</li>
-      <li>Email address</li>
-      <li>Profile photo (optional)</li>
-      <li>Contact details provided voluntarily (mobile number, Matrix ID)</li>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Who is responsible for your data</h2>
+    <p>
+      The data controller for this website is <strong>FOSDEM VZW</strong>
+      (Belgian enterprise number / KBO-BCE: BE 0477.085.590), a not-for-profit organisation under
+      Belgian law, registered at <strong>Guldendelle 9, 1930 Zaventem, Belgium</strong>.
+      For any privacy-related question or request you can contact us at
+      <span class="font-medium">{{ "info@fosdem.org"|obfuscate_email }}</span>
+      or <span class="font-medium">{{ "volunteer-admin@fosdem.org"|obfuscate_email }}</span>.
+      FOSDEM VZW is a small volunteer-run non-profit and is not required to appoint a Data Protection
+      Officer under Article 37 GDPR; the contacts above act as our privacy contact point.
+    </p>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Legal basis for processing</h2>
+    <p>
+      We rely on different legal bases depending on the data and purpose:
+    </p>
+    <ul class="list-disc list-outside pl-5 space-y-1">
+      <li>
+        <strong>Necessity of the volunteer relationship</strong> (Art. 6(1)(b)/(f) GDPR) — your name,
+        username, email address, and task sign-up/attendance records. These are required to create a
+        volunteer account and to schedule and coordinate you for tasks; without them we cannot register
+        you as a volunteer.
+      </li>
+      <li>
+        <strong>Consent</strong> (Art. 6(1)(a) GDPR) — all optional fields (profile photo, mobile
+        number, Matrix ID, pronouns, spoken languages, T-shirt size). These are never required to
+        volunteer; you can leave them blank, add them, or remove them at any time from your profile,
+        and doing so has no effect on your ability to sign up for or carry out tasks.
+      </li>
+      <li>
+        <strong>Legitimate interest</strong> (Art. 6(1)(f) GDPR) — printing badges/labels and retaining
+        volunteering history across editions, in our legitimate interest of running the FOSDEM
+        volunteer programme safely and effectively. We have assessed that this is necessary and
+        proportionate: it uses the minimum data needed, access to history/attendance data is restricted
+        to you and coordinators/admins (see "Who can see your data" below), and you may object at any
+        time (see "Your rights").
+      </li>
     </ul>
+    <p>
+      You can withdraw consent for any consent-based (optional) data at any time by editing your profile
+      or by contacting us; this does not affect the lawfulness of processing carried out before
+      withdrawal. Withdrawing consent for account-necessary data (e.g. deleting your account) means we
+      can no longer keep you registered as a volunteer.
+    </p>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Data collected</h2>
+    <p>Fields marked "(optional)" are never required to volunteer and can be left blank.</p>
+    <ul class="list-disc list-outside pl-5 space-y-1">
+      <li>Name and username — required to create your account and identify you for tasks.</li>
+      <li>Email address — required, used to log in and to send you account and task-related emails.</li>
+      <li>Profile photo (optional) — shown on your profile to help coordinators and fellow volunteers recognise you.</li>
+      <li>"About me" text (optional) — a short bio shown on your profile.</li>
+      <li>
+        Contact details
+        <ul class="list-[circle] list-outside pl-5 mt-1 space-y-1">
+          <li>Mobile number (optional) — used as an on-site emergency/urgent contact channel.</li>
+          <li>Matrix ID (optional) — used to invite you to volunteer chat rooms.</li>
+        </ul>
+      </li>
+      <li>Pronouns (optional) — shown on your profile and badge so others can address you correctly.</li>
+      <li>Spoken languages (optional) — shown on your badge so attendees know which languages you can help in.</li>
+      <li>T-shirt size (optional) — used to help gauge the number of T-shirts of each size to order; providing this does not guarantee you will receive a T-shirt in that size. Visible only to you and volunteer coordinators/admins.</li>
+      <li>Task sign-up and attendance records, including sign-in/sign-out timestamps for tasks you check in to — required for scheduling and coordination.</li>
+    </ul>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">How your data is used</h2>
+    <ul class="list-disc list-outside pl-5 space-y-1">
+      <li>To schedule and coordinate your volunteering tasks for each edition.</li>
+      <li>
+        Your name, username, pronouns, and spoken languages may be printed on a physical badge/lanyard
+        label for the event, so staff, other volunteers, and attendees can recognise you and
+        communicate with you appropriately during FOSDEM. Your task schedule for the current edition
+        may also be printed on the label, to help you as a volunteer know where you should be and
+        when. This label is printed by FOSDEM itself, on-site, and is never sent to or printed by an
+        external/third-party provider.
+      </li>
+      <li>
+        Task sign-in/sign-out timestamps help coordinators spot tasks that are unstaffed or
+        running short, so they can quickly find and dispatch a replacement volunteer to cover
+        the gap.
+      </li>
+    </ul>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Who can see your data</h2>
+    <ul class="list-disc list-outside pl-5 space-y-1">
+      <li>You can always see your own full profile, task history, and current-edition tasks.</li>
+      <li>
+        Volunteer coordinators and site admins can see your full profile, including your volunteering
+        history, current-edition tasks, and T-shirt size, in order to schedule and support you.
+      </li>
+      <li>
+        Other logged-in volunteers can see your name, username, profile photo, "about me" text, and
+        pronouns, but not your contact details, T-shirt size, volunteering history, or current-edition
+        tasks.
+      </li>
+      <li>
+        Staff, other volunteers, and attendees may see whatever is printed on your physical
+        badge/lanyard label (name, pronouns, spoken languages, task schedule — see above); printed
+        labels are discarded after the event and are not retained by FOSDEM.
+      </li>
+    </ul>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Data retention and volunteering history</h2>
+    <p>
+      Your task assignments are retained across editions rather than deleted after each event, so that
+      your profile shows a "Volunteering history" of tasks from previous years. This history, as well as
+      your task list for the current edition, is only visible to you and to volunteer coordinators/admins
+      — it is not visible to other volunteers. This history is kept for as long as your account
+      remains active, as it directly supports showing you your own volunteering history and helping
+      coordinators recognise returning volunteers. If your account is deleted, your task and
+      attendance records are deleted or anonymised within 90 days. You can also request deletion of
+      your history at any time — see "Your rights" below. Optional profile fields (photo, contact
+      details, pronouns, languages, T-shirt size) are kept for as long as you choose to keep them on
+      your profile, and are removed if you delete them or your account. Routine backups are retained
+      for a limited period (no more than 30 days) before being overwritten.
+    </p>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Where your data is stored and who processes it</h2>
+    <p>
+      This website and its database are hosted in Belgium / the European Union.
+      We do not sell or share your data with advertisers. The following parties process your data on
+      our behalf, strictly to run this service:
+    </p>
+    <ul class="list-disc list-outside pl-5 space-y-1">
+      <li>
+        <strong>[PLACEHOLDER: hosting provider name]</strong> — hosts the application and database
+        (located in Belgium / the EU).
+      </li>
+      <li>
+        FOSDEM's own mail server — sends you account and task-related emails.
+      </li>
+    </ul>
+    <p>
+      Your data is not transferred outside the European Economic Area.
+    </p>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Cookies</h2>
+    <p>
+      This website only uses strictly necessary cookies, which are exempt from consent requirements
+      under Belgian ePrivacy rules because they are necessary to provide the service you request:
+    </p>
+    <ul class="list-disc list-outside pl-5 space-y-1">
+      <li>Session cookie — keeps you signed in; expires when your session ends or after a period of inactivity.</li>
+      <li>CSRF cookie — protects forms against cross-site request forgery; expires after about one year.</li>
+    </ul>
+    <p>We do not use tracking, advertising, or analytics cookies.</p>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Automated decision-making</h2>
+    <p>We do not use automated decision-making or profiling that produces legal or similarly significant effects on you.</p>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Minors</h2>
+    <p>
+      You must be at least 16 years old to volunteer for FOSDEM. Some tasks may, at the discretion of
+      volunteer coordinators or other staff, be restricted to volunteers aged 18 and over. When signing
+      in for the first time, you may be asked to prove your age to a member of staff.
+    </p>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Security</h2>
+    <p>
+      We take reasonable technical and organisational measures to protect your data against unauthorised
+      access, loss, or misuse, including access restrictions, encrypted connections (HTTPS), and
+      restricting historical/attendance data to yourself and volunteer coordinators/admins. In the
+      unlikely event of a data breach affecting your data, we will notify the Belgian Data Protection
+      Authority and, where required, you, in line with Articles 33 and 34 GDPR.
+    </p>
     <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Your rights</h2>
-    <p>You may request deletion of your data by contacting the volunteer coordinators.</p>
+    <p>
+      Under the GDPR, you have the right to access, rectify, export (data portability), or request
+      deletion of your data (including your volunteering history), and to request restriction of its
+      processing. Where we rely on legitimate interest (see "Legal basis for processing"), you also have
+      the right to object at any time to that processing; we will then stop unless we have compelling
+      legitimate grounds that override your interests. We will respond to any such request without
+      undue delay, and in any event within one month (extendable by a further two months for complex
+      requests). To exercise any of these rights, contact us at
+      <span class="font-medium">{{ "info@fosdem.org"|obfuscate_email }}</span>
+      or <span class="font-medium">{{ "volunteer-admin@fosdem.org"|obfuscate_email }}</span>. You also have the right to lodge a complaint with the Belgian Data Protection
+      Authority (Gegevensbeschermingsautoriteit / Autorité de protection des données), Rue de la Presse
+      35 / Drukpersstraat 35, 1000 Brussels, Belgium, at
+      <a href="https://www.autoriteprotectiondonnees.be" target="_blank" rel="noopener"
+         class="text-fosdem underline hover:text-fosdem-dark">autoriteprotectiondonnees.be<span class="sr-only"> (opens in new tab)</span></a>,
+      or with the supervisory authority of your own country of residence, without prejudice to your
+      right to a judicial remedy.
+    </p>
+    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Changes to this policy</h2>
+    <p>
+      If we make material changes to this policy, we will ask existing users to review and accept the
+      updated policy the next time they sign in, and we will update the "version" and "last updated"
+      date at the top of this page.
+    </p>
     <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mt-6 mb-2">Contact</h2>
     <p>
-      Questions about this policy can be directed to the
-      <a href="https://doc.volunteers.fosdem.org/general/communication/#contacting-coordinators"
-         class="text-fosdem underline hover:text-fosdem-dark">volunteer coordinators</a>.
+      Questions about this policy can be directed to
+      <span class="font-medium">{{ "info@fosdem.org"|obfuscate_email }}</span>
+      or <span class="font-medium">{{ "volunteer-admin@fosdem.org"|obfuscate_email }}</span>.
     </p>
   </div>
 </div>

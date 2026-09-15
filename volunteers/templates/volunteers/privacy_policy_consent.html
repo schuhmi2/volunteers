@@ -5,7 +5,11 @@
 <div class="max-w-md mx-auto">
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow-lg p-8">
     <h1 class="text-2xl font-bold text-lm-text dark:text-dm-text mb-2">Privacy Policy Agreement</h1>
+    {% if is_reconsent %}
+    <p class="text-lm-muted dark:text-dm-text text-sm mb-4">Our Privacy Policy has been updated. Please review the changes and accept the updated policy to continue.</p>
+    {% else %}
     <p class="text-lm-muted dark:text-dm-text text-sm mb-4">You must accept our updated Privacy Policy to continue.</p>
+    {% endif %}
     <a href="{% url 'privacy_policy' %}" target="_blank"
        class="text-fosdem hover:underline text-sm font-medium">Read Privacy Policy ↗<span class="sr-only"> (opens in new tab)</span></a>
 

@@ -68,6 +68,7 @@
   </div>
 
   <!-- Current edition tasks -->
+  {% if can_view_current_tasks %}
   {% if tasks %}
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
     <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-3">{% trans "Tasks this edition" %}</h2>
@@ -86,6 +87,7 @@
     {% if profile.user.get_full_name %}{{ profile.user.get_full_name }}{% else %}{{ profile.user }}{% endif %}
     hasn't signed up for any tasks this edition yet.
   </p>
+  {% endif %}
   {% endif %}
 
   <!-- Volunteering history: past editions -->
