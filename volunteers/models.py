@@ -86,8 +86,11 @@ class Edition(models.Model):
 
     @classmethod
     def get_previous(cls):
-        today = datetime.date.today()
-        previous = cls.objects.filter(end_date__lt=today)
+        current = cls.get_current()
+        if current:
+            previous = cls.objects.filter(end_date__lt=current.start_date)
+        else:
+            previous = cls.objects.filter(end_date__lt=datetime.date.today())
         if previous:
             return previous[0]
         return False
