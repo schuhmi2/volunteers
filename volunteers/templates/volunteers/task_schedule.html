@@ -10,7 +10,7 @@
     <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{{ template.name }} {% trans "Schedule" %}</h1>
     <form action="{% url 'task_schedule_csv' template.id %}">
       <button type="submit" class="bg-fosdem hover:bg-fosdem-dark text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
-        <span aria-hidden="true">⬇</span> Export CSV
+        Export CSV
       </button>
     </form>
   </div>

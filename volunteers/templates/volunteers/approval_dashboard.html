@@ -43,11 +43,11 @@
                 <input type="hidden" name="vt_id" value="{{ vt.id }}">
                 <button type="submit" name="action" value="approve"
                         class="bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors">
-                  <span aria-hidden="true">✓</span> {% trans "Approve" %}
+                  {% trans "Approve" %}
                 </button>
                 <button type="submit" name="action" value="deny"
                         class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors">
-                  <span aria-hidden="true">✗</span> {% trans "Deny" %}
+                  {% trans "Deny" %}
                 </button>
               </form>
             </td>
