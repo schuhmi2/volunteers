@@ -3,20 +3,30 @@
 from django.db import migrations, models
 
 
+def set_postgresql_default(apps, schema_editor):
+    if schema_editor.connection.vendor == 'postgresql':
+        schema_editor.execute(
+            'ALTER TABLE volunteers_volunteer '
+            'ALTER COLUMN email_confirmed SET DEFAULT FALSE;'
+        )
+
+
+def drop_postgresql_default(apps, schema_editor):
+    if schema_editor.connection.vendor == 'postgresql':
+        schema_editor.execute(
+            'ALTER TABLE volunteers_volunteer '
+            'ALTER COLUMN email_confirmed DROP DEFAULT;'
+        )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
         ("volunteers", "0005_volunteer_language_volunteer_privacy"),
     ]
     operations = [
-        migrations.RunSQL(
-            sql="""
-                ALTER TABLE volunteers_volunteer
-                ALTER COLUMN email_confirmed SET DEFAULT FALSE;
-            """,
-            reverse_sql="""
-                ALTER TABLE volunteers_volunteer
-                ALTER COLUMN email_confirmed DROP DEFAULT;
-            """
+        migrations.RunPython(
+            set_postgresql_default,
+            drop_postgresql_default,
         ),
-        ]
+    ]

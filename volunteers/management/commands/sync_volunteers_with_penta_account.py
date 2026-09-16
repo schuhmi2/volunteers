@@ -11,7 +11,7 @@ class Command(BaseCommand):
         for task in Task.objects.filter(edition=Edition.get_current()):
             if task.talk_id is None and task.template.name.lower() not in ['Virtual Infodesk'.lower()]:
                 continue
-            for volunteer in task.volunteers.all():
+            for volunteer in task.approved_volunteers():
                 if not volunteer.penta_account_name:
                     continue
                 if task.template.name.lower() in ['Virtual Infodesk'.lower()]:

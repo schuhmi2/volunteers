@@ -23,6 +23,7 @@ from django.contrib.auth import get_user_model
 
 from django.http import Http404
 import csv
+import uuid
 
 # PDF generation (optional for local development)
 try:
@@ -182,20 +183,20 @@ def category_schedule_list(request):
 
 @login_required
 def task_schedule(request, template_id):
-    template = TaskTemplate.objects.filter(id=template_id)[0]
+    template = get_object_or_404(TaskTemplate, id=template_id)
     tasks = Task.objects.annotate(volunteers__count=Count("volunteer")).filter(template=template, edition=Edition.get_current()).order_by('date', 'start_time', 'end_time')
     context = {
         'template': template,
         'tasks': SortedDict.fromkeys(tasks, {}),
     }
     for task in context['tasks']:
-        context['tasks'][task] = Volunteer.objects.filter(tasks=task)
+        context['tasks'][task] = task.approved_volunteers().select_related('user')
     return render(request, 'volunteers/task_schedule.html', context)
 
 
 @user_passes_test(lambda u: u.is_staff)
 def task_schedule_csv(request, template_id):
-    template = TaskTemplate.objects.filter(id=template_id)[0]
+    template = get_object_or_404(TaskTemplate, id=template_id)
     tasks = Task.objects.annotate(volunteers__count=Count("volunteer")).filter(template=template, edition=Edition.get_current()).order_by('date', 'start_time', 'end_time')
     response = HttpResponse(content_type='text/csv')
     filename = "schedule_%s.csv" % template.name
@@ -214,7 +215,7 @@ def task_schedule_csv(request, template_id):
             '', '', '', '', ''
         ]
         writer.writerow(row)
-        volunteers = Volunteer.objects.filter(tasks=task)
+        volunteers = task.approved_volunteers().select_related('user')
         for number, volunteer in enumerate(volunteers):
             row = [
                 '', '', '', '', '', '',
@@ -482,12 +483,21 @@ def task_list_detailed(request, username):
     current_tasks = Task.objects.filter(edition=edition).order_by('date', 'start_time', 'end_time')
 
     # get the requested users tasks
-    context['tasks'] = current_tasks.filter(volunteers__user__username=username)
+    context['tasks'] = current_tasks.filter(
+        volunteertask__volunteer__user__username=username,
+        volunteertask__status__in=('approved', 'pending'),
+    )
     context['user'] = request.user
-    context['profile_user'] = User.objects.filter(username=username)[0]
-    volunteer = Volunteer.objects.filter(user__username=username)[0]
+    context['profile_user'] = get_object_or_404(User, username=username)
+    volunteer = get_object_or_404(Volunteer, user__username=username)
     context['volunteer'] = volunteer
     context['edition'] = edition
+    context['signup_statuses'] = dict(
+        VolunteerTask.objects.filter(
+            volunteer=volunteer,
+            task__in=context['tasks'],
+        ).values_list('task_id', 'status')
+    )
     check_profile_completeness(request, volunteer)
 
     # Build sign-in availability and status dicts for the template
@@ -716,7 +726,7 @@ def profile_detail(request, username,
 
     try:
         profile = user.volunteer
-    except profile_model.DoesNotExist:
+    except Volunteer.DoesNotExist:
         profile = Volunteer.objects.create(user=user)
 
     # Build volunteering history: past editions with their tasks, newest first.
@@ -726,7 +736,8 @@ def profile_detail(request, username,
     history = []
     if request.user == user or request.user.is_superuser:
         past_editions = Edition.objects.filter(
-            task__volunteertask__volunteer=profile
+            task__volunteertask__volunteer=profile,
+            task__volunteertask__status='approved',
         ).exclude(
             pk=current_edition.pk if current_edition else None
         ).distinct().order_by('-start_date')
@@ -735,6 +746,7 @@ def profile_detail(request, username,
             edition_tasks = Task.objects.filter(
                 edition=edition,
                 volunteertask__volunteer=profile,
+                volunteertask__status='approved',
             ).order_by('date', 'start_time')
             history.append({'edition': edition, 'tasks': edition_tasks})
 
@@ -742,7 +754,21 @@ def profile_detail(request, username,
     extra_context['profile'] = profile
     can_view_tasks = request.user == user or request.user.is_superuser
     extra_context['can_view_current_tasks'] = can_view_tasks
-    extra_context['tasks'] = current_tasks.filter(volunteers__user=user) if can_view_tasks else current_tasks.none()
+    if can_view_tasks:
+        current_signups = VolunteerTask.objects.filter(
+            volunteer=profile,
+            task__edition=current_edition,
+            status__in=('approved', 'pending'),
+        )
+        extra_context['tasks'] = current_tasks.filter(
+            volunteertask__in=current_signups,
+        )
+        extra_context['task_signup_statuses'] = dict(
+            current_signups.values_list('task_id', 'status')
+        )
+    else:
+        extra_context['tasks'] = current_tasks.none()
+        extra_context['task_signup_statuses'] = {}
     extra_context['history'] = history
     extra_context['hide_email'] = True
     extra_context['username'] = profile.user.username
@@ -822,7 +848,7 @@ def resend_activation(request):
             confirmation, created = EmailConfirmation.objects.get_or_create(user=user)
 
             # If it's very old, regenerate token (optional)
-            if confirmation.created_at < timezone.now() - timezone.timedelta(days=7):
+            if confirmation.created_at < timezone.now() - timedelta(days=7):
                 confirmation.token = uuid.uuid4()
                 confirmation.created_at = timezone.now()
                 confirmation.save()
@@ -839,15 +865,15 @@ def activate_account(request, token):
     try:
         valid_since = timezone.now() - timedelta(days=7)
         confirmation = EmailConfirmation.objects.get(token=token, created_at__gte=valid_since)
-    except Exception:
+        volunteer = confirmation.user.volunteer
+    except (EmailConfirmation.DoesNotExist, Volunteer.DoesNotExist):
         return render(request, "userena/activate_fail.html")
-    
-    if confirmation:
-        confirmation.user.volunteer.email_confirmed=True
-        confirmation.user.volunteer.save()
-        confirmation.delete()
-        messages.success(request, "Your account has been successfully activated!")
-        return redirect('task_list')
+
+    volunteer.email_confirmed = True
+    volunteer.save(update_fields=['email_confirmed'])
+    confirmation.delete()
+    messages.success(request, "Your account has been successfully activated!")
+    return redirect('task_list')
 
 
 
@@ -863,7 +889,10 @@ def label_dashboard(request):
 
     volunteers = (
         Volunteer.objects.select_related('user')
-        .filter(tasks__edition=edition)
+        .filter(
+            volunteertask__task__edition=edition,
+            volunteertask__status='approved',
+        )
         .distinct()
         .order_by('user__first_name', 'user__last_name')
     )
@@ -900,7 +929,12 @@ def label_preview(request):
 
     volunteers = (
         Volunteer.objects.select_related('user')
-        .filter(id__in=volunteer_ids)
+        .filter(
+            id__in=volunteer_ids,
+            volunteertask__task__edition=edition,
+            volunteertask__status='approved',
+        )
+        .distinct()
         .order_by('user__first_name', 'user__last_name')
     )
 
@@ -942,7 +976,12 @@ def label_generate_pdf(request):
     volunteers = (
         Volunteer.objects.select_related('user')
         .prefetch_related('spoken_languages', 'tasks')
-        .filter(id__in=volunteer_ids)
+        .filter(
+            id__in=volunteer_ids,
+            volunteertask__task__edition=edition,
+            volunteertask__status='approved',
+        )
+        .distinct()
         .order_by('user__first_name', 'user__last_name')
     )
 
@@ -997,14 +1036,17 @@ def tshirt_report(request):
 
         # Map volunteer → set of distinct t-shirt day dates they work
         vol_dates = defaultdict(set)
-        tasks = (
-            Task.objects
-            .filter(edition=selected_edition, date__in=tshirt_day_dates)
-            .prefetch_related('volunteers')
+        assignments = (
+            VolunteerTask.objects
+            .filter(
+                task__edition=selected_edition,
+                task__date__in=tshirt_day_dates,
+                status='approved',
+            )
+            .values_list('volunteer_id', 'task__date')
         )
-        for task in tasks:
-            for volunteer in task.volunteers.all():
-                vol_dates[volunteer.pk].add(task.date)
+        for volunteer_id, task_date in assignments:
+            vol_dates[volunteer_id].add(task_date)
 
         # Aggregate by t-shirt size
         size_data = defaultdict(list)
@@ -1047,7 +1089,11 @@ def matrix_ids_export(request):
 
     volunteers = (
         Volunteer.objects.select_related('user')
-        .filter(tasks__edition=edition, matrix_id__isnull=False)
+        .filter(
+            volunteertask__task__edition=edition,
+            volunteertask__status='approved',
+            matrix_id__isnull=False,
+        )
         .exclude(matrix_id='')
         .distinct()
         .order_by('user__first_name', 'user__last_name')

@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.db import connections
 from django.db.models import PROTECT, CASCADE
@@ -296,6 +296,17 @@ class Talk(models.Model):
         Location, null=True, blank=True, on_delete=models.SET_NULL,
         help_text="Resolved Location matching the 'location' text, used for the nav.fosdem.org map link."
     )
+
+    def save(self, *args, **kwargs):
+        previous_location = None
+        if self.pk:
+            previous_location = type(self).objects.filter(pk=self.pk).values_list('location', flat=True).first()
+        if not self.pk or previous_location != self.location:
+            self.location_ref = Location.get_or_create_for_name(self.location)
+            update_fields = kwargs.get('update_fields')
+            if update_fields is not None:
+                kwargs['update_fields'] = set(update_fields) | {'location_ref'}
+        super().save(*args, **kwargs)
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -484,9 +495,27 @@ class Task(models.Model):
         else:
             return VolunteerTask.objects.filter(task=self, status='approved').count()
 
+    def approved_volunteers(self):
+        """Return volunteers whose signup for this task is approved."""
+        return Volunteer.objects.filter(
+            volunteertask__task=self,
+            volunteertask__status='approved',
+        )
+
     def pending_volunteers(self):
         """Count volunteers pending approval for this task."""
         return VolunteerTask.objects.filter(task=self, status='pending').count()
+
+    def save(self, *args, **kwargs):
+        previous_location = None
+        if self.pk:
+            previous_location = type(self).objects.filter(pk=self.pk).values_list('location', flat=True).first()
+        if not self.pk or previous_location != self.location:
+            self.location_ref = Location.get_or_create_for_name(self.location)
+            update_fields = kwargs.get('update_fields')
+            if update_fields is not None:
+                kwargs['update_fields'] = set(update_fields) | {'location_ref'}
+        super().save(*args, **kwargs)
 
     def link(self):
         return 'Link'
@@ -724,7 +753,11 @@ class Volunteer(models.Model):
     # Dr. Manhattan detection: is this person capable of being in multiple places at once?
     def detect_dr_manhattan(self):
         retval = [False, []]
-        current_tasks = self.tasks.filter(edition=Edition.get_current())
+        current_tasks = Task.objects.filter(
+            edition=Edition.get_current(),
+            volunteertask__volunteer=self,
+            volunteertask__status__in=('approved', 'pending'),
+        )
         dates = sorted(list(set([x.date for x in current_tasks])))
         # Yes yes, I know about dict generators; my editor doesn't however and I don't
         # want to see warnings for perfectly valid code.
@@ -756,7 +789,11 @@ class Volunteer(models.Model):
         edition = Edition.get_current()
         message_header.extend(['Here is your schedule for %s:' % (edition.name,), ''])
         message_body = []
-        for task in self.tasks.filter(edition=Edition.get_current()):
+        for task in Task.objects.filter(
+            edition=edition,
+            volunteertask__volunteer=self,
+            volunteertask__status='approved',
+        ):
             message_body.extend(["%s, %s-%s: %s" % (
                 task.date.strftime('%a'),
                 task.start_time,
@@ -889,21 +926,64 @@ class VolunteerTalk(models.Model):
     talk = models.ForeignKey(Talk, on_delete=CASCADE)
 
 
+def _penta_event_id(volunteer_task):
+    task = volunteer_task.task
+    if task.talk_id is None and task.template.name.lower() != 'infodesk':
+        return None
+    if task.template.name.lower() == 'infodesk':
+        if task.date.weekday() == datetime.datetime.strptime('2021-02-06', '%Y-%m-%d').weekday():
+            # Saturday
+            return '11762'
+        # Sunday
+        return '11763'
+    return task.talk.ext_id
+
+
+def _delete_penta_assignment(volunteer_task):
+    event_id = _penta_event_id(volunteer_task)
+    account_name = volunteer_task.volunteer.penta_account_name
+    if not event_id or not account_name:
+        return
+
+    logger = logging.getLogger("pentabarf")
+    logger.debug("Values in delete: %s, %s", event_id, account_name)
+    try:
+        with connections['pentabarf'].cursor() as cursor:
+            cursor.execute(
+                "delete from event_person where event_id=%s "
+                "and person_id=(select person_id from auth.account where login_name = %s) "
+                "and event_role='host' and remark='volunteer';",
+                (event_id, account_name),
+            )
+    except Exception as err:
+        logger.exception(err)
+
+
+@receiver(pre_save, sender=VolunteerTask)
+def remember_previous_volunteer_task_status(sender, instance, **kwargs):
+    if not instance.pk:
+        instance._previous_status = None
+        return
+    instance._previous_status = (
+        VolunteerTask.objects.filter(pk=instance.pk)
+        .values_list('status', flat=True)
+        .first()
+    )
+
+
 @receiver(post_save, sender=VolunteerTask)
 def save_penta(sender, instance, **kwargs):
-    if instance.task.talk_id is None and instance.task.template.name.lower() not in ['Infodesk'.lower()]:
+    previous_status = getattr(instance, '_previous_status', None)
+    if previous_status == 'approved' and instance.status != 'approved':
+        _delete_penta_assignment(instance)
         return
-    if instance.task.template.name.lower() in ['Infodesk'.lower()]:
-        # Harcoded because this works and will save me time
-        if instance.task.date.weekday() == datetime.datetime.strptime('2021-02-06', '%Y-%m-%d').weekday():
-            # Saturday
-            event_id = '11762'
-        else:
-            # Sunday
-            event_id = '11763'
-    else:
-        event_id = instance.task.talk.ext_id
+    if instance.status != 'approved':
+        return
+
+    event_id = _penta_event_id(instance)
     account_name = instance.volunteer.penta_account_name
+    if not event_id or not account_name:
+        return
 
     logger = logging.getLogger("pentabarf")
     logger.debug("Values in insert: %s, %s" % (event_id, account_name))
@@ -920,18 +1000,9 @@ def save_penta(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=VolunteerTask)
 def delete_volunteertask(sender, instance, **kwargs):
-    if instance.task.talk_id is None:
+    if instance.status != 'approved':
         return
-    event_id = instance.task.talk.ext_id
-    account_name = instance.volunteer.penta_account_name
-
-    logger = logging.getLogger("pentabarf")
-    logger.debug("Values in delete: %s, %s" % (event_id, account_name))
-    try:
-        with connections['pentabarf'].cursor() as cursor:
-            cursor.execute("delete from event_person where event_id=%s and person_id=(select person_id from auth.account where login_name = %s) and event_role='host' and remark='volunteer';", (event_id, account_name))
-    except Exception as err:
-        logger.exception(err)
+    _delete_penta_assignment(instance)
 
 class EmailConfirmation(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

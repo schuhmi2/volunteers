@@ -43,9 +43,14 @@
           {% for task in tasks %}
           <tr class="hover:bg-lm-soft dark:hover:bg-dm-hover transition-colors">
             <td class="px-4 py-3 whitespace-nowrap text-lm-muted dark:text-dm-text">{{ task.date|date:"D" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</td>
-            <td class="px-4 py-3 font-medium min-w-0 max-w-xs"><a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline truncate block" title="{{ task.name }}">{{ task.name }}</a></td>
+            <td class="px-4 py-3 font-medium min-w-0 max-w-xs">
+              <a href="{% url 'task_detailed' task.id %}" class="text-fosdem hover:underline truncate block" title="{{ task.name }}">{{ task.name }}</a>
+              {% if signup_statuses|get_item:task.id == "pending" %}
+              <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">{% trans "Pending approval" %}</span>
+              {% endif %}
+            </td>
             <td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-xs">
-              {% with attendees=task.volunteer_set.all %}
+              {% with attendees=task.approved_volunteers %}
               {% if attendees|length > 2 %}
               <details class="group">
                 <summary class="cursor-pointer select-none text-sm font-medium text-lm-text dark:text-dm-text hover:text-fosdem inline-flex items-center gap-1">

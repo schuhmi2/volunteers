@@ -506,14 +506,17 @@ class VolunteerAdmin(admin.ModelAdmin):
 
             # Map volunteer → set of distinct t-shirt day dates they work
             vol_dates = defaultdict(set)
-            tasks = (
-                Task.objects
-                .filter(edition=selected_edition, date__in=tshirt_day_dates)
-                .prefetch_related('volunteers')
+            assignments = (
+                VolunteerTask.objects
+                .filter(
+                    task__edition=selected_edition,
+                    task__date__in=tshirt_day_dates,
+                    status='approved',
+                )
+                .values_list('volunteer_id', 'task__date')
             )
-            for task in tasks:
-                for volunteer in task.volunteers.all():
-                    vol_dates[volunteer.pk].add(task.date)
+            for volunteer_id, task_date in assignments:
+                vol_dates[volunteer_id].add(task_date)
 
             # Aggregate by t-shirt size
             size_data = defaultdict(list)  # size → [(volunteer, n_shirts, sorted_dates)]

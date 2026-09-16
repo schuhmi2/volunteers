@@ -41,7 +41,7 @@
             <td class="px-4 py-3 font-medium text-lm-text dark:text-dm-text min-w-0 max-w-xs truncate" title="{{ task.name }}">{{ task.name }}</td>
             <td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-xs">
               {% if can_view_volunteer_names %}
-              {% with attendees=task.volunteer_set.all %}
+              {% with attendees=task.approved_volunteers %}
               {% if attendees|length > 3 %}
               <details class="group">
                 <summary class="cursor-pointer select-none text-sm font-medium text-lm-text dark:text-dm-text hover:text-fosdem inline-flex items-center gap-1">
@@ -132,11 +132,11 @@
     {% endif %}
 
     {# Currently assigned volunteers with unassign option #}
-    {% if task.volunteer_set.all %}
+    {% if task.approved_volunteers %}
     <div>
       <h3 class="text-sm font-medium text-lm-muted dark:text-dm-text mb-2">{% trans "Currently assigned" %}</h3>
       <div class="space-y-2">
-        {% for volunteer in task.volunteer_set.all %}
+        {% for volunteer in task.approved_volunteers %}
         <div class="flex items-center justify-between gap-3 bg-lm-soft dark:bg-dm-nav rounded-lg px-3 py-2">
           <span class="text-sm text-lm-text dark:text-dm-text truncate min-w-0 max-w-xs block" title="{{ volunteer.user.first_name }} {{ volunteer.user.last_name }} ({{ volunteer.user.username }})">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }} ({{ volunteer.user.username }})</span>
           <form method="post" action="{% url 'admin_assign_volunteer' task.id %}" class="inline flex-shrink-0">

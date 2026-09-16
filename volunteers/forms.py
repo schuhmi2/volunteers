@@ -286,7 +286,8 @@ class ActivationAwareAuthenticationForm(AuthenticationForm):
         return self.cleaned_data
 
     def confirm_login_allowed(self, user):
-        if not user.volunteer.email_confirmed:
+        volunteer = getattr(user, 'volunteer', None)
+        if volunteer is None or not volunteer.email_confirmed:
             raise forms.ValidationError(
                 _("Your account is not activated yet. Please check your email for the activation link."),
                 code='inactive',

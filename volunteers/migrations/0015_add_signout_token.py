@@ -5,6 +5,24 @@ import django.db.models.deletion
 import uuid
 
 
+def populate_signout_tokens(apps, schema_editor):
+    TaskAttendance = apps.get_model('volunteers', 'TaskAttendance')
+    db_alias = schema_editor.connection.alias
+    attendances = TaskAttendance.objects.using(db_alias).filter(
+        signout_token__isnull=True
+    )
+    for attendance in attendances.iterator():
+        attendance.signout_token = uuid.uuid4()
+        attendance.save(using=db_alias, update_fields=['signout_token'])
+
+
+def clear_signout_tokens(apps, schema_editor):
+    TaskAttendance = apps.get_model('volunteers', 'TaskAttendance')
+    TaskAttendance.objects.using(schema_editor.connection.alias).update(
+        signout_token=None
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -19,9 +37,9 @@ class Migration(migrations.Migration):
             field=models.UUIDField(null=True, blank=True),
         ),
         # Step 2: populate unique UUIDs for existing rows
-        migrations.RunSQL(
-            sql="UPDATE volunteers_taskattendance SET signout_token = lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))) WHERE signout_token IS NULL;",
-            reverse_sql="UPDATE volunteers_taskattendance SET signout_token = NULL;",
+        migrations.RunPython(
+            populate_signout_tokens,
+            clear_signout_tokens,
         ),
         # Step 3: make it non-null and unique
         migrations.AlterField(
