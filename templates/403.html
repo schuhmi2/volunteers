@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Access denied" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-8 text-center space-y-4">
+  <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Access denied" %}</h1>
+  <p class="text-lm-muted dark:text-dm-text">
+    {% trans "Your account does not have the operational role required for this page or action." %}
+  </p>
+  <a href="{% url 'task_list' %}" class="inline-flex items-center px-4 py-2 rounded-lg bg-fosdem hover:bg-fosdem-dark text-white font-medium">
+    {% trans "Return to tasks" %}
+  </a>
+</div>
+{% endblock %}

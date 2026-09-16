@@ -62,6 +62,17 @@ After cloning the repo do these steps:
    ./manage.py createsuperuser
    ```
 
+Operational access is granted through the `Coordinator`, `Logistics`, and
+`Communications` Django groups. Migrations create these groups without adding
+users to them. Their default permissions can be restored idempotently with:
+
+   ```
+    ./manage.py bootstrap_coordinator_roles
+   ```
+
+Task-scoped access is granted by selecting staff users as the primary or
+secondary responsible on a task template.
+
 8) run a development server:
    ```
    ./manage.py runserver

@@ -11,6 +11,7 @@ import glob
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -404,6 +405,26 @@ class TaskTemplate(models.Model):
         verbose_name = _('Task Template')
         verbose_name_plural = _('Task Templates')
         ordering = ['name']
+        permissions = [
+            ('manage_approvals', 'Can manage signup approvals'),
+            ('manage_task_clashes', 'Can manage task clashes'),
+            ('manage_attendance', 'Can manage task attendance'),
+            ('assign_volunteers', 'Can assign volunteers'),
+            ('event_signon', 'Can sign on event volunteers'),
+            ('view_other_schedules', 'Can view other volunteer schedules'),
+            ('view_volunteer_history', 'Can view full volunteer history'),
+            ('export_task_schedules', 'Can export task schedules'),
+            ('manage_labels', 'Can generate volunteer labels'),
+            ('view_tshirt_report', 'Can view T-shirt reports'),
+            ('export_matrix_ids', 'Can export Matrix IDs'),
+            ('send_mass_mail', 'Can send mass mail'),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(primary=models.F('secondary')),
+                name='tasktemplate_distinct_responsibles',
+            ),
+        ]
 
     def __str__(self):
         return self.name
@@ -412,8 +433,29 @@ class TaskTemplate(models.Model):
     description = models.TextField()
     info_url = models.URLField(null=True, blank=True, help_text="Link to volunteer documentation for this task type")
     category = models.ForeignKey(TaskCategory, on_delete=PROTECT)
-    primary = models.ForeignKey(User, default=1, limit_choices_to={'is_staff': True}, on_delete=PROTECT)
+    primary = models.ForeignKey(
+        User,
+        default=1,
+        limit_choices_to={'is_staff': True},
+        on_delete=PROTECT,
+        related_name='primary_task_templates',
+    )
+    secondary = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        limit_choices_to={'is_staff': True},
+        on_delete=PROTECT,
+        related_name='secondary_task_templates',
+    )
     requires_approval = models.BooleanField(default=False, help_text="If set, volunteer sign-ups require approval from the task responsible.")
+
+    def clean(self):
+        super().clean()
+        if self.secondary_id and self.secondary_id == self.primary_id:
+            raise ValidationError({
+                'secondary': _('Primary and secondary responsibles must be different users.')
+            })
 
     def link(self):
         return 'Link'

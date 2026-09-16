@@ -145,6 +145,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'volunteers.context_processors.operational_navigation',
             ]
         }
     }

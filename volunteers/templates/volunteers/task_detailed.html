@@ -57,11 +57,17 @@
                 </ul>
               </details>
               {% else %}
-              <span class="truncate block" title="{% for volunteer in attendees %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}">
-              {% for volunteer in attendees %}
-              <a href="{% url 'userena_profile_detail' volunteer.user.username %}" class="text-fosdem hover:underline">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}</a>{% if not forloop.last %}, {% endif %}
-              {% endfor %}
-              </span>
+              <ul class="space-y-0.5">
+                {% for volunteer in attendees %}
+                <li class="min-w-0">
+                  <a href="{% url 'userena_profile_detail' volunteer.user.username %}"
+                     class="block truncate text-fosdem hover:underline"
+                     title="{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}">
+                    {{ volunteer.user.first_name }} {{ volunteer.user.last_name }}
+                  </a>
+                </li>
+                {% endfor %}
+              </ul>
               {% endif %}
               {% endwith %}
               {% else %}
@@ -101,7 +107,7 @@
     {% endif %}
   </div>
 
-  {% if user.is_superuser and assignable_volunteers is not None %}
+  {% if can_view_volunteer_names and assignable_volunteers is not None %}
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 space-y-4">
     <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Admin: Manage Volunteers" %}</h2>
 
@@ -113,6 +119,14 @@
         {% for vt in pending_signups %}
         <div class="flex items-center justify-between gap-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg px-3 py-2">
           <span class="text-sm text-lm-text dark:text-dm-text truncate min-w-0 max-w-xs block" title="{{ vt.volunteer.user.first_name }} {{ vt.volunteer.user.last_name }} ({{ vt.volunteer.user.username }})">{{ vt.volunteer.user.first_name }} {{ vt.volunteer.user.last_name }} ({{ vt.volunteer.user.username }})</span>
+          <span class="text-xs text-lm-subtle dark:text-dm-muted">
+            {% if vt.prior_assignment_count %}
+              {% blocktrans count count=vt.prior_assignment_count %}Previously assigned once{% plural %}Previously assigned {{ count }} times{% endblocktrans %}
+              {% if vt.prior_attendance_count %} · {% blocktrans count count=vt.prior_attendance_count %}1 recorded check-in{% plural %}{{ count }} recorded check-ins{% endblocktrans %}{% endif %}
+            {% else %}
+              {% trans "No previous approved assignments for this task type" %}
+            {% endif %}
+          </span>
           <form method="post" action="{% url 'approval_respond' %}" class="inline-flex gap-2 flex-shrink-0">
             {% csrf_token %}
             <input type="hidden" name="vt_id" value="{{ vt.id }}">

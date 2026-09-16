@@ -130,7 +130,7 @@
   </div>
   {% endif %}
 
-  {% if user == profile_user or user.is_staff %}
+  {% if can_mail_schedule %}
   <div class="flex justify-end">
     <button type="submit" name="mail_schedule"
             class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">

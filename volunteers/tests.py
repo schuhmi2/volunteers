@@ -5,7 +5,8 @@ Tests to be run via "manage.py test"
 import datetime
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
+from django.contrib.admin.models import LogEntry
+from django.contrib.auth.models import Group, User
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
@@ -407,6 +408,52 @@ class CurrentEditionWorkflowTestCase(TestCase):
         self.assertContains(response, 'Pending Approval')
         self.assertNotContains(response, 'Denied Volunteer')
 
+    def test_task_detail_keeps_each_short_roster_member_visible(self):
+        edge_user = User.objects.create_user(
+            username='local-edgecase-max',
+            first_name='A' * 150,
+            last_name='Z' * 150,
+            email='edge@example.com',
+            password='password',
+        )
+        edge_volunteer = Volunteer.objects.create(
+            user=edge_user,
+            email_confirmed=True,
+            privacy_policy_accepted_at=timezone.now(),
+            privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+        )
+        third_user = User.objects.create_user(
+            username='third-volunteer',
+            first_name='Avery',
+            last_name='Novak',
+            email='third@example.com',
+            password='password',
+        )
+        third_volunteer = Volunteer.objects.create(
+            user=third_user,
+            email_confirmed=True,
+            privacy_policy_accepted_at=timezone.now(),
+            privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+        )
+        VolunteerTask.objects.create(
+            volunteer=edge_volunteer,
+            task=self.task,
+            status='approved',
+        )
+        VolunteerTask.objects.create(
+            volunteer=third_volunteer,
+            task=self.task,
+            status='approved',
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse('task_detailed', args=[self.task.id]))
+
+        self.assertContains(response, '<ul class="space-y-0.5">', html=False)
+        self.assertContains(response, 'Approved Volunteer')
+        self.assertContains(response, 'Avery Novak')
+        self.assertContains(response, 'A' * 150)
+
     def test_labels_tshirts_and_matrix_export_only_include_approved(self):
         self.client.force_login(self.admin)
 
@@ -663,7 +710,349 @@ class CurrentEditionWorkflowTestCase(TestCase):
         self.client.force_login(self.user)
 
         for url_name in ('label_dashboard', 'attendance_dashboard', 'task_clashes_dashboard'):
-            self.assertEqual(self.client.get(reverse(url_name)).status_code, 302)
+            self.assertEqual(self.client.get(reverse(url_name)).status_code, 403)
+
+
+class OperationalPermissionsTestCase(TestCase):
+    def setUp(self):
+        today = datetime.date.today()
+        self.primary = self.create_staff_user('primary')
+        self.secondary = self.create_staff_user('secondary')
+        self.other_lead = self.create_staff_user('other-lead')
+        self.coordinator = self.create_staff_user('coordinator')
+        self.logistics = self.create_staff_user('logistics')
+        self.ordinary_staff = self.create_staff_user('ordinary-staff')
+        self.volunteer_user = User.objects.create_user(
+            username='permission-volunteer',
+            first_name='Permission',
+            last_name='Volunteer',
+            email='permission-volunteer@example.com',
+            password='password',
+        )
+        self.volunteer = Volunteer.objects.create(
+            user=self.volunteer_user,
+            email_confirmed=True,
+            privacy_policy_accepted_at=timezone.now(),
+            privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+        )
+        self.edition = Edition.objects.create(
+            name='Permission edition',
+            start_date=today,
+            end_date=today + datetime.timedelta(days=1),
+            visible_from=today - datetime.timedelta(days=1),
+            visible_until=today + datetime.timedelta(days=2),
+            enable_task_signin=True,
+        )
+        self.previous_edition = Edition.objects.create(
+            name='Previous permission edition',
+            start_date=today - datetime.timedelta(days=365),
+            end_date=today - datetime.timedelta(days=364),
+            visible_from=today - datetime.timedelta(days=370),
+            visible_until=today - datetime.timedelta(days=360),
+        )
+        self.category = TaskCategory.objects.create(
+            name='Permission category',
+            description='Permission category',
+        )
+        self.template = TaskTemplate.objects.create(
+            name='Owned template',
+            description='Owned template',
+            category=self.category,
+            primary=self.primary,
+            secondary=self.secondary,
+        )
+        self.other_template = TaskTemplate.objects.create(
+            name='Other template',
+            description='Other template',
+            category=self.category,
+            primary=self.other_lead,
+        )
+        self.task = self.create_task(self.template, 'Owned task')
+        self.other_task = self.create_task(self.other_template, 'Other task')
+        self.pending = VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=self.task,
+            status='pending',
+        )
+        self.other_pending = VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=self.other_task,
+            status='pending',
+        )
+        Group.objects.get(name='Coordinator').user_set.add(self.coordinator)
+        Group.objects.get(name='Logistics').user_set.add(self.logistics)
+
+    def create_staff_user(self, username):
+        user = User.objects.create_user(
+            username=username,
+            email=f'{username}@example.com',
+            password='password',
+            is_staff=True,
+        )
+        Volunteer.objects.create(
+            user=user,
+            email_confirmed=True,
+            privacy_policy_accepted_at=timezone.now(),
+            privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+        )
+        return user
+
+    def create_task(self, template, name, edition=None):
+        target_edition = edition or self.edition
+        return Task.objects.create(
+            name=name,
+            counter='1',
+            description=name,
+            location='K building',
+            date=target_edition.start_date,
+            start_time=datetime.time(10),
+            end_time=datetime.time(11),
+            nbr_volunteers=1,
+            nbr_volunteers_min=1,
+            nbr_volunteers_max=3,
+            edition=target_edition,
+            template=template,
+        )
+
+    def test_bootstrapped_groups_have_only_their_default_permissions(self):
+        coordinator_codenames = set(
+            Group.objects.get(name='Coordinator')
+            .permissions.values_list('codename', flat=True)
+        )
+        logistics_codenames = set(
+            Group.objects.get(name='Logistics')
+            .permissions.values_list('codename', flat=True)
+        )
+
+        self.assertIn('manage_attendance', coordinator_codenames)
+        self.assertNotIn('manage_labels', coordinator_codenames)
+        self.assertEqual(
+            logistics_codenames,
+            {'manage_labels', 'view_tshirt_report', 'export_matrix_ids'},
+        )
+
+    def test_primary_and_secondary_see_only_their_approvals(self):
+        for responsible in (self.primary, self.secondary):
+            self.client.force_login(responsible)
+
+            response = self.client.get(reverse('approval_dashboard'))
+
+            self.assertContains(response, 'Owned task')
+            self.assertNotContains(response, 'Other task')
+
+    def test_coordinator_sees_global_operational_surfaces(self):
+        self.client.force_login(self.coordinator)
+
+        approvals = self.client.get(reverse('approval_dashboard'))
+        attendance = self.client.get(reverse('attendance_dashboard'))
+
+        self.assertContains(approvals, 'Owned task')
+        self.assertContains(approvals, 'Other task')
+        self.assertEqual(attendance.status_code, 200)
+
+    def test_approval_request_notifies_both_responsibles(self):
+        from volunteers.emails import send_approval_request_email
+
+        send_approval_request_email(self.volunteer, self.task)
+
+        self.assertEqual(
+            {message.to[0] for message in mail.outbox},
+            {self.primary.email, self.secondary.email},
+        )
+
+    def test_secondary_can_approve_own_task_and_action_is_audited(self):
+        self.client.force_login(self.secondary)
+
+        response = self.client.post(reverse('approval_respond'), {
+            'vt_id': self.pending.id,
+            'action': 'approve',
+        })
+        self.pending.refresh_from_db()
+
+        self.assertRedirects(response, reverse('approval_dashboard'))
+        self.assertEqual(self.pending.status, 'approved')
+        self.assertEqual(self.pending.reviewed_by, self.secondary)
+        self.assertTrue(
+            LogEntry.objects.filter(
+                user=self.secondary,
+                object_id=str(self.pending.id),
+            ).exists()
+        )
+
+    def test_secondary_cannot_approve_another_responsibles_task(self):
+        self.client.force_login(self.secondary)
+
+        response = self.client.post(reverse('approval_respond'), {
+            'vt_id': self.other_pending.id,
+            'action': 'approve',
+        })
+        self.other_pending.refresh_from_db()
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.other_pending.status, 'pending')
+
+    def test_task_responsible_sees_only_same_template_history(self):
+        previous_same = self.create_task(
+            self.template,
+            'Previous owned task',
+            self.previous_edition,
+        )
+        previous_other = self.create_task(
+            self.other_template,
+            'Previous unrelated task',
+            self.previous_edition,
+        )
+        previous_signup = VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=previous_same,
+            status='approved',
+        )
+        VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=previous_other,
+            status='approved',
+        )
+        TaskAttendance.objects.create(
+            volunteer_task=previous_signup,
+            signed_in_at=timezone.now(),
+        )
+        self.client.force_login(self.primary)
+
+        response = self.client.get(reverse('approval_dashboard'))
+
+        self.assertContains(response, 'Previously assigned once')
+        self.assertContains(response, self.previous_edition.name)
+        self.assertContains(response, '1 recorded check-in')
+        self.assertNotContains(response, 'Previous unrelated task')
+
+    def test_task_responsible_can_manage_own_attendance_but_not_other_task(self):
+        approved = VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=self.task,
+            status='approved',
+        )
+        self.client.force_login(self.secondary)
+
+        own_detail = self.client.get(
+            reverse('attendance_task_detail', args=[self.task.id])
+        )
+        other_detail = self.client.get(
+            reverse('attendance_task_detail', args=[self.other_task.id])
+        )
+        marked = self.client.post(reverse('attendance_mark'), {
+            'vt_id': approved.id,
+            'action': 'signin',
+        })
+
+        self.assertEqual(own_detail.status_code, 200)
+        self.assertEqual(other_detail.status_code, 403)
+        self.assertRedirects(
+            marked,
+            reverse('attendance_task_detail', args=[self.task.id]),
+        )
+
+    def test_task_responsible_can_export_only_their_task_template(self):
+        self.client.force_login(self.secondary)
+
+        schedule_index = self.client.get(reverse('category_schedule_list'))
+        own_schedule = self.client.get(
+            reverse('task_schedule', args=[self.template.id])
+        )
+        other_schedule = self.client.get(
+            reverse('task_schedule', args=[self.other_template.id])
+        )
+        own_export = self.client.get(
+            reverse('task_schedule_csv', args=[self.template.id])
+        )
+        other_export = self.client.get(
+            reverse('task_schedule_csv', args=[self.other_template.id])
+        )
+
+        self.assertContains(schedule_index, self.template.name)
+        self.assertNotContains(schedule_index, self.other_template.name)
+        self.assertEqual(own_schedule.status_code, 200)
+        self.assertEqual(other_schedule.status_code, 403)
+        self.assertEqual(own_export.status_code, 200)
+        self.assertEqual(other_export.status_code, 403)
+
+    def test_removed_staff_status_revokes_task_responsible_access(self):
+        self.secondary.is_staff = False
+        self.secondary.save(update_fields=['is_staff'])
+        self.client.force_login(self.secondary)
+
+        response = self.client.get(reverse('approval_dashboard'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_task_responsible_cannot_use_destructive_runner_transfer(self):
+        runner_template = TaskTemplate.objects.create(
+            name='Runner',
+            description='Runner',
+            category=self.category,
+            primary=self.other_lead,
+        )
+        runner_task = self.create_task(runner_template, 'Runner')
+        runner_signup = VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=runner_task,
+            status='approved',
+        )
+        self.client.force_login(self.secondary)
+
+        response = self.client.post(reverse('transfer_runner'), {
+            'task_id': self.task.id,
+            'runner_vt_id': runner_signup.id,
+        })
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(
+            VolunteerTask.objects.filter(id=runner_signup.id).exists()
+        )
+
+    def test_logistics_access_is_limited_to_logistics_surfaces(self):
+        self.client.force_login(self.logistics)
+
+        self.assertEqual(
+            self.client.get(reverse('label_dashboard')).status_code,
+            200,
+        )
+        self.assertEqual(
+            self.client.get(reverse('approval_dashboard')).status_code,
+            403,
+        )
+
+    def test_ordinary_staff_has_no_implicit_operational_access(self):
+        self.client.force_login(self.ordinary_staff)
+
+        for url_name in (
+            'approval_dashboard',
+            'attendance_dashboard',
+            'label_dashboard',
+        ):
+            self.assertEqual(self.client.get(reverse(url_name)).status_code, 403)
+
+    def test_navigation_matches_task_responsible_scope(self):
+        self.client.force_login(self.secondary)
+
+        response = self.client.get(reverse('approval_dashboard'))
+
+        self.assertContains(response, 'Approvals')
+        self.assertContains(response, 'Attendance')
+        self.assertNotContains(response, 'Django Admin')
+        self.assertNotContains(response, 'T-shirt Report')
+        self.assertNotContains(response, 'Matrix IDs')
+
+    def test_same_user_cannot_be_primary_and_secondary(self):
+        template = TaskTemplate(
+            name='Invalid template',
+            description='Invalid template',
+            category=self.category,
+            primary=self.primary,
+            secondary=self.primary,
+        )
+
+        with self.assertRaises(ValidationError):
+            template.full_clean()
 
 
 class ActivationHardeningTestCase(TestCase):

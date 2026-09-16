@@ -91,8 +91,10 @@
           <a href="{% url 'task_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Tasks' %}</a>
           {% if user.is_authenticated %}
             <a href="{% url 'talk_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Talks' %}</a>
-            {% if user.is_staff %}
+            {% if operational_nav.schedules %}
               <a href="{% url 'category_schedule_list' %}" class="text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium transition-colors">{% trans 'Schedules' %}</a>
+            {% endif %}
+            {% if operational_nav.admin_any %}
               <div class="relative" id="admin-dropdown">
                 <button type="button" id="admin-dropdown-btn"
                         aria-haspopup="true" aria-expanded="false" aria-controls="admin-dropdown-menu"
@@ -101,13 +103,25 @@
                   <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div id="admin-dropdown-menu" class="hidden absolute right-0 mt-1 w-48 bg-lm-bg dark:bg-dm-soft rounded-lg shadow-lg border border-lm-border dark:border-dm-border py-1 z-50">
-                  <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Django Admin' %}</a>
+                  {% if operational_nav.django_admin %}<a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Django Admin' %}</a>{% endif %}
+                  {% if operational_nav.approvals %}
                   <a href="{% url 'approval_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Approvals' %}</a>
+                  {% endif %}
+                  {% if operational_nav.clashes %}
                   <a href="{% url 'task_clashes_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Task Clashes' %}</a>
+                  {% endif %}
+                  {% if operational_nav.attendance %}
                   <a href="{% url 'attendance_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Attendance' %}</a>
+                  {% endif %}
+                  {% if operational_nav.labels %}
                   <a href="{% url 'label_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Labels' %}</a>
+                  {% endif %}
+                  {% if operational_nav.tshirts %}
                   <a href="{% url 'tshirt_report' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'T-shirt Report' %}</a>
+                  {% endif %}
+                  {% if operational_nav.matrix_ids %}
                   <a href="{% url 'matrix_ids_export' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Matrix IDs' %}</a>
+                  {% endif %}
                 </div>
               </div>
             {% endif %}
@@ -148,17 +162,31 @@
         <a href="{% url 'task_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Tasks' %}</a>
         {% if user.is_authenticated %}
           <a href="{% url 'talk_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Talks' %}</a>
-          {% if user.is_staff %}
+          {% if operational_nav.schedules %}
             <a href="{% url 'category_schedule_list' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Schedules' %}</a>
+          {% endif %}
+          {% if operational_nav.admin_any %}
             <div class="border-t border-fosdem-dark/50 my-1"></div>
             <span class="block px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pink-200">{% trans 'Admin' %}</span>
-            <a href="{% url 'admin:index' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Django Admin' %}</a>
+            {% if operational_nav.django_admin %}<a href="{% url 'admin:index' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Django Admin' %}</a>{% endif %}
+            {% if operational_nav.approvals %}
             <a href="{% url 'approval_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Approvals' %}</a>
+            {% endif %}
+            {% if operational_nav.clashes %}
             <a href="{% url 'task_clashes_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Task Clashes' %}</a>
+            {% endif %}
+            {% if operational_nav.attendance %}
             <a href="{% url 'attendance_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Attendance' %}</a>
+            {% endif %}
+            {% if operational_nav.labels %}
             <a href="{% url 'label_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Labels' %}</a>
+            {% endif %}
+            {% if operational_nav.tshirts %}
             <a href="{% url 'tshirt_report' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'T-shirt Report' %}</a>
+            {% endif %}
+            {% if operational_nav.matrix_ids %}
             <a href="{% url 'matrix_ids_export' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Matrix IDs' %}</a>
+            {% endif %}
             <div class="border-t border-fosdem-dark/50 my-1"></div>
           {% endif %}
           <a href="https://doc.volunteers.fosdem.org" target="_blank" rel="noopener" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium">{% trans 'Docs' %}<span aria-hidden="true"> ↗</span><span class="sr-only"> ({% trans "opens in new tab" %})</span></a>

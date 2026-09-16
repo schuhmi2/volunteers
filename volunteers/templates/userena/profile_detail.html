@@ -39,7 +39,7 @@
         <p class="text-lm-muted dark:text-dm-text mt-1 break-words whitespace-pre-wrap max-h-48 overflow-y-auto pr-1">{{ profile.about_me }}</p>
       </div>
       {% endif %}
-      {% if profile.tshirt_size and user.username == profile.user.username or profile.tshirt_size and user.is_staff %}
+      {% if profile.tshirt_size and user.username == profile.user.username or profile.tshirt_size and perms.volunteers.view_tshirt_report %}
       <div>
         <span class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{% trans "T-shirt size" %}</span>
         <p class="text-lm-muted dark:text-dm-text mt-1">{{ profile.tshirt_size }}</p>

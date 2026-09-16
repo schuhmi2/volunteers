@@ -30,6 +30,15 @@
             </td>
             <td class="px-4 py-3 min-w-0 max-w-xs">
               <a href="{% url 'task_detailed' vt.task.id %}" class="text-fosdem hover:underline truncate block" title="{{ vt.task.name }}">{{ vt.task.name }}</a>
+              <div class="mt-1 text-xs text-lm-subtle dark:text-dm-muted">
+                {% if vt.prior_assignment_count %}
+                  {% blocktrans count count=vt.prior_assignment_count %}Previously assigned once{% plural %}Previously assigned {{ count }} times{% endblocktrans %}
+                  {% if vt.prior_edition_names %} · {{ vt.prior_edition_names|join:", " }}{% endif %}
+                  {% if vt.prior_attendance_count %} · {% blocktrans count count=vt.prior_attendance_count %}1 recorded check-in{% plural %}{{ count }} recorded check-ins{% endblocktrans %}{% endif %}
+                {% else %}
+                  {% trans "No previous approved assignments for this task type" %}
+                {% endif %}
+              </div>
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-lm-muted dark:text-dm-text">
               {{ vt.task.date|date:"D d M" }}, {{ vt.task.start_time|time:"H:i" }}–{{ vt.task.end_time|time:"H:i" }}

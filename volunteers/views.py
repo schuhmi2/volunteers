@@ -11,14 +11,14 @@ from django.http import HttpResponse, JsonResponse
 from django.views.generic.list import ListView
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from collections import OrderedDict as SortedDict
 from django.utils.translation import gettext as _
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.contrib.auth import get_user_model
 
 from django.http import Http404
@@ -33,6 +33,18 @@ except ImportError:
 from django.template.loader import get_template
 from django.template import Context
 from django.utils.html import escape
+
+from .permissions import (
+    can_approve_task,
+    can_manage_task,
+    can_manage_task_attendance,
+    can_view_template_schedule,
+    has_permission,
+    has_responsible_templates,
+    is_task_responsible,
+    log_operational_action,
+    permission_required,
+)
 
 from django.views.generic import TemplateView
 
@@ -59,6 +71,26 @@ def privacy_policy(request):
     return render(request, 'static/privacy_policy.html')
 
 
+def _attach_prior_task_experience(signups):
+    for signup in signups:
+        previous = VolunteerTask.objects.filter(
+            volunteer=signup.volunteer,
+            task__template=signup.task.template,
+            task__edition__start_date__lt=signup.task.edition.start_date,
+            status='approved',
+        ).select_related('task__edition')
+        signup.prior_assignment_count = previous.count()
+        signup.prior_edition_names = list(
+            previous.order_by('-task__edition__start_date')
+            .values_list('task__edition__name', flat=True)
+            .distinct()
+        )
+        signup.prior_attendance_count = TaskAttendance.objects.filter(
+            volunteer_task__in=previous,
+            signed_in_at__isnull=False,
+        ).count()
+
+
 def promo(request):
     return render(request, 'static/promo.html')
 
@@ -76,9 +108,7 @@ def task_detailed(request, task_id):
     # Only admins can see the named list of volunteers on this task; everyone
     # else only sees a count (see template). This matches the privacy policy's
     # "current-edition tasks visible only to self + admin" rule.
-    can_view_volunteer_names = bool(
-        request.user.is_authenticated and request.user.is_superuser
-    )
+    can_view_volunteer_names = can_manage_task(request.user, task)
     context['can_view_volunteer_names'] = can_view_volunteer_names
     # Let the volunteer know their own signup status for this task.
     context['own_signup_status'] = None
@@ -88,7 +118,7 @@ def task_detailed(request, task_id):
             own_vt = VolunteerTask.objects.filter(task=task, volunteer=volunteer).first()
             if own_vt:
                 context['own_signup_status'] = own_vt.status
-    if request.user.is_authenticated and request.user.is_superuser:
+    if can_view_volunteer_names:
         # Provide list of all volunteers for admin assignment dropdown
         assigned_volunteer_ids = task.volunteers.values_list('id', flat=True)
         context['assignable_volunteers'] = (
@@ -97,17 +127,20 @@ def task_detailed(request, task_id):
             .order_by('user__first_name', 'user__last_name')
         )
         # Pending approval signups
-        context['pending_signups'] = (
+        context['pending_signups'] = list(
             VolunteerTask.objects.filter(task=task, status='pending')
             .select_related('volunteer__user')
         )
+        _attach_prior_task_experience(context['pending_signups'])
     return render(request, 'volunteers/task_detailed.html', context)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def admin_assign_volunteer(request, task_id):
-    """Admin-only view to assign any volunteer to a task."""
+    """Assign or remove a volunteer when the actor manages this task."""
     task = get_object_or_404(Task, id=task_id)
+    if not can_manage_task(request.user, task):
+        raise PermissionDenied
 
     if request.method == 'POST':
         volunteer_id = request.POST.get('volunteer_id')
@@ -115,7 +148,21 @@ def admin_assign_volunteer(request, task_id):
 
         if action == 'assign' and volunteer_id:
             volunteer = get_object_or_404(Volunteer, id=volunteer_id)
-            VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer)
+            signup, created = VolunteerTask.objects.get_or_create(
+                task=task,
+                volunteer=volunteer,
+                defaults={'status': 'approved'},
+            )
+            if not created and signup.status != 'approved':
+                signup.status = 'approved'
+                signup.reviewed_at = timezone.now()
+                signup.reviewed_by = request.user
+                signup.save(update_fields=['status', 'reviewed_at', 'reviewed_by'])
+            log_operational_action(
+                request,
+                signup,
+                f'Assigned {volunteer.user.username} to task {task.pk}',
+            )
             messages.success(
                 request,
                 _('%(name)s has been assigned to this task.') % {
@@ -124,7 +171,17 @@ def admin_assign_volunteer(request, task_id):
             )
         elif action == 'unassign' and volunteer_id:
             volunteer = get_object_or_404(Volunteer, id=volunteer_id)
-            VolunteerTask.objects.filter(task=task, volunteer=volunteer).delete()
+            signup = get_object_or_404(
+                VolunteerTask,
+                task=task,
+                volunteer=volunteer,
+            )
+            log_operational_action(
+                request,
+                signup,
+                f'Removed {volunteer.user.username} from task {task.pk}',
+            )
+            signup.delete()
             messages.success(
                 request,
                 _('%(name)s has been removed from this task.') % {
@@ -174,16 +231,29 @@ def talk_list(request):
 
 @login_required
 def category_schedule_list(request):
-    categories = TaskCategory.objects.filter(active=True)
+    templates = TaskTemplate.objects.filter(category__active=True)
+    if not has_permission(request.user, 'export_task_schedules'):
+        templates = templates.filter(
+            Q(primary=request.user) | Q(secondary=request.user)
+        )
+    if not templates.exists():
+        raise PermissionDenied
+
+    categories = TaskCategory.objects.filter(
+        active=True,
+        tasktemplate__in=templates,
+    ).distinct()
     context = {'categories': SortedDict.fromkeys(categories, [])}
     for category in context['categories']:
-        context['categories'][category] = TaskTemplate.objects.filter(category=category)
+        context['categories'][category] = templates.filter(category=category)
     return render(request, 'volunteers/category_schedule_list.html', context)
 
 
 @login_required
 def task_schedule(request, template_id):
     template = get_object_or_404(TaskTemplate, id=template_id)
+    if not can_view_template_schedule(request.user, template):
+        raise PermissionDenied
     tasks = Task.objects.annotate(volunteers__count=Count("volunteer")).filter(template=template, edition=Edition.get_current()).order_by('date', 'start_time', 'end_time')
     context = {
         'template': template,
@@ -194,9 +264,11 @@ def task_schedule(request, template_id):
     return render(request, 'volunteers/task_schedule.html', context)
 
 
-@user_passes_test(lambda u: u.is_staff)
+@login_required
 def task_schedule_csv(request, template_id):
     template = get_object_or_404(TaskTemplate, id=template_id)
+    if not can_view_template_schedule(request.user, template):
+        raise PermissionDenied
     tasks = Task.objects.annotate(volunteers__count=Count("volunteer")).filter(template=template, edition=Edition.get_current()).order_by('date', 'start_time', 'end_time')
     response = HttpResponse(content_type='text/csv')
     filename = "schedule_%s.csv" % template.name
@@ -390,7 +462,7 @@ def task_list(request):
     return render(request, 'volunteers/tasks.html', context)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('event_signon')
 def event_sign_on(request):
     current_tasks = Task.objects.filter(edition=Edition.get_current())
     ok_tasks = current_tasks
@@ -414,6 +486,11 @@ def event_sign_on(request):
             # checked boxes, add the volunteer to the tasks when he/she is not added
             for task in current_tasks.filter(id__in=task_ids):
                 VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer)
+            log_operational_action(
+                request,
+                volunteer,
+                f'Created event sign-on account with {len(task_ids)} selected tasks',
+            )
             # Send tasks
             try:
                 volunteer.mail_schedule()
@@ -475,7 +552,10 @@ def task_list_detailed(request, username):
     # Detailed current-edition schedule is personal information (which
     # tasks/times/locations a specific volunteer is assigned); only the
     # volunteer themselves or an admin may view it.
-    if request.user.username != username and not request.user.is_superuser:
+    if (
+        request.user.username != username
+        and not has_permission(request.user, 'view_other_schedules')
+    ):
         raise PermissionDenied("you are not allowed to view another user's task schedule")
 
     context = {}
@@ -549,6 +629,10 @@ def task_list_detailed(request, username):
     context['signin_available'] = signin_available
     context['signin_status'] = signin_status
     context['enable_task_signin'] = edition.enable_task_signin if edition else False
+    context['can_mail_schedule'] = (
+        request.user == context['profile_user']
+        or has_permission(request.user, 'send_mass_mail')
+    )
 
     if request.POST:
         if 'print_pdf' in request.POST:
@@ -556,6 +640,8 @@ def task_list_detailed(request, username):
             context.update({'pagesize': 'A4'})
             return render_to_pdf(request, 'volunteers/tasks_detailed.html', context)
         elif 'mail_schedule' in request.POST:
+            if not context['can_mail_schedule']:
+                raise PermissionDenied
             try:
                 volunteer.mail_schedule()
                 messages.success(request, _('Your schedule has been mailed to %s.' % (volunteer.user.email,)),
@@ -734,7 +820,7 @@ def profile_detail(request, username,
     # multi-year attendance pattern (dates/times/locations), which other
     # logged-in volunteers should not be able to browse.
     history = []
-    if request.user == user or request.user.is_superuser:
+    if request.user == user or has_permission(request.user, 'view_volunteer_history'):
         past_editions = Edition.objects.filter(
             task__volunteertask__volunteer=profile,
             task__volunteertask__status='approved',
@@ -752,7 +838,10 @@ def profile_detail(request, username,
 
     if not extra_context: extra_context = dict()
     extra_context['profile'] = profile
-    can_view_tasks = request.user == user or request.user.is_superuser
+    can_view_tasks = (
+        request.user == user
+        or has_permission(request.user, 'view_other_schedules')
+    )
     extra_context['can_view_current_tasks'] = can_view_tasks
     if can_view_tasks:
         current_signups = VolunteerTask.objects.filter(
@@ -879,7 +968,7 @@ def activate_account(request, token):
 
 # --- Admin Label Generation Views ---
 
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('manage_labels')
 def label_dashboard(request):
     """Admin dashboard for generating volunteer labels."""
     edition = Edition.get_current()
@@ -911,7 +1000,7 @@ def label_dashboard(request):
     return render(request, 'volunteers/label_dashboard.html', context)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('manage_labels')
 def label_preview(request):
     """Show confirmation/preview before generating labels, with reprint warnings."""
     if request.method != 'POST':
@@ -953,7 +1042,7 @@ def label_preview(request):
     return render(request, 'volunteers/label_confirm.html', context)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('manage_labels')
 def label_generate_pdf(request):
     """Generate the PDF and log the print."""
     from .labels import generate_labels_pdf
@@ -995,6 +1084,11 @@ def label_generate_pdf(request):
             edition=edition,
             printed_by=request.user,
         )
+    log_operational_action(
+        request,
+        edition,
+        f'Generated labels for {len(volunteers)} volunteers',
+    )
 
     # Return PDF as download
     response = HttpResponse(pdf_content, content_type='application/pdf')
@@ -1005,7 +1099,7 @@ def label_generate_pdf(request):
 
 # --- Admin T-shirt Report View ---
 
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('view_tshirt_report')
 def tshirt_report(request):
     """T-shirt size statistics per edition, accessible from the standard UI."""
     from collections import defaultdict
@@ -1079,7 +1173,7 @@ def tshirt_report(request):
 
 # --- Admin Matrix IDs Export ---
 
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('export_matrix_ids')
 def matrix_ids_export(request):
     """Export Matrix IDs of all volunteers for the current edition as a text file."""
     edition = Edition.get_current()
@@ -1105,6 +1199,11 @@ def matrix_ids_export(request):
         content = '\n'.join(matrix_ids)
         response = HttpResponse(content, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename="matrix_ids_{edition.name}.txt"'
+        log_operational_action(
+            request,
+            edition,
+            f'Exported {len(matrix_ids)} Matrix IDs',
+        )
         return response
 
     context = {
@@ -1116,20 +1215,33 @@ def matrix_ids_export(request):
 
 # --- Admin Approval Dashboard ---
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def approval_dashboard(request):
     """List all pending sign-up approvals for the current edition."""
+    has_global_access = has_permission(request.user, 'manage_approvals')
+    if not has_global_access and not has_responsible_templates(request.user):
+        raise PermissionDenied
+
     edition = Edition.get_current()
     if not edition:
         messages.error(request, _('No current edition found.'))
         return redirect('task_list')
 
-    pending = (
-        VolunteerTask.objects
-        .filter(task__edition=edition, status='pending')
+    pending = VolunteerTask.objects.filter(
+        task__edition=edition,
+        status='pending',
+    )
+    if not has_global_access:
+        pending = pending.filter(
+            Q(task__template__primary=request.user)
+            | Q(task__template__secondary=request.user)
+        )
+    pending = list(
+        pending
         .select_related('volunteer__user', 'task', 'task__template')
         .order_by('requested_at')
     )
+    _attach_prior_task_experience(pending)
 
     context = {
         'edition': edition,
@@ -1138,7 +1250,7 @@ def approval_dashboard(request):
     return render(request, 'volunteers/approval_dashboard.html', context)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def approval_respond(request):
     """Approve or deny a pending signup."""
     if request.method != 'POST':
@@ -1150,12 +1262,19 @@ def approval_respond(request):
     action = request.POST.get('action')
 
     vt = get_object_or_404(VolunteerTask, id=vt_id, status='pending')
+    if not can_approve_task(request.user, vt.task):
+        raise PermissionDenied
 
     if action == 'approve':
         vt.status = 'approved'
         vt.reviewed_at = timezone.now()
         vt.reviewed_by = request.user
         vt.save()
+        log_operational_action(
+            request,
+            vt,
+            f'Approved signup for {vt.volunteer.user.username}',
+        )
         if not safe_send_email(send_approval_decision_email, vt, True):
             messages.warning(request, _('Approval saved, but notification email could not be sent.'))
         messages.success(
@@ -1168,6 +1287,11 @@ def approval_respond(request):
     elif action == 'deny':
         if not safe_send_email(send_approval_decision_email, vt, False):
             messages.warning(request, _('Denial processed, but notification email could not be sent.'))
+        log_operational_action(
+            request,
+            vt,
+            f'Denied signup for {vt.volunteer.user.username}',
+        )
         vt.delete()  # Delete so volunteer can re-apply
         messages.success(
             request,
@@ -1227,9 +1351,13 @@ def _find_task_clashes(volunteer_tasks):
         return [group for group in groups.values() if len(group) > 1]
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def task_clashes_dashboard(request):
     """Show and resolve overlapping approved or pending task sign-ups."""
+    has_global_access = has_permission(request.user, 'manage_task_clashes')
+    if not has_global_access and not has_responsible_templates(request.user):
+        raise PermissionDenied
+
     edition = Edition.get_current()
     if not edition:
         messages.error(request, _('No current edition found.'))
@@ -1294,7 +1422,17 @@ def task_clashes_dashboard(request):
                 task__edition=edition,
                 status__in=('approved', 'pending'),
             )
+            if not (
+                has_global_access
+                or is_task_responsible(request.user, signup.task)
+            ):
+                raise PermissionDenied
             task_name = signup.task.name
+            log_operational_action(
+                request,
+                signup,
+                f'Removed clashing signup from task {signup.task_id}',
+            )
             signup.delete()
             messages.success(
                 request,
@@ -1304,6 +1442,8 @@ def task_clashes_dashboard(request):
                 },
             )
         elif action == 'email':
+            if not has_global_access:
+                raise PermissionDenied
             if not volunteer.user.email:
                 messages.error(request, _('This volunteer does not have an email address.'))
                 return redirect('task_clashes_dashboard')
@@ -1335,11 +1475,28 @@ def task_clashes_dashboard(request):
 
     volunteers_with_clashes = []
     for clashes in clashes_by_volunteer.values():
+        if not has_global_access and not any(
+            is_task_responsible(request.user, signup.task)
+            for clash in clashes
+            for signup in clash
+        ):
+            continue
         volunteer = clashes[0][0].volunteer
         volunteers_with_clashes.append({
             'volunteer': volunteer,
             'clashes': [
-                {'signups': clash}
+                {
+                    'signups': [
+                        {
+                            'signup': signup,
+                            'can_remove': (
+                                has_global_access
+                                or is_task_responsible(request.user, signup.task)
+                            ),
+                        }
+                        for signup in clash
+                    ],
+                }
                 for clash in clashes
             ],
         })
@@ -1355,6 +1512,7 @@ def task_clashes_dashboard(request):
     return render(request, 'volunteers/task_clashes_dashboard.html', {
         'edition': edition,
         'volunteers_with_clashes': volunteers_with_clashes,
+        'can_email_clashes': has_global_access,
     })
 
 
@@ -1534,9 +1692,13 @@ def task_signout(request, vt_id):
 
 # --- Admin Attendance Dashboard Views ---
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def attendance_dashboard(request):
     """Admin attendance dashboard showing all tasks grouped by day with sign-in counts."""
+    has_global_access = has_permission(request.user, 'manage_attendance')
+    if not has_global_access and not has_responsible_templates(request.user):
+        raise PermissionDenied
+
     edition = Edition.get_current()
     if not edition:
         messages.error(request, _('No current edition found.'))
@@ -1552,6 +1714,11 @@ def attendance_dashboard(request):
         .prefetch_related('volunteertask_set__attendance')
         .order_by('date', 'start_time', 'name')
     )
+    if not has_global_access:
+        tasks = tasks.filter(
+            Q(template__primary=request.user)
+            | Q(template__secondary=request.user)
+        )
 
     now = timezone.localtime(timezone.now())
     today = now.date()
@@ -1596,10 +1763,12 @@ def attendance_dashboard(request):
     return render(request, 'volunteers/attendance_dashboard.html', context)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def attendance_task_detail(request, task_id):
     """Admin view showing individual volunteers for a task with their attendance status."""
     task = get_object_or_404(Task, id=task_id)
+    if not can_manage_task_attendance(request.user, task):
+        raise PermissionDenied
     edition = task.edition
 
     if not edition.enable_task_signin:
@@ -1636,12 +1805,16 @@ def attendance_task_detail(request, task_id):
         start_time__lt=task.end_time,
         end_time__gt=task.start_time,
     ).exclude(id=task.id)
-    available_runners = (
-        VolunteerTask.objects.filter(task__in=runner_tasks, status='approved')
-        .exclude(volunteer_id__in=assigned_ids)
-        .select_related('volunteer__user', 'task')
-        .order_by('task__start_time', 'volunteer__user__first_name', 'volunteer__user__last_name')
-    )
+    can_transfer_runner = has_permission(request.user, 'manage_attendance')
+    if can_transfer_runner:
+        available_runners = (
+            VolunteerTask.objects.filter(task__in=runner_tasks, status='approved')
+            .exclude(volunteer_id__in=assigned_ids)
+            .select_related('volunteer__user', 'task')
+            .order_by('task__start_time', 'volunteer__user__first_name', 'volunteer__user__last_name')
+        )
+    else:
+        available_runners = VolunteerTask.objects.none()
 
     # Any other volunteer, as a manual backup option (always available).
     all_volunteers = (
@@ -1658,11 +1831,12 @@ def attendance_task_detail(request, task_id):
         'all_volunteers': all_volunteers,
         'signin_email_enabled': getattr(settings, 'SIGNIN_EMAIL_ENABLED', False),
         'signin_matrix_enabled': getattr(settings, 'SIGNIN_MATRIX_ENABLED', False),
+        'can_transfer_runner': can_transfer_runner,
     }
     return render(request, 'volunteers/attendance_task_detail.html', context)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def attendance_mark(request):
     """POST: Manually sign-in or sign-out a volunteer."""
     if request.method != 'POST':
@@ -1672,6 +1846,8 @@ def attendance_mark(request):
     action = request.POST.get('action')  # 'signin' or 'signout'
 
     vt = get_object_or_404(VolunteerTask, id=vt_id)
+    if not can_manage_task_attendance(request.user, vt.task):
+        raise PermissionDenied
     attendance, _created = TaskAttendance.objects.get_or_create(volunteer_task=vt)
 
     now = timezone.now()
@@ -1680,17 +1856,27 @@ def attendance_mark(request):
         attendance.signed_in_at = now
         attendance.manually_marked_by = request.user
         attendance.save(update_fields=['signed_in_at', 'manually_marked_by'])
+        log_operational_action(
+            request,
+            attendance,
+            f'Manually checked in {vt.volunteer.user.username}',
+        )
         messages.success(request, _('Manually checked in %s.') % vt.volunteer.user.get_full_name())
     elif action == 'signout':
         attendance.signed_out_at = now
         attendance.manually_marked_by = request.user
         attendance.save(update_fields=['signed_out_at', 'manually_marked_by'])
+        log_operational_action(
+            request,
+            attendance,
+            f'Manually checked out {vt.volunteer.user.username}',
+        )
         messages.success(request, _('Manually checked out %s.') % vt.volunteer.user.get_full_name())
 
     return redirect('attendance_task_detail', task_id=vt.task.id)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('manage_attendance')
 def transfer_runner(request):
     """POST: Move a volunteer currently on Runner duty over to this task."""
     if request.method != 'POST':
@@ -1712,6 +1898,11 @@ def transfer_runner(request):
     runner_vt.delete()
     vt = VolunteerTask.objects.create(task=task, volunteer=volunteer, status='approved')
     TaskAttendance.objects.create(volunteer_task=vt)
+    log_operational_action(
+        request,
+        vt,
+        f'Moved {volunteer.user.username} from runner task {runner_task.pk}',
+    )
 
     messages.success(
         request,
@@ -1725,13 +1916,15 @@ def transfer_runner(request):
     return redirect('attendance_task_detail', task_id=task.id)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def attendance_assign_volunteer(request, task_id):
     """POST: Manually assign any volunteer to this task as a backup option."""
     if request.method != 'POST':
         return redirect('attendance_dashboard')
 
     task = get_object_or_404(Task, id=task_id)
+    if not can_manage_task_attendance(request.user, task):
+        raise PermissionDenied
     volunteer_id = request.POST.get('volunteer_id')
     if not volunteer_id:
         messages.error(request, _('Please select a volunteer.'))
@@ -1742,6 +1935,11 @@ def attendance_assign_volunteer(request, task_id):
     vt, created = VolunteerTask.objects.get_or_create(task=task, volunteer=volunteer, defaults={'status': 'approved'})
     if created:
         TaskAttendance.objects.create(volunteer_task=vt)
+        log_operational_action(
+            request,
+            vt,
+            f'Assigned backup volunteer {volunteer.user.username}',
+        )
         messages.success(
             request,
             _('%(name)s has been assigned to "%(task)s".') % {
@@ -1755,7 +1953,7 @@ def attendance_assign_volunteer(request, task_id):
     return redirect('attendance_task_detail', task_id=task.id)
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def summon_runner(request):
     """POST: Send a Matrix message or email to summon a runner.
 
@@ -1770,6 +1968,8 @@ def summon_runner(request):
     method = request.POST.get('method')
     volunteer = get_object_or_404(Volunteer, id=volunteer_id)
     task = get_object_or_404(Task, id=task_id)
+    if not can_manage_task_attendance(request.user, task):
+        raise PermissionDenied
 
     sent = False
 
@@ -1813,6 +2013,11 @@ def summon_runner(request):
         return redirect('attendance_task_detail', task_id=task.id)
 
     if sent:
+        log_operational_action(
+            request,
+            task,
+            f'Summoned {volunteer.user.username} by {method}',
+        )
         messages.success(request, _('Runner summoned: %s') % volunteer.user.get_full_name())
     else:
         messages.error(request, _('Could not summon runner.'))
@@ -1821,7 +2026,7 @@ def summon_runner(request):
 
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def need_volunteers_matrix(request):
     """POST: Post a message to Matrix room requesting more volunteers. Requires SIGNIN_MATRIX_ENABLED."""
     if request.method != 'POST':
@@ -1829,6 +2034,8 @@ def need_volunteers_matrix(request):
 
     task_id = request.POST.get('task_id')
     task = get_object_or_404(Task, id=task_id)
+    if not can_manage_task_attendance(request.user, task):
+        raise PermissionDenied
 
     if not getattr(settings, 'SIGNIN_MATRIX_ENABLED', False):
         messages.error(request, _('Matrix notifications are not enabled.'))
@@ -1846,6 +2053,11 @@ def need_volunteers_matrix(request):
     result = need_volunteers_message(task, missing if missing > 0 else 1)
 
     if result:
+        log_operational_action(
+            request,
+            task,
+            'Posted need-volunteers message to Matrix',
+        )
         messages.success(request, _('Posted need-volunteers message to Matrix.'))
     else:
         messages.error(request, _('Failed to post to Matrix room.'))

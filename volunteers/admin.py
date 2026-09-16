@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mass_mail
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.forms import TextInput, Textarea, Form, CharField, MultipleHiddenInput
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -114,12 +114,14 @@ class TaskFilter(admin.SimpleListFilter):
 
 
 class MyVolunteersFilter(admin.SimpleListFilter):
-    title = 'tasks I\'m primary on'
+    title = 'tasks I\'m responsible for'
     parameter_name = 'my_task'
 
     def lookups(self, request, model_admin):
         tasks = []
-        for task_template in TaskTemplate.objects.filter(primary__id=int(request.user.id)):
+        for task_template in TaskTemplate.objects.filter(
+            Q(primary=request.user) | Q(secondary=request.user)
+        ):
             tasks.append((task_template.id, task_template.name))
         return tasks
 
@@ -318,9 +320,9 @@ class TaskCategoryAdmin(admin.ModelAdmin):
 
 
 class TaskTemplateAdmin(admin.ModelAdmin):
-    fields = ['name', 'description', 'info_url', 'category', 'primary', 'requires_approval']
-    list_display = ['link', 'name', 'category', 'primary', 'requires_approval']
-    list_editable = ['name', 'category', 'primary', 'requires_approval']
+    fields = ['name', 'description', 'info_url', 'category', 'primary', 'secondary', 'requires_approval']
+    list_display = ['link', 'name', 'category', 'primary', 'secondary', 'requires_approval']
+    list_editable = ['name', 'category', 'primary', 'secondary', 'requires_approval']
     list_filter = [CategoryActiveFilter]
 
 
@@ -355,7 +357,7 @@ class TaskAdmin(admin.ModelAdmin):
         subject = CharField()
         message = CharField(widget=Textarea)
     def mass_mail_volunteer(self, request, queryset):
-        if not request.user.is_staff:
+        if not request.user.has_perm('volunteers.send_mass_mail'):
             raise PermissionDenied
         form = None
 
@@ -381,6 +383,12 @@ class TaskAdmin(admin.ModelAdmin):
                     plural = 's'
                 self.message_user(request,
                                   'Mail with subject "{}" sent to  {} volunteer{}.'.format(subject, count, plural))
+                for task in queryset:
+                    self.log_change(
+                        request,
+                        task,
+                        f'Sent mass mail "{subject}" to task volunteers',
+                    )
                 return HttpResponseRedirect(request.get_full_path())
         if not form:
             form = self.MassMailForm(initial={'_selected_action': request.POST.getlist("_selected_action")})
@@ -389,6 +397,12 @@ class TaskAdmin(admin.ModelAdmin):
                                                            })
 
     mass_mail_volunteer.short_description = "Send mass mail"
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not request.user.has_perm('volunteers.send_mass_mail'):
+            actions.pop('mass_mail_volunteer', None)
+        return actions
 
 
 class VolunteerLanguageInline(admin.TabularInline):
@@ -421,7 +435,7 @@ class VolunteerAdmin(admin.ModelAdmin):
         message = CharField(widget=Textarea)
 
     def mass_mail_volunteer(self, request, queryset):
-        if not request.user.is_staff:
+        if not request.user.has_perm('volunteers.send_mass_mail'):
             raise PermissionDenied
         form = None
         if 'send' in request.POST:
@@ -444,6 +458,12 @@ class VolunteerAdmin(admin.ModelAdmin):
                     plural = 's'
                 self.message_user(request,
                                   'Mail with subject "{}" sent to  {} volunteer{}.'.format(subject, count, plural))
+                for volunteer in queryset:
+                    self.log_change(
+                        request,
+                        volunteer,
+                        f'Sent mass mail "{subject}"',
+                    )
                 return HttpResponseRedirect(request.get_full_path())
         if not form:
             form = self.MassMailForm(initial={'_selected_action': request.POST.getlist("_selected_action")})
@@ -454,10 +474,11 @@ class VolunteerAdmin(admin.ModelAdmin):
     mass_mail_volunteer.short_description = "Send mass mail"
 
     def mail_schedule(self, request, queryset):
-        if not request.user.is_staff:
+        if not request.user.has_perm('volunteers.send_mass_mail'):
             raise PermissionDenied
         for volunteer in queryset:
             volunteer.mail_schedule()
+            self.log_change(request, volunteer, 'Sent volunteer schedule')
         count = len(queryset)
         plural = 's' if count > 1 else ''
         self.message_user(request, 'Volunteer schedule sent to  {} volunteer{}.'.format(count, plural))
@@ -468,6 +489,13 @@ class VolunteerAdmin(admin.ModelAdmin):
 
     num_tasks.admin_order_field = 'num_tasks'
 
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not request.user.has_perm('volunteers.send_mass_mail'):
+            actions.pop('mass_mail_volunteer', None)
+            actions.pop('mail_schedule', None)
+        return actions
+
     def get_urls(self):
         urls = super().get_urls()
         custom = [
@@ -476,7 +504,7 @@ class VolunteerAdmin(admin.ModelAdmin):
         return custom + urls
 
     def tshirt_report_view(self, request):
-        if not request.user.is_staff:
+        if not request.user.has_perm('volunteers.view_tshirt_report'):
             raise PermissionDenied
 
         all_editions = Edition.objects.all().order_by('-start_date')

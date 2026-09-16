@@ -86,32 +86,45 @@ def send_approval_request_email(volunteer, task):
     Notify the task responsible that a volunteer has signed up
     for an approval-required task.
     """
-    responsible = task.template.primary
-    if not responsible or not responsible.email:
+    responsibles = [
+        responsible
+        for responsible in (
+            task.template.primary,
+            task.template.secondary,
+        )
+        if (
+            responsible
+            and responsible.is_active
+            and responsible.is_staff
+            and responsible.email
+        )
+    ]
+    if not responsibles:
         return
 
     subject = f'[FOSDEM Volunteers] Approval needed: {volunteer.user.username} → {task.name}'
 
-    body = (
-        f'Hi {responsible.first_name or responsible.username},\n\n'
-        f'{volunteer.user.username} has signed up for '
-        f'"{task.name}" which requires your approval.\n\n'
-        f'Task details:\n'
-        f'  - Date: {task.date.strftime("%A %d %B %Y")}\n'
-        f'  - Time: {task.start_time.strftime("%H:%M")} – {task.end_time.strftime("%H:%M")}\n'
-        f'  - Location: {task.location or "N/A"}\n\n'
-        f'Please approve or deny this request in the admin panel.\n\n'
-        f'Thanks,\n'
-        f'FOSDEM Volunteers System'
-    )
+    for responsible in responsibles:
+        body = (
+            f'Hi {responsible.first_name or responsible.username},\n\n'
+            f'{volunteer.user.username} has signed up for '
+            f'"{task.name}" which requires your approval.\n\n'
+            f'Task details:\n'
+            f'  - Date: {task.date.strftime("%A %d %B %Y")}\n'
+            f'  - Time: {task.start_time.strftime("%H:%M")} – {task.end_time.strftime("%H:%M")}\n'
+            f'  - Location: {task.location or "N/A"}\n\n'
+            f'Please approve or deny this request in the approval dashboard.\n\n'
+            f'Thanks,\n'
+            f'FOSDEM Volunteers System'
+        )
 
-    email = EmailMultiAlternatives(
-        subject=subject,
-        body=body,
-        from_email='volunteer-admin@fosdem.org',
-        to=[responsible.email],
-    )
-    email.send(fail_silently=True)
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=body,
+            from_email='volunteer-admin@fosdem.org',
+            to=[responsible.email],
+        )
+        email.send(fail_silently=True)
 
 
 def send_approval_decision_email(volunteer_task, approved):

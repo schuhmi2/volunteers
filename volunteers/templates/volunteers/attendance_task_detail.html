@@ -131,6 +131,7 @@
     </div>
   </div>
 
+  {% if can_transfer_runner %}
   <!-- Available Runners -->
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
     <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-1">{% trans "Available Runners" %}</h2>
@@ -159,6 +160,7 @@
     <p class="text-sm text-lm-subtle dark:text-dm-muted italic">{% trans "No runners are currently available for this time slot." %}</p>
     {% endif %}
   </div>
+  {% endif %}
 
   <!-- Manual Backup Assignment -->
   {% if all_volunteers %}
