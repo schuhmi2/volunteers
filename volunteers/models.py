@@ -637,15 +637,6 @@ class Volunteer(models.Model):
     def __str__(self):
         return self.user.username
 
-    ratings = (
-        (0, 'No longer welcome'),
-        (1, 'Poor'),
-        (2, 'Not great'),
-        (3, 'Average'),
-        (4, 'Good'),
-        (5, 'Superb'),
-    )
-
     user = models.OneToOneField(User, unique=True, verbose_name=_('user'), related_name='volunteer', on_delete=CASCADE)
     # Categories in which they're interested to help out.
     # Tasks for which they've signed up.
@@ -657,8 +648,6 @@ class Volunteer(models.Model):
     mobile_nbr = models.CharField('Mobile Phone', max_length=30, blank=True, null=True,
                                   help_text="We won't share this, but we need it in case we"
                                             " need to contact you in a pinch during the event.")
-    private_staff_rating = models.IntegerField(null=True, blank=True, choices=ratings)
-    private_staff_notes = models.TextField(null=True, blank=True)
     penta_account_name = models.TextField('Your Pentabarf account name (penta.fosdem.org)', null=True,
                                           blank=True, max_length=256, help_text="We need this to link your volunteers account from Pentabarf to participate in heralding/hosting a digital edition.")
     matrix_id = models.CharField('Matrix ID', null=True, blank=True, max_length=256, help_text='If you have a matrix account (mxid), you can specify it here. This is required for the virtual infodesk. The format is @username:homeserver.tld')

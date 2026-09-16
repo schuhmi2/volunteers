@@ -400,12 +400,12 @@ class VolunteerAdmin(admin.ModelAdmin):
     change_list_template = 'admin/volunteer_change_list.html'
 
     fields = ['user', 'full_name', 'email', 'mobile_nbr', 'matrix_id', 'pronouns', 'tshirt_size',
-              'private_staff_rating', 'private_staff_notes', 'penta_account_name']
+              'penta_account_name']
     inlines = [VolunteerLanguageInline]
-    list_display = ['full_name', 'mobile_nbr', 'matrix_id', 'email', 'pronouns', 'tshirt_size', 'private_staff_rating', 'private_staff_notes']
-    list_editable = ['private_staff_rating', 'private_staff_notes', 'mobile_nbr', 'tshirt_size']
+    list_display = ['full_name', 'mobile_nbr', 'matrix_id', 'email', 'pronouns', 'tshirt_size']
+    list_editable = ['mobile_nbr', 'tshirt_size']
     list_filter = [MyVolunteersFilter, TaskCategoryFilter, ThisYearsVolunteersFilter,
-                   TaskFilter, 'private_staff_rating']
+                   TaskFilter]
     readonly_fields = ['full_name', 'email']
     formfield_overrides = {
         models.CharField: {'widget': TextInput(attrs={'size': '20'})},
