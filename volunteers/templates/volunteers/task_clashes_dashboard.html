@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Task Clashes" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Task Clashes" %}</h1>
+      <p class="mt-2 text-sm text-lm-muted dark:text-dm-text">
+        {% trans "Review overlapping approved and pending task sign-ups. Remove a task for the volunteer, or email them to resolve the clash themselves." %}
+      </p>
+    </div>
+    <span class="text-sm text-lm-subtle dark:text-dm-muted">{{ edition.name }}</span>
+  </div>
+
+  {% for item in volunteers_with_clashes %}
+  <section class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden" aria-labelledby="volunteer-{{ item.volunteer.id }}">
+    <div class="px-4 py-3 bg-lm-soft dark:bg-dm-nav border-b border-lm-border dark:border-dm-border flex items-center justify-between flex-wrap gap-3">
+      <div class="min-w-0">
+        <h2 id="volunteer-{{ item.volunteer.id }}" class="font-semibold text-lm-text dark:text-dm-text truncate">
+          {{ item.volunteer.user.get_full_name|default:item.volunteer.user.username }}
+        </h2>
+        <p class="text-xs text-lm-subtle dark:text-dm-muted">
+          {{ item.volunteer.user.username }} ·
+          {{ item.volunteer.user.email|default:"No email address" }} ·
+          {% blocktrans count counter=item.clashes|length %}1 conflict group{% plural %}{{ counter }} conflict groups{% endblocktrans %}
+        </p>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="volunteer_id" value="{{ item.volunteer.id }}">
+        <button type="submit" name="action" value="email"
+                {% if not item.volunteer.user.email %}disabled title="{% trans 'This volunteer has no email address.' %}"{% endif %}
+                class="text-xs font-medium px-3 py-1.5 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fosdem
+                       {% if item.volunteer.user.email %}bg-fosdem hover:bg-fosdem-dark text-white{% else %}bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed{% endif %}">
+          {% trans "Email volunteer" %}
+        </button>
+      </form>
+    </div>
+
+    <div class="divide-y divide-lm-hair dark:divide-gray-700">
+      {% for clash in item.clashes %}
+      <div class="p-4">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400 mb-3">
+          {% blocktrans with number=forloop.counter %}Conflict group {{ number }}{% endblocktrans %}
+        </h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {% for signup in clash.signups %}
+          <div class="flex items-start justify-between gap-4 rounded-lg bg-lm-soft dark:bg-dm-nav p-3">
+            <div class="min-w-0">
+              <a href="{% url 'task_detailed' signup.task.id %}" class="font-medium text-fosdem hover:underline break-words">
+                {{ signup.task.name }}
+              </a>
+              <p class="mt-1 text-sm text-lm-muted dark:text-dm-text">
+                {{ signup.task.date|date:"D d M" }}, {{ signup.task.start_time|time:"H:i" }}–{{ signup.task.end_time|time:"H:i" }}
+              </p>
+              <p class="text-xs text-lm-subtle dark:text-dm-muted">
+                {{ signup.task.location|default:"Location not specified" }} · {{ signup.get_status_display }}
+              </p>
+            </div>
+            <form method="post" class="shrink-0">
+              {% csrf_token %}
+              <input type="hidden" name="volunteer_id" value="{{ item.volunteer.id }}">
+              <input type="hidden" name="signup_id" value="{{ signup.id }}">
+              <button type="submit" name="action" value="remove"
+                      class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                      aria-label="{% blocktrans with task=signup.task.name %}Remove volunteer from {{ task }}{% endblocktrans %}">
+                {% trans "Remove" %}
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% empty %}
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow px-6 py-10 text-center">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "No task clashes" %}</h2>
+    <p class="mt-2 text-sm text-lm-subtle dark:text-dm-muted">
+      {% trans "No volunteers currently have overlapping approved or pending task sign-ups." %}
+    </p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

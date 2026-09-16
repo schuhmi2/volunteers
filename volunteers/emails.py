@@ -156,3 +156,45 @@ def send_approval_decision_email(volunteer_task, approved):
         to=[volunteer.user.email],
     )
     email.send(fail_silently=True)
+
+
+def send_task_clash_email(volunteer, clashes, tasks_url):
+    """Ask a volunteer to resolve overlapping task sign-ups."""
+    if not volunteer.user.email:
+        return
+
+    clash_lines = []
+    for index, tasks in enumerate(clashes, start=1):
+        clash_lines.append(f'Conflict group {index}:')
+        for task in tasks:
+            clash_lines.append(
+                f'  - {task.name}: '
+                f'{task.date.strftime("%A %d %B %Y")}, '
+                f'{task.start_time.strftime("%H:%M")}–{task.end_time.strftime("%H:%M")}, '
+                f'{task.location or "location not specified"}'
+            )
+        clash_lines.append('')
+
+    body = '\n'.join([
+        f'Hi {volunteer.user.first_name or volunteer.user.username},',
+        '',
+        'You are currently signed up for tasks that overlap:',
+        '',
+        *clash_lines,
+        'Please sign in and remove enough tasks from each conflict group '
+        'so that none of your remaining tasks overlap:',
+        tasks_url,
+        '',
+        'If you need help deciding which task to keep, please contact the volunteer team.',
+        '',
+        'Thanks,',
+        'FOSDEM Volunteers System',
+    ])
+
+    email = EmailMultiAlternatives(
+        subject='[FOSDEM Volunteers] Please resolve your task clashes',
+        body=body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[volunteer.user.email],
+    )
+    email.send()

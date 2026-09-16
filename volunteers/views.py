@@ -1131,6 +1131,187 @@ def approval_respond(request):
     return redirect('approval_dashboard')
 
 
+def _find_task_clashes(volunteer_tasks):
+        """Return connected groups of overlapping active sign-ups."""
+        signups = sorted(
+            volunteer_tasks,
+            key=lambda vt: (
+                vt.task.date,
+                vt.task.start_time,
+                vt.task.end_time,
+                vt.task.name,
+            ),
+        )
+        parents = list(range(len(signups)))
+
+        def find(index):
+            while parents[index] != index:
+                parents[index] = parents[parents[index]]
+                index = parents[index]
+            return index
+
+        def union(first_index, second_index):
+            first_root = find(first_index)
+            second_root = find(second_index)
+            if first_root != second_root:
+                parents[second_root] = first_root
+
+        for index, first in enumerate(signups):
+            for second_index in range(index + 1, len(signups)):
+                second = signups[second_index]
+                if second.task.date != first.task.date:
+                    if second.task.date > first.task.date:
+                        break
+                    continue
+                if second.task.start_time >= first.task.end_time:
+                    break
+                if (
+                    first.task.start_time < second.task.end_time
+                    and second.task.start_time < first.task.end_time
+                    and not (
+                        first.task.name == second.task.name
+                        and first.task.location == second.task.location
+                    )
+                ):
+                    union(index, second_index)
+
+        groups = {}
+        for index, signup in enumerate(signups):
+            groups.setdefault(find(index), []).append(signup)
+        return [group for group in groups.values() if len(group) > 1]
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def task_clashes_dashboard(request):
+    """Show and resolve overlapping approved or pending task sign-ups."""
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('task_list')
+
+    signups = list(
+        VolunteerTask.objects
+        .filter(task__edition=edition, status__in=('approved', 'pending'))
+        .select_related('volunteer__user', 'task')
+        .order_by(
+            'volunteer__user__last_name',
+            'volunteer__user__first_name',
+            'task__date',
+            'task__start_time',
+        )
+    )
+
+    signups_by_volunteer = {}
+    for signup in signups:
+        signups_by_volunteer.setdefault(signup.volunteer_id, []).append(signup)
+
+    clashes_by_volunteer = {}
+    for volunteer_id, volunteer_signups in signups_by_volunteer.items():
+        clashes = _find_task_clashes(volunteer_signups)
+        if clashes:
+            clashes_by_volunteer[volunteer_id] = clashes
+
+    if request.method == 'POST':
+        volunteer_id = request.POST.get('volunteer_id')
+        action = request.POST.get('action')
+        try:
+            volunteer_id = int(volunteer_id)
+        except (TypeError, ValueError):
+            messages.error(request, _('Invalid volunteer.'))
+            return redirect('task_clashes_dashboard')
+
+        clashes = clashes_by_volunteer.get(volunteer_id)
+        if not clashes:
+            messages.error(request, _('This volunteer no longer has any task clashes.'))
+            return redirect('task_clashes_dashboard')
+
+        volunteer = clashes[0][0].volunteer
+        if action == 'remove':
+            signup_id = request.POST.get('signup_id')
+            clashing_signup_ids = {
+                signup.id
+                for clash in clashes
+                for signup in clash
+            }
+            try:
+                signup_id = int(signup_id)
+            except (TypeError, ValueError):
+                signup_id = None
+            if signup_id not in clashing_signup_ids:
+                messages.error(request, _('That task is not part of this volunteer’s current clashes.'))
+                return redirect('task_clashes_dashboard')
+
+            signup = get_object_or_404(
+                VolunteerTask,
+                id=signup_id,
+                volunteer_id=volunteer_id,
+                task__edition=edition,
+                status__in=('approved', 'pending'),
+            )
+            task_name = signup.task.name
+            signup.delete()
+            messages.success(
+                request,
+                _('%(name)s has been removed from “%(task)s”.') % {
+                    'name': volunteer.user.get_full_name() or volunteer.user.username,
+                    'task': task_name,
+                },
+            )
+        elif action == 'email':
+            if not volunteer.user.email:
+                messages.error(request, _('This volunteer does not have an email address.'))
+                return redirect('task_clashes_dashboard')
+
+            from .emails import safe_send_email, send_task_clash_email
+            task_groups = [
+                [signup.task for signup in clash]
+                for clash in clashes
+            ]
+            sent = safe_send_email(
+                send_task_clash_email,
+                volunteer,
+                task_groups,
+                request.build_absolute_uri(reverse('task_list')),
+            )
+            if sent:
+                messages.success(
+                    request,
+                    _('Task clash email sent to %(email)s.') % {
+                        'email': volunteer.user.email,
+                    },
+                )
+            else:
+                messages.error(request, _('The task clash email could not be sent.'))
+        else:
+            messages.error(request, _('Invalid action.'))
+
+        return redirect('task_clashes_dashboard')
+
+    volunteers_with_clashes = []
+    for clashes in clashes_by_volunteer.values():
+        volunteer = clashes[0][0].volunteer
+        volunteers_with_clashes.append({
+            'volunteer': volunteer,
+            'clashes': [
+                {'signups': clash}
+                for clash in clashes
+            ],
+        })
+
+    volunteers_with_clashes.sort(
+        key=lambda item: (
+            item['volunteer'].user.last_name.lower(),
+            item['volunteer'].user.first_name.lower(),
+            item['volunteer'].user.username.lower(),
+        )
+    )
+
+    return render(request, 'volunteers/task_clashes_dashboard.html', {
+        'edition': edition,
+        'volunteers_with_clashes': volunteers_with_clashes,
+    })
+
+
 # --- Task Sign-in/Sign-out Views ---
 
 
