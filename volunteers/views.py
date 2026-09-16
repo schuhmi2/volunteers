@@ -3,8 +3,15 @@ from datetime import timedelta
 import datetime as _dt
 
 from .models import Volunteer, VolunteerTask, VolunteerTalk, TaskCategory, TaskTemplate, Task, Track, \
-    Talk, Edition, EmailConfirmation, LabelPrintLog, TaskAttendance, CURRENT_PRIVACY_POLICY_VERSION
+    Talk, Edition, EmailConfirmation, LabelPrintLog, RunnerDeployment, TaskAttendance, \
+    CURRENT_PRIVACY_POLICY_VERSION
 from .forms import EditProfileForm, SignupForm, EventSignupForm, EmailChangeForm, ResendActivationForm
+from .runner_deployments import (
+    approve_runner_deployment,
+    complete_runner_deployment,
+    deny_runner_deployment,
+    request_runner_deployment,
+)
 
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
@@ -13,7 +20,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.urls import reverse
 from collections import OrderedDict as SortedDict
 from django.utils.translation import gettext as _
@@ -176,18 +183,27 @@ def admin_assign_volunteer(request, task_id):
                 task=task,
                 volunteer=volunteer,
             )
-            log_operational_action(
-                request,
-                signup,
-                f'Removed {volunteer.user.username} from task {task.pk}',
-            )
-            signup.delete()
-            messages.success(
-                request,
-                _('%(name)s has been removed from this task.') % {
-                    'name': f'{volunteer.user.first_name} {volunteer.user.last_name}'
-                }
-            )
+            if (
+                signup.runner_deployments.exists()
+                or signup.destination_deployments.exists()
+            ):
+                messages.error(
+                    request,
+                    _('This assignment is part of a recorded runner deployment and cannot be removed.'),
+                )
+            else:
+                log_operational_action(
+                    request,
+                    signup,
+                    f'Removed {volunteer.user.username} from task {task.pk}',
+                )
+                signup.delete()
+                messages.success(
+                    request,
+                    _('%(name)s has been removed from this task.') % {
+                        'name': f'{volunteer.user.first_name} {volunteer.user.last_name}'
+                    }
+                )
 
     return redirect('task_detailed', task_id=task.id)
 
@@ -317,6 +333,15 @@ def task_toggle(request, task_id):
     existing = VolunteerTask.objects.filter(task=task, volunteer=volunteer).first()
 
     if existing:
+        if (
+            existing.runner_deployments.exists()
+            or existing.destination_deployments.exists()
+        ):
+            message = _('This assignment is part of a recorded runner deployment and cannot be removed.')
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': message})
+            messages.error(request, message)
+            return redirect('task_list')
         # Remove sign-up
         existing.delete()
         result_status = 'removed'
@@ -481,7 +506,12 @@ def event_sign_on(request):
 
             # unchecked boxes, delete him/her from the task
             for task in current_tasks.exclude(id__in=task_ids):
-                VolunteerTask.objects.filter(task=task, volunteer=volunteer).delete()
+                VolunteerTask.objects.filter(
+                    task=task,
+                    volunteer=volunteer,
+                    runner_deployments__isnull=True,
+                    destination_deployments__isnull=True,
+                ).delete()
 
             # checked boxes, add the volunteer to the tasks when he/she is not added
             for task in current_tasks.filter(id__in=task_ids):
@@ -1312,6 +1342,14 @@ def _find_task_clashes(volunteer_tasks):
                 vt.task.name,
             ),
         )
+        intentional_pairs = {
+            frozenset((runner_id, destination_id))
+            for runner_id, destination_id in RunnerDeployment.objects.filter(
+                runner_assignment_id__in=[signup.pk for signup in signups],
+                destination_assignment_id__in=[signup.pk for signup in signups],
+                status__in=('active', 'completed'),
+            ).values_list('runner_assignment_id', 'destination_assignment_id')
+        }
         parents = list(range(len(signups)))
 
         def find(index):
@@ -1338,6 +1376,7 @@ def _find_task_clashes(volunteer_tasks):
                 if (
                     first.task.start_time < second.task.end_time
                     and second.task.start_time < first.task.end_time
+                    and frozenset((first.pk, second.pk)) not in intentional_pairs
                     and not (
                         first.task.name == second.task.name
                         and first.task.location == second.task.location
@@ -1428,19 +1467,28 @@ def task_clashes_dashboard(request):
             ):
                 raise PermissionDenied
             task_name = signup.task.name
-            log_operational_action(
-                request,
-                signup,
-                f'Removed clashing signup from task {signup.task_id}',
-            )
-            signup.delete()
-            messages.success(
-                request,
-                _('%(name)s has been removed from “%(task)s”.') % {
-                    'name': volunteer.user.get_full_name() or volunteer.user.username,
-                    'task': task_name,
-                },
-            )
+            if (
+                signup.runner_deployments.exists()
+                or signup.destination_deployments.exists()
+            ):
+                messages.error(
+                    request,
+                    _('This assignment is part of a recorded runner deployment and cannot be removed.'),
+                )
+            else:
+                log_operational_action(
+                    request,
+                    signup,
+                    f'Removed clashing signup from task {signup.task_id}',
+                )
+                signup.delete()
+                messages.success(
+                    request,
+                    _('%(name)s has been removed from “%(task)s”.') % {
+                        'name': volunteer.user.get_full_name() or volunteer.user.username,
+                        'task': task_name,
+                    },
+                )
         elif action == 'email':
             if not has_global_access:
                 raise PermissionDenied
@@ -1759,6 +1807,16 @@ def attendance_dashboard(request):
     context = {
         'edition': edition,
         'days': dict(sorted(days.items())),
+        'pending_deployments': (
+            RunnerDeployment.objects.filter(status='pending')
+            .select_related(
+                'runner_assignment__volunteer__user',
+                'runner_assignment__task',
+                'destination_task',
+                'requested_by',
+            )
+            if has_global_access else RunnerDeployment.objects.none()
+        ),
     }
     return render(request, 'volunteers/attendance_dashboard.html', context)
 
@@ -1795,8 +1853,7 @@ def attendance_task_detail(request, task_id):
             'status': attendance.status if attendance else 'no_record',
         })
 
-    # Volunteers currently on "Runner" duty in a slot that overlaps this task's
-    # time window, so an admin can quickly move them over to help staff this task.
+    # Volunteers currently on Runner duty in a slot that overlaps this task.
     assigned_ids = volunteer_tasks.values_list('volunteer_id', flat=True)
     runner_tasks = Task.objects.filter(
         edition=edition,
@@ -1805,16 +1862,28 @@ def attendance_task_detail(request, task_id):
         start_time__lt=task.end_time,
         end_time__gt=task.start_time,
     ).exclude(id=task.id)
-    can_transfer_runner = has_permission(request.user, 'manage_attendance')
-    if can_transfer_runner:
-        available_runners = (
-            VolunteerTask.objects.filter(task__in=runner_tasks, status='approved')
-            .exclude(volunteer_id__in=assigned_ids)
-            .select_related('volunteer__user', 'task')
-            .order_by('task__start_time', 'volunteer__user__first_name', 'volunteer__user__last_name')
+    open_runner_assignments = RunnerDeployment.objects.filter(
+        status__in=('pending', 'active'),
+    ).values_list('runner_assignment_id', flat=True)
+    available_runners = (
+        VolunteerTask.objects.filter(task__in=runner_tasks, status='approved')
+        .exclude(volunteer_id__in=assigned_ids)
+        .exclude(id__in=open_runner_assignments)
+        .select_related('volunteer__user', 'task')
+        .order_by('task__start_time', 'volunteer__user__first_name', 'volunteer__user__last_name')
+    )
+    task_deployments = (
+        RunnerDeployment.objects.filter(
+            destination_task=task,
+            status__in=('pending', 'active'),
         )
-    else:
-        available_runners = VolunteerTask.objects.none()
+        .select_related(
+            'runner_assignment__volunteer__user',
+            'runner_assignment__task',
+            'requested_by',
+        )
+        .order_by('requested_at')
+    )
 
     # Any other volunteer, as a manual backup option (always available).
     all_volunteers = (
@@ -1831,7 +1900,8 @@ def attendance_task_detail(request, task_id):
         'all_volunteers': all_volunteers,
         'signin_email_enabled': getattr(settings, 'SIGNIN_EMAIL_ENABLED', False),
         'signin_matrix_enabled': getattr(settings, 'SIGNIN_MATRIX_ENABLED', False),
-        'can_transfer_runner': can_transfer_runner,
+        'can_deploy_runner': has_permission(request.user, 'manage_attendance'),
+        'task_deployments': task_deployments,
     }
     return render(request, 'volunteers/attendance_task_detail.html', context)
 
@@ -1876,9 +1946,8 @@ def attendance_mark(request):
     return redirect('attendance_task_detail', task_id=vt.task.id)
 
 
-@permission_required('manage_attendance')
 def transfer_runner(request):
-    """POST: Move a volunteer currently on Runner duty over to this task."""
+    """POST: Request or immediately approve a non-destructive runner deployment."""
     if request.method != 'POST':
         return redirect('attendance_dashboard')
 
@@ -1886,34 +1955,106 @@ def transfer_runner(request):
     runner_vt_id = request.POST.get('runner_vt_id')
 
     task = get_object_or_404(Task, id=task_id)
+    if not can_manage_task_attendance(request.user, task):
+        raise PermissionDenied
     runner_vt = get_object_or_404(VolunteerTask, id=runner_vt_id)
     volunteer = runner_vt.volunteer
 
-    if VolunteerTask.objects.filter(task=task, volunteer=volunteer).exists():
-        messages.info(request, _('%s is already assigned to this task.') % volunteer.user.get_full_name())
+    try:
+        deployment = request_runner_deployment(runner_vt, task, request.user)
+        if has_permission(request.user, 'manage_attendance'):
+            deployment = approve_runner_deployment(deployment, request.user)
+            message = _('%(name)s is now deployed to "%(task)s". Their Runner assignment has been kept.') % {
+                'name': volunteer.user.get_full_name(),
+                'task': task.name,
+            }
+        else:
+            message = _('Deployment of %(name)s to "%(task)s" is pending Coordinator approval.') % {
+                'name': volunteer.user.get_full_name(),
+                'task': task.name,
+            }
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
         return redirect('attendance_task_detail', task_id=task.id)
 
-    # Move the volunteer off Runner duty and onto this task, fresh attendance record.
-    runner_task = runner_vt.task
-    runner_vt.delete()
-    vt = VolunteerTask.objects.create(task=task, volunteer=volunteer, status='approved')
-    TaskAttendance.objects.create(volunteer_task=vt)
     log_operational_action(
         request,
-        vt,
-        f'Moved {volunteer.user.username} from runner task {runner_task.pk}',
+        deployment,
+        f'{"Deployed" if deployment.status == "active" else "Requested deployment of"} '
+        f'{volunteer.user.username} from runner task {runner_vt.task_id} to task {task.pk}',
     )
-
-    messages.success(
-        request,
-        _('%(name)s has been moved from "%(runner_task)s" to "%(task)s".') % {
-            'name': volunteer.user.get_full_name(),
-            'runner_task': runner_task.name,
-            'task': task.name,
-        }
-    )
+    messages.success(request, message)
 
     return redirect('attendance_task_detail', task_id=task.id)
+
+
+@permission_required('manage_attendance')
+def runner_deployment_review(request, deployment_id):
+    if request.method != 'POST':
+        return redirect('attendance_dashboard')
+
+    deployment = get_object_or_404(RunnerDeployment, id=deployment_id)
+    action = request.POST.get('action')
+    try:
+        if action == 'approve':
+            deployment = approve_runner_deployment(deployment, request.user)
+            message = _('Runner deployment approved.')
+        elif action == 'deny':
+            deployment = deny_runner_deployment(
+                deployment,
+                request.user,
+                request.POST.get('review_note', '').strip(),
+            )
+            message = _('Runner deployment denied.')
+        else:
+            messages.error(request, _('Unknown deployment action.'))
+            return redirect('attendance_dashboard')
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+        return redirect('attendance_dashboard')
+
+    log_operational_action(
+        request,
+        deployment,
+        f'{"Approved" if action == "approve" else "Denied"} runner deployment {deployment.pk}',
+    )
+    messages.success(request, message)
+    return redirect('attendance_dashboard')
+
+
+@login_required
+def runner_deployment_return(request, deployment_id):
+    if request.method != 'POST':
+        return redirect('attendance_dashboard')
+
+    deployment = get_object_or_404(
+        RunnerDeployment.objects.select_related('destination_task'),
+        id=deployment_id,
+    )
+    if not can_manage_task_attendance(request.user, deployment.destination_task):
+        raise PermissionDenied
+    try:
+        deployment = complete_runner_deployment(deployment, request.user)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+        return redirect(
+            'attendance_task_detail',
+            task_id=deployment.destination_task_id,
+        )
+
+    log_operational_action(
+        request,
+        deployment,
+        f'Returned runner from deployment {deployment.pk}',
+    )
+    messages.success(
+        request,
+        _('Runner returned to the pool; both task assignments were retained.'),
+    )
+    return redirect(
+        'attendance_task_detail',
+        task_id=deployment.destination_task_id,
+    )
 
 
 @login_required

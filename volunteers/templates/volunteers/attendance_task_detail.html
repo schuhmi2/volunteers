@@ -131,11 +131,50 @@
     </div>
   </div>
 
-  {% if can_transfer_runner %}
-  <!-- Available Runners -->
+  {% if task_deployments %}
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-1">{% trans "Runner deployments" %}</h2>
+    <p class="text-sm text-lm-subtle dark:text-dm-muted mb-4">{% trans "The original Runner assignment remains in place while the volunteer helps this task." %}</p>
+    <div class="divide-y divide-lm-hair dark:divide-gray-700">
+      {% for deployment in task_deployments %}
+      <div class="flex items-center justify-between gap-4 py-3 flex-wrap">
+        <div class="min-w-0">
+          <p class="font-medium text-lm-text dark:text-dm-text break-words">
+            {{ deployment.runner_assignment.volunteer.user.get_full_name }}
+            <span class="font-normal text-sm text-lm-subtle dark:text-dm-muted">({{ deployment.runner_assignment.volunteer.user.username }})</span>
+          </p>
+          <p class="text-sm text-lm-subtle dark:text-dm-muted">
+            {% trans "Runner" %} {{ deployment.runner_assignment.task.start_time|time:"H:i" }}–{{ deployment.runner_assignment.task.end_time|time:"H:i" }}
+            {% if deployment.status == "pending" %}
+              · {% blocktrans with requester=deployment.requested_by.get_full_name|default:deployment.requested_by.username %}Pending Coordinator approval · requested by {{ requester }}{% endblocktrans %}
+            {% else %}
+              · {% trans "Currently deployed here" %}
+            {% endif %}
+          </p>
+        </div>
+        {% if deployment.status == "active" %}
+        <form method="post" action="{% url 'runner_deployment_return' deployment.id %}">
+          {% csrf_token %}
+          <button type="submit" class="px-3 py-2 bg-lm-soft hover:bg-lm-hair dark:bg-dm-nav dark:hover:bg-dm-hover text-lm-text dark:text-dm-text font-medium text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-fosdem focus:ring-offset-2">
+            {% trans "Return to Runner pool" %}
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
     <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-1">{% trans "Available Runners" %}</h2>
-    <p class="text-sm text-lm-subtle dark:text-dm-muted mb-4">{% trans "Volunteers currently on Runner duty during this task's time slot. Move one over to help staff this task." %}</p>
+    <p class="text-sm text-lm-subtle dark:text-dm-muted mb-4">
+      {% if can_deploy_runner %}
+        {% trans "Deploy a runner to this task immediately. Their Runner assignment will be retained." %}
+      {% else %}
+        {% trans "Request a runner for this task. A Coordinator must approve the deployment; the Runner assignment will be retained." %}
+      {% endif %}
+    </p>
     {% if available_runners %}
     <div class="divide-y divide-lm-hair dark:divide-gray-700">
       {% for runner_vt in available_runners %}
@@ -149,8 +188,8 @@
           {% csrf_token %}
           <input type="hidden" name="task_id" value="{{ task.id }}">
           <input type="hidden" name="runner_vt_id" value="{{ runner_vt.id }}">
-          <button type="submit" class="px-3 py-1.5 bg-fosdem hover:bg-fosdem-dark text-white font-medium text-xs rounded-lg transition-colors">
-            {% trans "Move here" %}
+          <button type="submit" class="px-3 py-2 bg-fosdem hover:bg-fosdem-dark text-white font-medium text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-fosdem focus:ring-offset-2">
+            {% if can_deploy_runner %}{% trans "Deploy here" %}{% else %}{% trans "Request deployment" %}{% endif %}
           </button>
         </form>
       </div>
@@ -160,7 +199,6 @@
     <p class="text-sm text-lm-subtle dark:text-dm-muted italic">{% trans "No runners are currently available for this time slot." %}</p>
     {% endif %}
   </div>
-  {% endif %}
 
   <!-- Manual Backup Assignment -->
   {% if all_volunteers %}

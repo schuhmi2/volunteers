@@ -25,6 +25,7 @@ from volunteers.models import Volunteer
 from volunteers.models import VolunteerLanguage
 from volunteers.models import VolunteerStatus
 from volunteers.models import VolunteerTask
+from volunteers.models import RunnerDeployment
 
 
 class DayListFilter(admin.SimpleListFilter):
@@ -333,6 +334,44 @@ class VolunteerTaskAdmin(admin.ModelAdmin):
     readonly_fields = ['requested_at']
 
 
+class RunnerDeploymentAdmin(admin.ModelAdmin):
+    list_display = [
+        'runner_assignment',
+        'destination_task',
+        'status',
+        'requested_by',
+        'requested_at',
+        'reviewed_by',
+    ]
+    list_filter = ['status', 'destination_task__edition']
+    search_fields = [
+        'runner_assignment__volunteer__user__username',
+        'destination_task__name',
+    ]
+    readonly_fields = [
+        'runner_assignment',
+        'destination_task',
+        'destination_assignment',
+        'requested_by',
+        'requested_at',
+        'reviewed_by',
+        'reviewed_at',
+        'deployed_at',
+        'returned_at',
+        'status',
+        'review_note',
+    ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class TaskAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {'fields': ['edition', 'name', 'nbr_volunteers', 'nbr_volunteers_min', 'nbr_volunteers_max', 'date',
@@ -601,3 +640,4 @@ admin.site.register(Task, TaskAdmin)
 admin.site.register(Volunteer, VolunteerAdmin)
 admin.site.register(VolunteerStatus, VolunteerStatusAdmin)
 admin.site.register(VolunteerTask, VolunteerTaskAdmin)
+admin.site.register(RunnerDeployment, RunnerDeploymentAdmin)

@@ -10,6 +10,49 @@
     <span class="text-sm text-lm-subtle dark:text-dm-muted">{{ edition.name }}</span>
   </div>
 
+  {% if pending_deployments %}
+  <section class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden" aria-labelledby="pending-deployments-heading">
+    <div class="px-4 py-3 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900">
+      <h2 id="pending-deployments-heading" class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Runner deployment requests" %}</h2>
+      <p class="mt-1 text-sm text-lm-muted dark:text-dm-muted">{% trans "Review requests from task responsibles. Approval keeps the Runner assignment and adds the destination assignment." %}</p>
+    </div>
+    <div class="divide-y divide-lm-hair dark:divide-gray-700">
+      {% for deployment in pending_deployments %}
+      <div class="p-4 flex items-start justify-between gap-4 flex-wrap">
+        <div class="min-w-0">
+          <p class="font-semibold text-lm-text dark:text-dm-text break-words">
+            {{ deployment.runner_assignment.volunteer.user.get_full_name }}
+            <span class="font-normal text-sm text-lm-subtle dark:text-dm-muted">({{ deployment.runner_assignment.volunteer.user.username }})</span>
+          </p>
+          <p class="mt-1 text-sm text-lm-muted dark:text-dm-text">
+            {{ deployment.runner_assignment.task.name }} → {{ deployment.destination_task.name }}
+          </p>
+          <p class="mt-1 text-xs text-lm-subtle dark:text-dm-muted">
+            {% blocktrans with requester=deployment.requested_by.get_full_name|default:deployment.requested_by.username requested=deployment.requested_at|date:"DATETIME_FORMAT" %}Requested by {{ requester }} on {{ requested }}{% endblocktrans %}
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <form method="post" action="{% url 'runner_deployment_review' deployment.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="deny">
+            <button type="submit" class="px-3 py-2 bg-lm-soft hover:bg-lm-hair dark:bg-dm-nav dark:hover:bg-dm-hover text-lm-text dark:text-dm-text font-medium text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-fosdem focus:ring-offset-2">
+              {% trans "Deny" %}
+            </button>
+          </form>
+          <form method="post" action="{% url 'runner_deployment_review' deployment.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="approve">
+            <button type="submit" class="px-3 py-2 bg-fosdem hover:bg-fosdem-dark text-white font-medium text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-fosdem focus:ring-offset-2">
+              {% trans "Approve and deploy" %}
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   {% for day, task_list in days.items %}
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
     <div class="px-4 py-3 bg-lm-soft dark:bg-dm-nav border-b border-lm-border dark:border-dm-border">

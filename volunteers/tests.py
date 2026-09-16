@@ -20,6 +20,7 @@ from volunteers.models import (
     EmailConfirmation,
     Edition,
     Location,
+    RunnerDeployment,
     Talk,
     Task,
     TaskAttendance,
@@ -984,7 +985,7 @@ class OperationalPermissionsTestCase(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-    def test_task_responsible_cannot_use_destructive_runner_transfer(self):
+    def test_task_responsible_can_request_runner_without_removing_source(self):
         runner_template = TaskTemplate.objects.create(
             name='Runner',
             description='Runner',
@@ -993,7 +994,7 @@ class OperationalPermissionsTestCase(TestCase):
         )
         runner_task = self.create_task(runner_template, 'Runner')
         runner_signup = VolunteerTask.objects.create(
-            volunteer=self.volunteer,
+            volunteer=self.secondary.volunteer,
             task=runner_task,
             status='approved',
         )
@@ -1004,9 +1005,24 @@ class OperationalPermissionsTestCase(TestCase):
             'runner_vt_id': runner_signup.id,
         })
 
-        self.assertEqual(response.status_code, 403)
+        self.assertRedirects(
+            response,
+            reverse('attendance_task_detail', args=[self.task.id]),
+        )
         self.assertTrue(
             VolunteerTask.objects.filter(id=runner_signup.id).exists()
+        )
+        deployment = RunnerDeployment.objects.get(
+            runner_assignment=runner_signup,
+            destination_task=self.task,
+        )
+        self.assertEqual(deployment.status, 'pending')
+        self.assertEqual(deployment.requested_by, self.secondary)
+        self.assertFalse(
+            VolunteerTask.objects.filter(
+                volunteer=self.secondary.volunteer,
+                task=self.task,
+            ).exists()
         )
 
     def test_logistics_access_is_limited_to_logistics_surfaces(self):
@@ -1163,6 +1179,33 @@ class AttendanceWorkflowTestCase(TestCase):
             template=self.template,
         )
 
+    def create_runner_assignment(self):
+        now = timezone.localtime()
+        runner_template = TaskTemplate.objects.create(
+            name='Runner',
+            description='Runner',
+            category=self.template.category,
+            primary=self.admin,
+        )
+        runner_task = Task.objects.create(
+            name='Runner',
+            counter='1',
+            description='Runner',
+            date=timezone.localdate(),
+            start_time=(now - datetime.timedelta(minutes=5)).time(),
+            end_time=(now + datetime.timedelta(hours=1)).time(),
+            nbr_volunteers=1,
+            nbr_volunteers_min=1,
+            nbr_volunteers_max=2,
+            edition=self.edition,
+            template=runner_template,
+        )
+        return VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=runner_task,
+            status='approved',
+        )
+
     def test_volunteer_cannot_check_in_for_someone_else(self):
         now = timezone.localtime()
         task = self.create_task(
@@ -1225,37 +1268,14 @@ class AttendanceWorkflowTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIsNotNone(finished_attendance.signed_out_at)
 
-    def test_runner_transfer_is_atomic_from_source_to_destination(self):
+    def test_coordinator_deployment_preserves_both_assignments(self):
         now = timezone.localtime()
-        runner_template = TaskTemplate.objects.create(
-            name='Runner',
-            description='Runner',
-            category=self.template.category,
-            primary=self.admin,
-        )
-        runner_task = Task.objects.create(
-            name='Runner',
-            counter='1',
-            description='Runner',
-            date=timezone.localdate(),
-            start_time=(now - datetime.timedelta(minutes=5)).time(),
-            end_time=(now + datetime.timedelta(hours=1)).time(),
-            nbr_volunteers=1,
-            nbr_volunteers_min=1,
-            nbr_volunteers_max=2,
-            edition=self.edition,
-            template=runner_template,
-        )
         destination = self.create_task(
             'Needs help',
             (now - datetime.timedelta(minutes=5)).time(),
             (now + datetime.timedelta(hours=1)).time(),
         )
-        runner_signup = VolunteerTask.objects.create(
-            volunteer=self.volunteer,
-            task=runner_task,
-            status='approved',
-        )
+        runner_signup = self.create_runner_assignment()
         self.client.force_login(self.admin)
 
         response = self.client.post(reverse('transfer_runner'), {
@@ -1267,10 +1287,267 @@ class AttendanceWorkflowTestCase(TestCase):
             response,
             reverse('attendance_task_detail', args=[destination.id]),
         )
-        self.assertFalse(VolunteerTask.objects.filter(id=runner_signup.id).exists())
+        self.assertTrue(VolunteerTask.objects.filter(id=runner_signup.id).exists())
         new_signup = VolunteerTask.objects.get(
             volunteer=self.volunteer,
             task=destination,
         )
         self.assertEqual(new_signup.status, 'approved')
-        self.assertTrue(TaskAttendance.objects.filter(volunteer_task=new_signup).exists())
+        attendance = TaskAttendance.objects.get(volunteer_task=new_signup)
+        self.assertIsNotNone(attendance.signed_in_at)
+        deployment = RunnerDeployment.objects.get(
+            runner_assignment=runner_signup,
+            destination_assignment=new_signup,
+        )
+        self.assertEqual(deployment.status, 'active')
+        self.assertEqual(deployment.requested_by, self.admin)
+        self.assertEqual(deployment.reviewed_by, self.admin)
+
+    def test_task_responsible_requests_and_coordinator_approves_deployment(self):
+        now = timezone.localtime()
+        responsible = User.objects.create_user(
+            username='task-responsible',
+            email='responsible@example.com',
+            password='password',
+            is_staff=True,
+        )
+        self.template.secondary = responsible
+        self.template.save()
+        destination = self.create_task(
+            'Needs approval',
+            (now - datetime.timedelta(minutes=5)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+        )
+        runner_signup = self.create_runner_assignment()
+        self.client.force_login(responsible)
+
+        response = self.client.post(reverse('transfer_runner'), {
+            'task_id': destination.id,
+            'runner_vt_id': runner_signup.id,
+        })
+
+        self.assertRedirects(
+            response,
+            reverse('attendance_task_detail', args=[destination.id]),
+        )
+        deployment = RunnerDeployment.objects.get()
+        self.assertEqual(deployment.status, 'pending')
+        self.assertFalse(
+            VolunteerTask.objects.filter(
+                volunteer=self.volunteer,
+                task=destination,
+            ).exists()
+        )
+
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse('runner_deployment_review', args=[deployment.id]),
+            {'action': 'approve'},
+        )
+        deployment.refresh_from_db()
+
+        self.assertRedirects(response, reverse('attendance_dashboard'))
+        self.assertEqual(deployment.status, 'active')
+        self.assertTrue(VolunteerTask.objects.filter(id=runner_signup.id).exists())
+        self.assertIsNotNone(deployment.destination_assignment)
+
+    def test_denied_deployment_does_not_change_assignments(self):
+        now = timezone.localtime()
+        destination = self.create_task(
+            'Denied help',
+            (now - datetime.timedelta(minutes=5)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+        )
+        runner_signup = self.create_runner_assignment()
+        deployment = RunnerDeployment.objects.create(
+            runner_assignment=runner_signup,
+            destination_task=destination,
+            requested_by=self.admin,
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse('runner_deployment_review', args=[deployment.id]),
+            {'action': 'deny', 'review_note': 'No longer needed'},
+        )
+        deployment.refresh_from_db()
+
+        self.assertRedirects(response, reverse('attendance_dashboard'))
+        self.assertEqual(deployment.status, 'denied')
+        self.assertEqual(deployment.review_note, 'No longer needed')
+        self.assertTrue(VolunteerTask.objects.filter(id=runner_signup.id).exists())
+        self.assertFalse(
+            VolunteerTask.objects.filter(
+                volunteer=self.volunteer,
+                task=destination,
+            ).exists()
+        )
+
+    def test_return_completes_deployment_and_preserves_assignments(self):
+        now = timezone.localtime()
+        destination = self.create_task(
+            'Temporary help',
+            (now - datetime.timedelta(minutes=5)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+        )
+        runner_signup = self.create_runner_assignment()
+        self.client.force_login(self.admin)
+        self.client.post(reverse('transfer_runner'), {
+            'task_id': destination.id,
+            'runner_vt_id': runner_signup.id,
+        })
+        deployment = RunnerDeployment.objects.get()
+
+        response = self.client.post(
+            reverse('runner_deployment_return', args=[deployment.id]),
+        )
+        deployment.refresh_from_db()
+        attendance = TaskAttendance.objects.get(
+            volunteer_task=deployment.destination_assignment,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('attendance_task_detail', args=[destination.id]),
+        )
+        self.assertEqual(deployment.status, 'completed')
+        self.assertIsNotNone(deployment.returned_at)
+        self.assertIsNotNone(attendance.signed_out_at)
+        self.assertTrue(VolunteerTask.objects.filter(id=runner_signup.id).exists())
+        self.assertTrue(
+            VolunteerTask.objects.filter(
+                id=deployment.destination_assignment_id,
+            ).exists()
+        )
+
+    def test_open_deployment_removes_runner_from_available_list(self):
+        now = timezone.localtime()
+        responsible = User.objects.create_user(
+            username='availability-responsible',
+            email='availability@example.com',
+            password='password',
+            is_staff=True,
+        )
+        self.template.secondary = responsible
+        self.template.save()
+        destination = self.create_task(
+            'Needs runner',
+            (now - datetime.timedelta(minutes=5)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+        )
+        runner_signup = self.create_runner_assignment()
+        self.client.force_login(responsible)
+        self.client.post(reverse('transfer_runner'), {
+            'task_id': destination.id,
+            'runner_vt_id': runner_signup.id,
+        })
+
+        response = self.client.get(
+            reverse('attendance_task_detail', args=[destination.id]),
+        )
+
+        self.assertEqual(list(response.context['available_runners']), [])
+        self.assertEqual(response.context['task_deployments'].count(), 1)
+
+    def test_task_responsible_cannot_review_deployment_request(self):
+        now = timezone.localtime()
+        responsible = User.objects.create_user(
+            username='review-responsible',
+            email='review@example.com',
+            password='password',
+            is_staff=True,
+        )
+        self.template.secondary = responsible
+        self.template.save()
+        destination = self.create_task(
+            'Review protected',
+            (now - datetime.timedelta(minutes=5)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+        )
+        deployment = RunnerDeployment.objects.create(
+            runner_assignment=self.create_runner_assignment(),
+            destination_task=destination,
+            requested_by=responsible,
+        )
+        self.client.force_login(responsible)
+
+        response = self.client.post(
+            reverse('runner_deployment_review', args=[deployment.id]),
+            {'action': 'approve'},
+        )
+        deployment.refresh_from_db()
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(deployment.status, 'pending')
+
+    def test_stale_approval_invalidates_request(self):
+        now = timezone.localtime()
+        destination = self.create_task(
+            'Stale deployment',
+            (now - datetime.timedelta(minutes=5)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+        )
+        runner_signup = self.create_runner_assignment()
+        deployment = RunnerDeployment.objects.create(
+            runner_assignment=runner_signup,
+            destination_task=destination,
+            requested_by=self.admin,
+        )
+        VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=destination,
+            status='approved',
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse('runner_deployment_review', args=[deployment.id]),
+            {'action': 'approve'},
+        )
+        deployment.refresh_from_db()
+
+        self.assertRedirects(response, reverse('attendance_dashboard'))
+        self.assertEqual(deployment.status, 'invalidated')
+        self.assertIsNone(deployment.destination_assignment)
+
+    def test_deployment_overlap_is_suppressed_but_third_task_still_clashes(self):
+        now = timezone.localtime()
+        destination = self.create_task(
+            'Intentional destination',
+            (now - datetime.timedelta(minutes=5)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+        )
+        runner_signup = self.create_runner_assignment()
+        self.client.force_login(self.admin)
+        self.client.post(reverse('transfer_runner'), {
+            'task_id': destination.id,
+            'runner_vt_id': runner_signup.id,
+        })
+        deployment = RunnerDeployment.objects.get()
+
+        self.assertEqual(
+            _find_task_clashes([
+                runner_signup,
+                deployment.destination_assignment,
+            ]),
+            [],
+        )
+
+        third_task = self.create_task(
+            'Unrelated overlap',
+            now.time(),
+            (now + datetime.timedelta(minutes=30)).time(),
+        )
+        third_signup = VolunteerTask.objects.create(
+            volunteer=self.volunteer,
+            task=third_task,
+            status='approved',
+        )
+        clashes = _find_task_clashes([
+            runner_signup,
+            deployment.destination_assignment,
+            third_signup,
+        ])
+
+        self.assertEqual(len(clashes), 1)
+        self.assertIn(third_signup, clashes[0])

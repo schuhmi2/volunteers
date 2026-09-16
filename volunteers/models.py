@@ -934,6 +934,76 @@ class VolunteerTask(models.Model):
     )
 
 
+class RunnerDeployment(models.Model):
+    class Meta:
+        verbose_name = _('Runner Deployment')
+        verbose_name_plural = _('Runner Deployments')
+        ordering = ['-requested_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['runner_assignment'],
+                condition=models.Q(status__in=('pending', 'active')),
+                name='one_open_runner_deployment',
+            ),
+        ]
+
+    STATUS_CHOICES = (
+        ('pending', 'Pending Approval'),
+        ('active', 'Deployed'),
+        ('completed', 'Returned'),
+        ('denied', 'Denied'),
+        ('cancelled', 'Cancelled'),
+        ('invalidated', 'Invalidated'),
+    )
+
+    runner_assignment = models.ForeignKey(
+        VolunteerTask,
+        related_name='runner_deployments',
+        on_delete=PROTECT,
+    )
+    destination_task = models.ForeignKey(
+        Task,
+        related_name='runner_deployments',
+        on_delete=PROTECT,
+    )
+    destination_assignment = models.ForeignKey(
+        VolunteerTask,
+        related_name='destination_deployments',
+        null=True,
+        blank=True,
+        on_delete=PROTECT,
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='requested_runner_deployments',
+        on_delete=PROTECT,
+    )
+    requested_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='reviewed_runner_deployments',
+        null=True,
+        blank=True,
+        on_delete=PROTECT,
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    deployed_at = models.DateTimeField(null=True, blank=True)
+    returned_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=12,
+        choices=STATUS_CHOICES,
+        default='pending',
+    )
+    review_note = models.TextField(blank=True)
+
+    def __str__(self):
+        return _('%(volunteer)s: %(source)s → %(destination)s') % {
+            'volunteer': self.runner_assignment.volunteer.user.username,
+            'source': self.runner_assignment.task.name,
+            'destination': self.destination_task.name,
+        }
+
+
 """
 link table between volunteers and languages
 """
