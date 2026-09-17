@@ -43,6 +43,11 @@ class PromoTestCase(TestCase):
         ret = promo(None)
         self.assertEqual(ret, static_promo_page_content)
 
+    def test_base_footer_shows_application_version(self):
+        response = self.client.get(reverse('promo'))
+
+        self.assertContains(response, 'v2.0.0')
+
 
 class EditProfileFormPhoneValidationTestCase(TestCase):
     """Tests for mobile phone number international format validation."""
