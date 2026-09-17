@@ -1,8 +1,22 @@
+from django.conf import settings
 from django.contrib import admin
 from django.db.models import Q
 
 from .models import TaskTemplate
 from .permissions import can_view_operations_dashboard, has_permission
+
+
+def environment_banner(request):
+    label = getattr(settings, 'ENVIRONMENT_LABEL', '')
+    if not settings.DEBUG and not label:
+        return {}
+
+    return {
+        'environment_banner': {
+            'label': label or 'Development',
+            'debug': settings.DEBUG,
+        }
+    }
 
 
 def operational_navigation(request):

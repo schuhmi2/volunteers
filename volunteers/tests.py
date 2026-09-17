@@ -48,6 +48,26 @@ class PromoTestCase(TestCase):
 
         self.assertContains(response, 'v2.0.0')
 
+    @override_settings(DEBUG=True, ENVIRONMENT_LABEL='')
+    def test_base_shows_development_banner_when_debug_enabled(self):
+        response = self.client.get(reverse('promo'))
+
+        self.assertContains(response, 'Development instance')
+        self.assertContains(response, 'DEBUG is enabled')
+
+    @override_settings(DEBUG=False, ENVIRONMENT_LABEL='')
+    def test_base_hides_environment_banner_in_production(self):
+        response = self.client.get(reverse('promo'))
+
+        self.assertNotContains(response, 'Development instance')
+        self.assertNotContains(response, 'DEBUG is enabled')
+
+    @override_settings(DEBUG=False, ENVIRONMENT_LABEL='Staging')
+    def test_base_shows_configured_environment_banner(self):
+        response = self.client.get(reverse('promo'))
+
+        self.assertContains(response, 'Staging instance')
+
 
 class EditProfileFormPhoneValidationTestCase(TestCase):
     """Tests for mobile phone number international format validation."""

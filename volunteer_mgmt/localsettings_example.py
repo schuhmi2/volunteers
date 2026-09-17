@@ -59,3 +59,4 @@ IMPORT_VIDEO_TASKS = False
 
 # Only uncomment when used for development
 #DEBUG = True
+#ENVIRONMENT_LABEL = 'Development'
