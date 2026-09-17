@@ -51,6 +51,7 @@
             </td>
             <td class="px-4 py-3 text-lm-muted dark:text-dm-text min-w-0 max-w-xs">
               {% with attendees=task.approved_volunteers %}
+              {% if can_view_attendee_names|get_item:task.id %}
               {% if attendees|length > 2 %}
               <details class="group">
                 <summary class="cursor-pointer select-none text-sm font-medium text-lm-text dark:text-dm-text hover:text-fosdem inline-flex items-center gap-1">
@@ -67,6 +68,9 @@
               </details>
               {% else %}
               <span class="truncate block" title="{% for volunteer in attendees %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}">{% for volunteer in attendees %}{{ volunteer.user.first_name }} {{ volunteer.user.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+              {% endif %}
+              {% else %}
+              <span class="text-sm">{{ attendees|length }} {% trans "attending" %}</span>
               {% endif %}
               {% endwith %}
             </td>

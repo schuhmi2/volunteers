@@ -917,6 +917,13 @@ def task_list_detailed(request, username):
     context['signin_available'] = signin_available
     context['signin_status'] = signin_status
     context['enable_task_signin'] = edition.enable_task_signin if edition else False
+    # Named co-attendee lists are admin/task-owner-only information (see
+    # task_detailed's privacy note); a volunteer viewing their own schedule
+    # should not see who else signed up for the same task unless they
+    # manage it themselves.
+    context['can_view_attendee_names'] = {
+        task.id: can_manage_task(request.user, task) for task in context['tasks']
+    }
     context['can_mail_schedule'] = (
         request.user == context['profile_user']
         or has_permission(request.user, 'send_mass_mail')

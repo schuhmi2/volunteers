@@ -505,6 +505,63 @@ class CurrentEditionWorkflowTestCase(TestCase):
         self.assertContains(response, 'Pending approval')
         self.assertNotContains(response, 'Denied-only task')
 
+    def test_own_schedule_hides_other_attendee_names_from_non_admin(self):
+        third_user = User.objects.create_user(
+            username='schedule-co-volunteer',
+            first_name='Casey',
+            last_name='Nguyen',
+            email='co-volunteer@example.com',
+            password='password',
+        )
+        third_volunteer = Volunteer.objects.create(
+            user=third_user,
+            email_confirmed=True,
+            privacy_policy_accepted_at=timezone.now(),
+            privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+        )
+        VolunteerTask.objects.create(
+            volunteer=third_volunteer,
+            task=self.task,
+            status='approved',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse('task_list_detailed', args=[self.user.username])
+        )
+
+        self.assertContains(response, 'Workflow task')
+        self.assertNotContains(response, 'Casey Nguyen')
+        self.assertContains(response, '2 attending')
+
+    def test_own_schedule_shows_attendee_names_to_task_owner(self):
+        third_user = User.objects.create_user(
+            username='schedule-co-volunteer-owner',
+            first_name='Casey',
+            last_name='Nguyen',
+            email='co-volunteer-owner@example.com',
+            password='password',
+        )
+        third_volunteer = Volunteer.objects.create(
+            user=third_user,
+            email_confirmed=True,
+            privacy_policy_accepted_at=timezone.now(),
+            privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+        )
+        VolunteerTask.objects.create(
+            volunteer=third_volunteer,
+            task=self.task,
+            status='approved',
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.get(
+            reverse('task_list_detailed', args=[self.user.username])
+        )
+
+        self.assertContains(response, 'Casey Nguyen')
+        self.assertContains(response, 'Approved Volunteer')
+
     def test_profile_shows_pending_status_and_approved_history_only(self):
         pending_only = self.create_task(
             'Profile pending task',
