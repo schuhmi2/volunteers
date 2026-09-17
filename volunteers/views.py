@@ -119,7 +119,13 @@ def talk_detailed(request, talk_id):
 
 def task_detailed(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    context = {'task': task}
+    context = {
+        'task': task,
+        'task_is_full': (
+            task.nbr_volunteers_max > 0
+            and task.assigned_volunteers() >= task.nbr_volunteers_max
+        ),
+    }
     # Only admins can see the named list of volunteers on this task; everyone
     # else only sees a count (see template). This matches the privacy policy's
     # "current-edition tasks visible only to self + admin" rule.
@@ -128,9 +134,13 @@ def task_detailed(request, task_id):
     context['can_message_this_task'] = can_message_task(request.user, task)
     # Let the volunteer know their own signup status for this task.
     context['own_signup_status'] = None
+    context['can_self_manage_signup'] = False
     if request.user.is_authenticated:
         volunteer = getattr(request.user, 'volunteer', None)
         if volunteer:
+            context['can_self_manage_signup'] = (
+                task.edition_id == getattr(Edition.get_current(), 'id', None)
+            )
             own_vt = VolunteerTask.objects.filter(task=task, volunteer=volunteer).first()
             if own_vt:
                 context['own_signup_status'] = own_vt.status
@@ -588,11 +598,21 @@ def task_toggle(request, task_id):
     volunteer = get_object_or_404(Volunteer, user=request.user)
     task = get_object_or_404(Task, id=task_id, edition=Edition.get_current())
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    redirect_name = (
+        'task_detailed'
+        if request.POST.get('return_to') == 'task_detail'
+        else 'task_list'
+    )
+
+    def redirect_after_toggle():
+        if redirect_name == 'task_detailed':
+            return redirect(redirect_name, task_id=task.id)
+        return redirect(redirect_name)
 
     # Check if already signed up
     existing = VolunteerTask.objects.filter(task=task, volunteer=volunteer).first()
 
-    if existing:
+    if existing and existing.status != 'denied':
         if (
             existing.runner_deployments.exists()
             or existing.destination_deployments.exists()
@@ -601,7 +621,7 @@ def task_toggle(request, task_id):
             if is_ajax:
                 return JsonResponse({'status': 'error', 'message': message})
             messages.error(request, message)
-            return redirect('task_list')
+            return redirect_after_toggle()
         # Remove sign-up
         existing.delete()
         result_status = 'removed'
@@ -612,17 +632,49 @@ def task_toggle(request, task_id):
             if is_ajax:
                 return JsonResponse({'status': 'error', 'message': 'This task is full.'})
             messages.error(request, _('This task is full.'))
-            return redirect('task_list')
+            return redirect_after_toggle()
 
         # Add sign-up
         if task.effective_requires_approval:
-            VolunteerTask.objects.create(task=task, volunteer=volunteer, status='pending')
+            if existing:
+                existing.status = 'pending'
+                existing.requested_at = timezone.now()
+                existing.reviewed_at = None
+                existing.reviewed_by = None
+                existing.save(update_fields=[
+                    'status',
+                    'requested_at',
+                    'reviewed_at',
+                    'reviewed_by',
+                ])
+            else:
+                VolunteerTask.objects.create(
+                    task=task,
+                    volunteer=volunteer,
+                    status='pending',
+                )
             result_status = 'pending'
             # Send approval email
             from .emails import send_approval_request_email, safe_send_email
             safe_send_email(send_approval_request_email, volunteer, task)
         else:
-            VolunteerTask.objects.create(task=task, volunteer=volunteer, status='approved')
+            if existing:
+                existing.status = 'approved'
+                existing.requested_at = timezone.now()
+                existing.reviewed_at = None
+                existing.reviewed_by = None
+                existing.save(update_fields=[
+                    'status',
+                    'requested_at',
+                    'reviewed_at',
+                    'reviewed_by',
+                ])
+            else:
+                VolunteerTask.objects.create(
+                    task=task,
+                    volunteer=volunteer,
+                    status='approved',
+                )
             result_status = 'added'
 
         # Dr. Manhattan detection
@@ -663,7 +715,7 @@ def task_toggle(request, task_id):
         messages.success(request, _('Signed up for "%s".') % task.name)
     if warning:
         messages.warning(request, warning)
-    return redirect('task_list')
+    return redirect_after_toggle()
 
 
 def task_list(request):

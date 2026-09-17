@@ -555,6 +555,80 @@ class CurrentEditionWorkflowTestCase(TestCase):
         self.assertContains(response, 'Pending Approval')
         self.assertNotContains(response, 'Denied Volunteer')
 
+    def test_task_detail_offers_signup_controls_for_own_status(self):
+        self.client.force_login(self.user)
+        approved_response = self.client.get(
+            reverse('task_detailed', args=[self.task.id])
+        )
+
+        self.assertContains(approved_response, 'Remove me from this task')
+        self.assertNotContains(approved_response, 'Sign up for this task')
+
+        self.client.force_login(self.pending_user)
+        pending_response = self.client.get(
+            reverse('task_detailed', args=[self.task.id])
+        )
+
+        self.assertContains(pending_response, 'Withdraw request')
+
+        self.client.force_login(self.denied_user)
+        denied_response = self.client.get(
+            reverse('task_detailed', args=[self.task.id])
+        )
+
+        self.assertContains(denied_response, 'Sign up for this task')
+
+    def test_task_detail_signup_action_returns_to_task_detail(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('task_toggle', args=[self.task.id]),
+            {'return_to': 'task_detail'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('task_detailed', args=[self.task.id]),
+        )
+        self.assertFalse(
+            VolunteerTask.objects.filter(
+                volunteer=self.volunteer,
+                task=self.task,
+            ).exists()
+        )
+
+    def test_denied_volunteer_can_submit_fresh_signup_from_task_detail(self):
+        denied_signup_id = self.denied_signup.id
+        self.client.force_login(self.denied_user)
+
+        response = self.client.post(
+            reverse('task_toggle', args=[self.task.id]),
+            {'return_to': 'task_detail'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('task_detailed', args=[self.task.id]),
+        )
+        signup = VolunteerTask.objects.get(
+            volunteer=self.denied_volunteer,
+            task=self.task,
+        )
+        self.assertEqual(signup.id, denied_signup_id)
+        self.assertEqual(signup.status, 'approved')
+
+    def test_task_detail_disables_signup_when_task_is_full(self):
+        self.task.nbr_volunteers_max = 1
+        self.task.save(update_fields=['nbr_volunteers_max'])
+        self.client.force_login(self.denied_user)
+
+        response = self.client.get(
+            reverse('task_detailed', args=[self.task.id])
+        )
+
+        self.assertContains(response, 'Task full')
+        self.assertNotContains(response, 'Sign up for this task')
+
     def test_task_detail_keeps_each_short_roster_member_visible(self):
         edge_user = User.objects.create_user(
             username='local-edgecase-max',

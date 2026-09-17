@@ -107,6 +107,80 @@
     {% endif %}
   </div>
 
+  {% if can_self_manage_signup %}
+  <section class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6" aria-labelledby="your-signup-heading">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h2 id="your-signup-heading" class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Your signup" %}</h2>
+        <p class="mt-1 text-sm text-lm-muted dark:text-dm-muted">
+          {% if own_signup_status == 'approved' %}
+            {% trans "You have a confirmed place on this task." %}
+          {% elif own_signup_status == 'pending' %}
+            {% trans "Your request is waiting for approval. You can withdraw it while you wait." %}
+          {% elif own_signup_status == 'denied' %}
+            {% if task.effective_requires_approval %}
+              {% trans "Your previous request was denied. You can submit a new request." %}
+            {% else %}
+              {% trans "Your previous signup was denied. You can sign up again." %}
+            {% endif %}
+          {% elif task_is_full %}
+            {% trans "This task has reached its maximum number of volunteers." %}
+          {% elif task.effective_requires_approval %}
+            {% trans "This task requires approval. Submitting will send a request to the task coordinator." %}
+          {% else %}
+            {% trans "Sign up to add this task to your schedule." %}
+          {% endif %}
+        </p>
+      </div>
+
+      {% if task_is_full and own_signup_status != 'approved' and own_signup_status != 'pending' %}
+      <span class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-lm-soft dark:bg-dm-nav text-lm-subtle dark:text-dm-muted font-medium text-sm cursor-not-allowed">
+        {% trans "Task full" %}
+      </span>
+      {% else %}
+      <form method="post" action="{% url 'task_toggle' task.id %}" class="flex-shrink-0">
+        {% csrf_token %}
+        <input type="hidden" name="return_to" value="task_detail">
+        {% if own_signup_status == 'approved' %}
+        <button type="submit"
+                class="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2">
+          {% trans "Remove me from this task" %}
+        </button>
+        {% elif own_signup_status == 'pending' %}
+        <button type="submit"
+                class="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2">
+          {% trans "Withdraw request" %}
+        </button>
+        {% elif task.effective_requires_approval %}
+        <button type="submit"
+                class="inline-flex items-center justify-center px-4 py-2 bg-fosdem hover:bg-fosdem-dark text-white font-semibold text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-fosdem focus:ring-offset-2">
+          {% trans "Request to join" %}
+        </button>
+        {% else %}
+        <button type="submit"
+                class="inline-flex items-center justify-center px-4 py-2 bg-fosdem hover:bg-fosdem-dark text-white font-semibold text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-fosdem focus:ring-offset-2">
+          {% trans "Sign up for this task" %}
+        </button>
+        {% endif %}
+      </form>
+      {% endif %}
+    </div>
+  </section>
+  {% elif not user.is_authenticated %}
+  <section class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6" aria-labelledby="your-signup-heading">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h2 id="your-signup-heading" class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Want to volunteer?" %}</h2>
+        <p class="mt-1 text-sm text-lm-muted dark:text-dm-muted">{% trans "Log in to sign up for this task or manage your existing signup." %}</p>
+      </div>
+      <a href="{% url 'login' %}?next={{ request.path|urlencode }}"
+         class="inline-flex items-center justify-center px-4 py-2 bg-fosdem hover:bg-fosdem-dark text-white font-semibold text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-fosdem focus:ring-offset-2">
+        {% trans "Log in" %}
+      </a>
+    </div>
+  </section>
+  {% endif %}
+
   {% if can_view_volunteer_names and assignable_volunteers is not None %}
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 space-y-4">
     <div class="flex items-center justify-between gap-3">
