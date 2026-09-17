@@ -104,6 +104,9 @@
                 </button>
                 <div id="admin-dropdown-menu" class="hidden absolute right-0 mt-1 w-48 bg-lm-bg dark:bg-dm-soft rounded-lg shadow-lg border border-lm-border dark:border-dm-border py-1 z-50">
                   {% if operational_nav.django_admin %}<a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Django Admin' %}</a>{% endif %}
+                  {% if operational_nav.operations %}
+                  <a href="{% url 'operations_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Operations' %}</a>
+                  {% endif %}
                   {% if operational_nav.approvals %}
                   <a href="{% url 'approval_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Approvals' %}</a>
                   {% endif %}
@@ -172,6 +175,9 @@
             <div class="border-t border-fosdem-dark/50 my-1"></div>
             <span class="block px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pink-200">{% trans 'Admin' %}</span>
             {% if operational_nav.django_admin %}<a href="{% url 'admin:index' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Django Admin' %}</a>{% endif %}
+            {% if operational_nav.operations %}
+            <a href="{% url 'operations_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Operations' %}</a>
+            {% endif %}
             {% if operational_nav.approvals %}
             <a href="{% url 'approval_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Approvals' %}</a>
             {% endif %}

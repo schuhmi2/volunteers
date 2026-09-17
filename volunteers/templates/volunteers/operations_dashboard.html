@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Operations Dashboard" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Operations Dashboard" %}</h1>
+    <span class="text-sm text-lm-subtle dark:text-dm-muted">
+      {{ edition.name }} · {% blocktrans with time=generated_at|date:"H:i:s" %}Last updated {{ time }}{% endblocktrans %}
+    </span>
+  </div>
+
+  <p class="text-sm text-lm-subtle dark:text-dm-muted max-w-3xl">
+    {% trans "This aggregates Approvals, Task Clashes, and Attendance for quick triage. Each item links to the page that owns that workflow — nothing here replaces those pages." %}
+  </p>
+
+  <form method="get" class="flex flex-wrap items-center gap-2">
+    <label for="window" class="text-sm font-medium text-lm-muted dark:text-dm-text">{% trans "Window" %}</label>
+    <select id="window" name="window" onchange="this.form.submit()"
+            class="border border-gray-300 dark:border-dm-border rounded-lg px-3 py-1.5 bg-lm-bg dark:bg-dm-nav text-lm-text dark:text-dm-text text-sm focus:outline-none focus:ring-2 focus:ring-fosdem">
+      {% for value, label in window_choices %}
+      <option value="{{ value }}" {% if value == window %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <noscript><button type="submit" class="text-sm font-medium text-fosdem hover:underline">{% trans "Apply" %}</button></noscript>
+  </form>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="lg:col-span-8 space-y-4">
+      <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow overflow-hidden">
+        <div class="px-4 py-3 bg-lm-soft dark:bg-dm-nav border-b border-lm-border dark:border-dm-border">
+          <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Now needs attention" %}</h2>
+        </div>
+        {% if attention_items %}
+        <ul class="divide-y divide-lm-hair dark:divide-gray-700">
+          {% for item in attention_items %}
+          <li class="p-4 flex items-start gap-3">
+            <span aria-hidden="true" class="mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0
+              {% if item.severity == 'critical' %}bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200
+              {% elif item.severity == 'warning' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+              {% else %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200{% endif %}">
+              {% if item.severity == 'critical' %}!{% elif item.severity == 'warning' %}~{% else %}i{% endif %}
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted">{{ item.category }}</p>
+              <p class="font-medium text-lm-text dark:text-dm-text break-words">{{ item.title }}</p>
+              <p class="text-sm text-lm-muted dark:text-dm-muted break-words">{{ item.detail }}</p>
+            </div>
+            {% if item.link %}
+            <a href="{{ item.link }}" class="text-sm font-medium text-fosdem hover:underline whitespace-nowrap flex-shrink-0 self-center">{% trans "Open" %}</a>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="p-6 text-sm text-lm-subtle dark:text-dm-muted">{% trans "Nothing needs attention in the selected window." %}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="lg:col-span-4 space-y-4">
+      <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-4">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted mb-3">{% trans "Live operations" %}</h2>
+        <dl class="grid grid-cols-2 gap-3 text-sm">
+          <div><dt class="text-lm-subtle dark:text-dm-muted">{% trans "Active tasks" %}</dt><dd class="text-lg font-semibold text-lm-text dark:text-dm-text">{{ kpis.active_tasks }}</dd></div>
+          <div><dt class="text-lm-subtle dark:text-dm-muted">{% trans "Starting < 1h" %}</dt><dd class="text-lg font-semibold text-lm-text dark:text-dm-text">{{ kpis.starting_soon }}</dd></div>
+          <div><dt class="text-lm-subtle dark:text-dm-muted">{% trans "Below minimum" %}</dt><dd class="text-lg font-semibold text-red-600 dark:text-red-400">{{ kpis.below_min }}</dd></div>
+          <div><dt class="text-lm-subtle dark:text-dm-muted">{% trans "Below target" %}</dt><dd class="text-lg font-semibold text-yellow-600 dark:text-yellow-400">{{ kpis.below_target }}</dd></div>
+          <div><dt class="text-lm-subtle dark:text-dm-muted">{% trans "Pending approvals" %}</dt><dd class="text-lg font-semibold text-lm-text dark:text-dm-text">{{ kpis.pending_approvals }}</dd></div>
+          <div><dt class="text-lm-subtle dark:text-dm-muted">{% trans "Clashes" %}</dt><dd class="text-lg font-semibold text-lm-text dark:text-dm-text">{{ kpis.clashes }}</dd></div>
+          <div><dt class="text-lm-subtle dark:text-dm-muted">{% trans "Available runners" %}</dt><dd class="text-lg font-semibold text-lm-text dark:text-dm-text">{{ kpis.available_runners }}</dd></div>
+          <div><dt class="text-lm-subtle dark:text-dm-muted">{% trans "Checked-in runners" %}</dt><dd class="text-lg font-semibold text-lm-text dark:text-dm-text">{{ kpis.checked_in_runners }}</dd></div>
+        </dl>
+        <div class="mt-3 pt-3 border-t border-lm-hair dark:border-dm-border flex flex-wrap gap-3 text-sm">
+          <a href="{% url 'approval_dashboard' %}" class="text-fosdem hover:underline">{% trans "Approvals" %}</a>
+          <a href="{% url 'task_clashes_dashboard' %}" class="text-fosdem hover:underline">{% trans "Task Clashes" %}</a>
+          <a href="{% url 'attendance_dashboard' %}" class="text-fosdem hover:underline">{% trans "Attendance" %}</a>
+        </div>
+      </div>
+
+      {% if runners %}
+      <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-4">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted mb-3">{% trans "Available runners" %}</h2>
+        <ul class="space-y-2 text-sm">
+          {% for runner in runners %}
+          <li class="flex items-center justify-between gap-2">
+            <span class="truncate min-w-0" title="{{ runner.volunteer_name }}">{{ runner.volunteer_name|truncatechars:30 }}</span>
+            <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+              {% if runner.checked_in %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+              {% else %}bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300{% endif %}">
+              {% if runner.checked_in %}{% trans "Checked in" %}{% else %}{% trans "Not arrived" %}{% endif %}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <details class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-4 group">
+        <summary class="cursor-pointer select-none text-sm font-semibold uppercase tracking-wide text-lm-subtle dark:text-dm-muted inline-flex items-center gap-1">
+          {% trans "Readiness checklist" %}
+          <svg aria-hidden="true" class="w-3 h-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </summary>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for check in readiness %}
+          <li class="flex items-start gap-2">
+            <span aria-hidden="true" class="mt-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold flex-shrink-0
+              {% if check.status == 'critical' %}bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200
+              {% elif check.status == 'warning' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+              {% elif check.status == 'ok' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+              {% else %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200{% endif %}">
+              {% if check.status == 'critical' %}!{% elif check.status == 'warning' %}~{% elif check.status == 'ok' %}✓{% else %}i{% endif %}
+            </span>
+            <div class="min-w-0">
+              <p class="font-medium text-lm-text dark:text-dm-text">{{ check.label }}</p>
+              <p class="text-lm-subtle dark:text-dm-muted">{{ check.detail }}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+    </div>
+  </div>
+</div>
+{% endblock %}

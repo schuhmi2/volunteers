@@ -96,6 +96,16 @@ def can_message_edition(user):
     return has_permission(user, 'send_mass_mail') or has_permission(user, 'manage_approvals')
 
 
+def can_view_operations_dashboard(user):
+    """Superusers and Coordinators may view the aggregated Operations dashboard.
+
+    ``has_permission`` already returns True for superusers via Django's
+    built-in ``user.has_perm`` short-circuit, so checking the Coordinator-only
+    'manage_approvals' permission covers both roles.
+    """
+    return has_permission(user, 'manage_approvals')
+
+
 def messageable_categories(user):
     """Task categories this user may compose an informational email to."""
     from .models import TaskCategory

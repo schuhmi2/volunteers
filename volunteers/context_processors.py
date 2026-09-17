@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.db.models import Q
 
 from .models import TaskTemplate
-from .permissions import has_permission
+from .permissions import can_view_operations_dashboard, has_permission
 
 
 def operational_navigation(request):
@@ -21,6 +21,7 @@ def operational_navigation(request):
         'approvals': has_permission(user, 'manage_approvals') or is_responsible,
         'clashes': has_permission(user, 'manage_task_clashes') or is_responsible,
         'attendance': has_permission(user, 'manage_attendance') or is_responsible,
+        'operations': can_view_operations_dashboard(user),
         'communications': (
             has_permission(user, 'send_mass_mail') or is_responsible
         ),

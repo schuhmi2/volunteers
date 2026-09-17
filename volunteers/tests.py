@@ -11,6 +11,8 @@ from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
+from django.db import connection
 from django.urls import reverse
 from django.utils import timezone
 
@@ -275,6 +277,150 @@ class TaskClashesDashboardTestCase(TestCase):
             mail.outbox[0].body,
         )
         self.assertIn(reverse('task_list'), mail.outbox[0].body)
+
+
+class OperationsDashboardTestCase(TestCase):
+    def setUp(self):
+        today = datetime.date.today()
+        self.admin = User.objects.create_superuser(
+            username='ops_admin',
+            email='ops_admin@example.com',
+            password='password',
+        )
+        coordinator_user = User.objects.create_user(
+            username='ops_coordinator',
+            email='ops_coordinator@example.com',
+            password='password',
+            is_staff=True,
+        )
+        Group.objects.get(name='Coordinator').user_set.add(coordinator_user)
+        self.coordinator = coordinator_user
+        plain_user = User.objects.create_user(
+            username='ops_plain',
+            email='ops_plain@example.com',
+            password='password',
+            is_staff=True,
+        )
+        self.plain_staff = plain_user
+        self.volunteer_user = User.objects.create_user(
+            username='ops_volunteer',
+            email='ops_volunteer@example.com',
+            password='password',
+        )
+        self.volunteer = Volunteer.objects.create(user=self.volunteer_user)
+        self.edition = Edition.objects.create(
+            name='Ops edition',
+            start_date=today,
+            end_date=today + datetime.timedelta(days=1),
+            visible_from=today - datetime.timedelta(days=1),
+            visible_until=today + datetime.timedelta(days=2),
+        )
+        category = TaskCategory.objects.create(
+            name='Ops category',
+            description='Ops category',
+        )
+        self.template = TaskTemplate.objects.create(
+            name='Ops template',
+            description='Ops template',
+            category=category,
+            primary=self.admin,
+        )
+
+    def create_task(self, name, start_time, end_time, nbr_min=1, nbr_max=3, nbr_target=None):
+        return Task.objects.create(
+            name=name,
+            counter='1',
+            description=name,
+            location='K building',
+            date=self.edition.start_date,
+            start_time=start_time,
+            end_time=end_time,
+            nbr_volunteers=nbr_target if nbr_target is not None else nbr_max,
+            nbr_volunteers_min=nbr_min,
+            nbr_volunteers_max=nbr_max,
+            edition=self.edition,
+            template=self.template,
+        )
+
+    def test_superuser_can_open_dashboard(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse('operations_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Operations Dashboard')
+
+    def test_coordinator_can_open_dashboard(self):
+        self.client.force_login(self.coordinator)
+
+        response = self.client.get(reverse('operations_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_plain_staff_cannot_open_dashboard(self):
+        self.client.force_login(self.plain_staff)
+
+        response = self.client.get(reverse('operations_dashboard'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_anonymous_user_is_redirected(self):
+        response = self.client.get(reverse('operations_dashboard'))
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_dashboard_flags_understaffed_task_below_minimum(self):
+        from volunteers.operations import SEVERITY_CRITICAL, get_operations_dashboard
+
+        now = timezone.now()
+        task = self.create_task(
+            'Critically understaffed',
+            (now - datetime.timedelta(minutes=30)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+            nbr_min=2,
+            nbr_max=3,
+        )
+        VolunteerTask.objects.create(volunteer=self.volunteer, task=task, status='approved')
+
+        data = get_operations_dashboard(self.edition, now=now, window='all')
+
+        staffing_items = [item for item in data.attention_items if item.category == 'Staffing']
+        self.assertEqual(len(staffing_items), 1)
+        self.assertEqual(staffing_items[0].severity, SEVERITY_CRITICAL)
+        self.assertEqual(data.kpis['below_min'], 1)
+
+    def test_dashboard_reports_pending_approvals_kpi(self):
+        from volunteers.operations import get_operations_dashboard
+
+        now = timezone.now()
+        task = self.create_task(
+            'Needs approval',
+            (now - datetime.timedelta(minutes=10)).time(),
+            (now + datetime.timedelta(hours=1)).time(),
+        )
+        VolunteerTask.objects.create(volunteer=self.volunteer, task=task, status='pending')
+
+        data = get_operations_dashboard(self.edition, now=now, window='all')
+
+        self.assertEqual(data.kpis['pending_approvals'], 1)
+
+    def test_dashboard_query_count_is_bounded(self):
+        now = timezone.now()
+        for index in range(5):
+            task = self.create_task(
+                f'Bounded task {index}',
+                (now - datetime.timedelta(minutes=5)).time(),
+                (now + datetime.timedelta(hours=1)).time(),
+            )
+            VolunteerTask.objects.create(volunteer=self.volunteer, task=task, status='approved')
+
+        self.client.force_login(self.admin)
+        with CaptureQueriesContext(connection) as queries:
+            self.client.get(reverse('operations_dashboard'))
+        self.assertLessEqual(
+            len(queries), 25,
+            'Operations dashboard should query in a bounded, non-N+1 way.',
+        )
 
 
 class CurrentEditionWorkflowTestCase(TestCase):

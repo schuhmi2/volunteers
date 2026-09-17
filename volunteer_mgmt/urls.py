@@ -47,6 +47,7 @@ urlpatterns = [
     path('admin-approvals/', approval_dashboard, name='approval_dashboard'),
     path('admin-approvals/respond/', approval_respond, name='approval_respond'),
     path('admin-task-clashes/', task_clashes_dashboard, name='task_clashes_dashboard'),
+    path('admin-operations/', operations_dashboard, name='operations_dashboard'),
     path('signin/<uuid:token>/', task_signin_token, name='task_signin_token'),
     path('signout/<uuid:token>/', task_signout_token, name='task_signout_token'),
     path('task-signin/<int:vt_id>/', task_signin, name='task_signin_ui'),

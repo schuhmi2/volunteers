@@ -14,6 +14,7 @@ from .runner_deployments import (
     request_runner_deployment,
 )
 from .communications import audience_for_category, audience_for_edition, audience_for_task, send_info_email
+from .operations import DEFAULT_WINDOW, WINDOW_MINUTES, find_task_clashes, get_operations_dashboard
 
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
@@ -50,6 +51,7 @@ from .permissions import (
     can_message_category,
     can_message_edition,
     can_message_task,
+    can_view_operations_dashboard,
     can_view_template_schedule,
     has_permission,
     has_responsible_templates,
@@ -1596,63 +1598,10 @@ def approval_respond(request):
     return redirect('approval_dashboard')
 
 
-def _find_task_clashes(volunteer_tasks):
-        """Return connected groups of overlapping active sign-ups."""
-        signups = sorted(
-            volunteer_tasks,
-            key=lambda vt: (
-                vt.task.date,
-                vt.task.start_time,
-                vt.task.end_time,
-                vt.task.name,
-            ),
-        )
-        intentional_pairs = {
-            frozenset((runner_id, destination_id))
-            for runner_id, destination_id in RunnerDeployment.objects.filter(
-                runner_assignment_id__in=[signup.pk for signup in signups],
-                destination_assignment_id__in=[signup.pk for signup in signups],
-                status__in=('active', 'completed'),
-            ).values_list('runner_assignment_id', 'destination_assignment_id')
-        }
-        parents = list(range(len(signups)))
-
-        def find(index):
-            while parents[index] != index:
-                parents[index] = parents[parents[index]]
-                index = parents[index]
-            return index
-
-        def union(first_index, second_index):
-            first_root = find(first_index)
-            second_root = find(second_index)
-            if first_root != second_root:
-                parents[second_root] = first_root
-
-        for index, first in enumerate(signups):
-            for second_index in range(index + 1, len(signups)):
-                second = signups[second_index]
-                if second.task.date != first.task.date:
-                    if second.task.date > first.task.date:
-                        break
-                    continue
-                if second.task.start_time >= first.task.end_time:
-                    break
-                if (
-                    first.task.start_time < second.task.end_time
-                    and second.task.start_time < first.task.end_time
-                    and frozenset((first.pk, second.pk)) not in intentional_pairs
-                    and not (
-                        first.task.name == second.task.name
-                        and first.task.location == second.task.location
-                    )
-                ):
-                    union(index, second_index)
-
-        groups = {}
-        for index, signup in enumerate(signups):
-            groups.setdefault(find(index), []).append(signup)
-        return [group for group in groups.values() if len(group) > 1]
+# Clash-detection is implemented once in operations.py and shared by both
+# this dashboard and the Operations dashboard; re-exported here under the
+# original name for backward compatibility (tests import it from this module).
+_find_task_clashes = find_task_clashes
 
 
 @login_required
@@ -2084,6 +2033,44 @@ def attendance_dashboard(request):
         ),
     }
     return render(request, 'volunteers/attendance_dashboard.html', context)
+
+
+@login_required
+def operations_dashboard(request):
+    """Unified triage view aggregating staffing, check-in, approvals, clashes,
+    runners, and readiness for the current edition. Read-only aggregator —
+    every item deep-links back to the page that owns that workflow."""
+    if not can_view_operations_dashboard(request.user):
+        raise PermissionDenied
+
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('task_list')
+
+    window = request.GET.get('window', DEFAULT_WINDOW)
+    if window not in WINDOW_MINUTES:
+        window = DEFAULT_WINDOW
+
+    data = get_operations_dashboard(edition, window=window)
+
+    context = {
+        'edition': edition,
+        'window': window,
+        'window_choices': [
+            ('now', _('Now')),
+            ('30m', _('Next 30 minutes')),
+            ('2h', _('Next 2 hours')),
+            ('today', _('Today')),
+            ('all', _('Whole edition')),
+        ],
+        'attention_items': data.attention_items,
+        'kpis': data.kpis,
+        'runners': data.runners,
+        'readiness': data.readiness,
+        'generated_at': data.generated_at,
+    }
+    return render(request, 'volunteers/operations_dashboard.html', context)
 
 
 @login_required
