@@ -3,8 +3,7 @@
     name: "{{item}}"
     state: present
   with_items:
-    - nginx
-    - python3-venv
+    "{{ ['nginx'] + python_system_packages }}"
 - name: "Create system user {{app_user}}"
   user:
     name: "{{app_user}}"
@@ -21,10 +20,23 @@
     version: master
   register: app_updated
   notify: Restart fosdem_volunteers
+- name: Check virtualenv Python version
+  command: "{{base_dir}}/venv3/bin/python -c 'import sys; print(\"%s.%s\" % sys.version_info[:2])'"
+  register: virtualenv_python_version
+  changed_when: false
+  failed_when: false
+- name: Remove virtualenv if Python version changed
+  file:
+    path: "{{base_dir}}/venv3"
+    state: absent
+  when:
+    - virtualenv_python_version.rc == 0
+    - virtualenv_python_version.stdout != python_version
+  notify: Restart fosdem_volunteers
 - name: Install dependencies inside a virtual environment
   pip:
     virtualenv: "{{base_dir}}/venv3"
-    virtualenv_python: python3
+    virtualenv_python: "{{ python_executable }}"
     requirements: "{{base_dir}}/tool/requirements.txt"
   become: yes
   become_user: "{{app_user}}"

@@ -1,0 +1,5 @@
+python_version: "3.11"
+python_executable: "python{{ python_version }}"
+python_system_packages:
+  - "python{{ python_version }}"
+  - "python{{ python_version }}-venv"
