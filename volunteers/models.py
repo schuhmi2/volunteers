@@ -201,6 +201,11 @@ class Edition(models.Model):
                         Task.create_or_update_from_talk(edition, talk, 'Video', [1, 1, 1])
 
 
+def current_edition_id():
+    current = Edition.get_current()
+    return current.pk if current else None
+
+
 """
 A location represents a physical (or virtual) place at FOSDEM, e.g. a room,
 building, or online space. It stores an optional mapping to the matching
@@ -270,7 +275,7 @@ class Track(models.Model):
 
     title = models.CharField(max_length=128)
     description = models.TextField(blank=True, null=True)
-    edition = models.ForeignKey(Edition, default=Edition.get_current().pk if Edition.get_current() else None, on_delete=PROTECT)
+    edition = models.ForeignKey(Edition, default=current_edition_id, on_delete=PROTECT)
     date = models.DateField()
     start_time = models.TimeField()
     # end_time = models.TimeField()
@@ -510,7 +515,7 @@ class Task(models.Model):
     nbr_volunteers = models.IntegerField(default=0)
     nbr_volunteers_min = models.IntegerField(default=0)
     nbr_volunteers_max = models.IntegerField(default=0)
-    edition = models.ForeignKey(Edition, default=Edition.get_current().pk if Edition.get_current() else None, on_delete=PROTECT)
+    edition = models.ForeignKey(Edition, default=current_edition_id, on_delete=PROTECT)
     template = models.ForeignKey(TaskTemplate, on_delete=PROTECT)
     volunteers = models.ManyToManyField('Volunteer', through='VolunteerTask', blank=True)
     # Only for heralding, or possible future tasks related
@@ -901,7 +906,7 @@ class VolunteerStatus(models.Model):
 
     active = models.BooleanField()
     volunteer = models.ForeignKey(Volunteer, on_delete=CASCADE)
-    edition = models.ForeignKey(Edition, default=Edition.get_current().pk if Edition.get_current() else None, on_delete=PROTECT)
+    edition = models.ForeignKey(Edition, default=current_edition_id, on_delete=PROTECT)
 
 
 """

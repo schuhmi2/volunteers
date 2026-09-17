@@ -1,4 +1,4 @@
-FROM python:3.7-bullseye
+FROM python:3.11-bookworm
 
 RUN apt-get update -y && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y sqlite3

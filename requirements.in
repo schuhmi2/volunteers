@@ -1,4 +1,4 @@
-Django>=4.2,<5.0
+Django>=5.2,<6.0
 Pillow
 psycopg2-binary
-reportlab==4.2.5
+reportlab==5.0.1

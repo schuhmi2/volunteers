@@ -76,7 +76,7 @@ class NumTasksFilter(admin.SimpleListFilter):
 
 
 class TaskCategoryFilter(admin.SimpleListFilter):
-    title = '{0} categories'.format(Edition.get_current().name) if Edition.get_current() else None
+    title = 'Current edition categories'
     parameter_name = 'category'
 
     def lookups(self, request, model_admin):
@@ -95,7 +95,7 @@ class TaskCategoryFilter(admin.SimpleListFilter):
 
 
 class TaskFilter(admin.SimpleListFilter):
-    title = '{0} tasks'.format(Edition.get_current().name) if Edition.get_current() else None
+    title = 'Current edition tasks'
     parameter_name = 'task'
 
     def lookups(self, request, model_admin):
