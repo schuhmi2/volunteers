@@ -67,6 +67,15 @@ urlpatterns = [
     path('category_schedule/', category_schedule_list, name='category_schedule_list'),
     path('task_schedule/<int:template_id>/', task_schedule, name='task_schedule'),
     path('task_schedule_csv/<int:template_id>/', task_schedule_csv, name='task_schedule_csv'),
+    path('communications/', communications_dashboard, name='communications_dashboard'),
+    path('communications/edition/', edition_email_compose, name='edition_email_compose'),
+    path('communications/task/<int:task_id>/', task_email_compose, name='task_email_compose'),
+    path('communications/category/<int:category_id>/', category_email_compose, name='category_email_compose'),
+    path(
+        'communications/task/<int:task_id>/volunteer/<int:volunteer_id>/',
+        volunteer_email_compose,
+        name='volunteer_email_compose',
+    ),
 
     re_path(
         r'^media/(?P<path>.*)$',

@@ -311,3 +311,20 @@ class ResendActivationForm(forms.Form):
 
         self.user = user
         return email
+
+
+class ComposeInfoEmailForm(forms.Form):
+    """Targeted informational email to a task, category, or single volunteer."""
+    _input_classes = (
+        'w-full border border-gray-300 dark:border-dm-border rounded-lg px-3 py-2 '
+        'bg-lm-bg dark:bg-dm-nav text-lm-text dark:text-dm-text text-sm '
+        'focus:outline-none focus:ring-2 focus:ring-fosdem'
+    )
+    subject = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={'class': _input_classes}),
+    )
+    message = forms.CharField(
+        widget=forms.Textarea(attrs={'class': _input_classes, 'rows': 8}),
+    )
+    include_pending = forms.BooleanField(required=False, initial=False)

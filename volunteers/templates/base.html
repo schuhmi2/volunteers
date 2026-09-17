@@ -113,6 +113,9 @@
                   {% if operational_nav.attendance %}
                   <a href="{% url 'attendance_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Attendance' %}</a>
                   {% endif %}
+                  {% if operational_nav.communications %}
+                  <a href="{% url 'communications_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Communications' %}</a>
+                  {% endif %}
                   {% if operational_nav.labels %}
                   <a href="{% url 'label_dashboard' %}" class="block px-4 py-2 text-sm text-lm-muted dark:text-dm-muted hover:bg-lm-soft dark:hover:bg-dm-nav">{% trans 'Labels' %}</a>
                   {% endif %}
@@ -177,6 +180,9 @@
             {% endif %}
             {% if operational_nav.attendance %}
             <a href="{% url 'attendance_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Attendance' %}</a>
+            {% endif %}
+            {% if operational_nav.communications %}
+            <a href="{% url 'communications_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Communications' %}</a>
             {% endif %}
             {% if operational_nav.labels %}
             <a href="{% url 'label_dashboard' %}" class="block text-white hover:bg-fosdem-dark px-3 py-2 rounded-md text-sm font-medium pl-6">{% trans 'Labels' %}</a>

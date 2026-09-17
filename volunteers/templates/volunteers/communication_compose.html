@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Email" %} {{ audience_label }} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-2xl">
+  <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text break-words">
+    {% trans "Email" %} <span class="text-fosdem break-words">{{ audience_label|truncatechars:60 }}</span>
+  </h1>
+
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 space-y-4">
+    <div>
+      <h2 class="text-sm font-medium text-lm-muted dark:text-dm-text mb-2">
+        {% trans "Recipients" %} ({{ recipients|length }})
+      </h2>
+      {% if recipients %}
+      <div class="flex flex-wrap gap-2">
+        {% for volunteer in recipients %}
+        <span class="inline-block max-w-[12rem] truncate align-bottom text-xs bg-lm-soft dark:bg-dm-nav text-lm-text dark:text-dm-text rounded-full px-3 py-1"
+              title="{{ volunteer.user.first_name }} {{ volunteer.user.last_name }} ({{ volunteer.user.email }})">
+          {{ volunteer.user.first_name }} {{ volunteer.user.last_name }}
+        </span>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-lm-subtle dark:text-dm-muted">{% trans "No recipients with an email on file." %}</p>
+      {% endif %}
+      {% if skipped %}
+      <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+        <span aria-hidden="true">⚠</span>
+        {% blocktrans count count=skipped|length %}{{ count }} volunteer will be skipped (no email on file).{% plural %}{{ count }} volunteers will be skipped (no email on file).{% endblocktrans %}
+      </p>
+      {% endif %}
+    </div>
+
+    {% if preview %}
+    {# Preview / confirm step: show the exact message that will be sent. #}
+    <div class="border border-fosdem/40 rounded-lg p-4 bg-lm-soft dark:bg-dm-nav space-y-2">
+      <p class="text-xs font-semibold uppercase tracking-wide text-fosdem">{% trans "Preview" %}</p>
+      <p class="text-sm text-lm-text dark:text-dm-text"><span class="font-medium">{% trans "Subject" %}:</span> {{ form.cleaned_data.subject }}</p>
+      <p class="text-sm text-lm-text dark:text-dm-text whitespace-pre-wrap">{{ form.cleaned_data.message }}</p>
+    </div>
+
+    <form method="post" action="{{ action_url }}" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="subject" value="{{ form.cleaned_data.subject }}">
+      <input type="hidden" name="message" value="{{ form.cleaned_data.message }}">
+      {% if include_pending is not None %}
+      <input type="hidden" name="include_pending" value="{% if include_pending %}on{% endif %}">
+      {% endif %}
+      <div class="flex items-center gap-3">
+        <button type="submit" name="action" value="send"
+                class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+                {% if not recipients %}disabled{% endif %}>
+          {% trans "Confirm & send" %}
+        </button>
+        <button type="submit" name="action" value="edit"
+                class="text-sm text-lm-subtle dark:text-dm-muted hover:underline">
+          {% trans "Edit" %}
+        </button>
+      </div>
+    </form>
+
+    {% else %}
+    {# Compose step #}
+    <form method="post" action="{{ action_url }}" class="space-y-4">
+      {% csrf_token %}
+
+      {% if include_pending is not None %}
+      <label class="flex items-center gap-2 text-sm text-lm-text dark:text-dm-text">
+        <input type="checkbox" name="include_pending" {% if include_pending %}checked{% endif %}
+               onchange="document.getElementById('id_compose_action').value='edit'; this.form.submit();"
+               class="rounded border-gray-300 dark:border-dm-border text-fosdem focus:ring-fosdem">
+        {% trans "Also include volunteers awaiting approval" %}
+      </label>
+      {% endif %}
+
+      <div>
+        <label for="id_subject" class="block text-sm font-medium text-lm-text dark:text-dm-text mb-1">{% trans "Subject" %}</label>
+        {{ form.subject }}
+        {% if form.subject.errors %}<p class="text-xs text-red-600 mt-1">{{ form.subject.errors|join:", " }}</p>{% endif %}
+      </div>
+      <div>
+        <label for="id_message" class="block text-sm font-medium text-lm-text dark:text-dm-text mb-1">{% trans "Message" %}</label>
+        {{ form.message }}
+        {% if form.message.errors %}<p class="text-xs text-red-600 mt-1">{{ form.message.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <input type="hidden" name="action" value="preview" id="id_compose_action">
+      <div class="flex items-center gap-3">
+        <button type="submit"
+                class="bg-fosdem hover:bg-fosdem-dark text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+                {% if not recipients %}disabled{% endif %}>
+          {% trans "Preview" %}
+        </button>
+        <a href="{{ cancel_url }}" class="text-sm text-lm-subtle dark:text-dm-muted hover:underline">{% trans "Cancel" %}</a>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

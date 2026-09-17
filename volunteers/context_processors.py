@@ -21,6 +21,9 @@ def operational_navigation(request):
         'approvals': has_permission(user, 'manage_approvals') or is_responsible,
         'clashes': has_permission(user, 'manage_task_clashes') or is_responsible,
         'attendance': has_permission(user, 'manage_attendance') or is_responsible,
+        'communications': (
+            has_permission(user, 'send_mass_mail') or is_responsible
+        ),
         'labels': has_permission(user, 'manage_labels'),
         'tshirts': has_permission(user, 'view_tshirt_report'),
         'matrix_ids': has_permission(user, 'export_matrix_ids'),

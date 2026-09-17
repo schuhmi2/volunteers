@@ -109,7 +109,15 @@
 
   {% if can_view_volunteer_names and assignable_volunteers is not None %}
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 space-y-4">
-    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Admin: Manage Volunteers" %}</h2>
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Admin: Manage Volunteers" %}</h2>
+      {% if can_message_this_task %}
+      <a href="{% url 'task_email_compose' task.id %}"
+         class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm whitespace-nowrap">
+        <span aria-hidden="true">✉</span> {% trans "Email volunteers" %}
+      </a>
+      {% endif %}
+    </div>
 
     {# Pending approval signups #}
     {% if pending_signups %}
@@ -130,6 +138,12 @@
           <form method="post" action="{% url 'approval_respond' %}" class="inline-flex gap-2 flex-shrink-0">
             {% csrf_token %}
             <input type="hidden" name="vt_id" value="{{ vt.id }}">
+            {% if can_message_this_task %}
+            <a href="{% url 'volunteer_email_compose' task.id vt.volunteer.id %}"
+               class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors whitespace-nowrap self-center">
+              <span aria-hidden="true">✉</span> {% trans "Email" %}
+            </a>
+            {% endif %}
             <button type="submit" name="action" value="approve"
                     class="bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors">
               {% trans "Approve" %}
@@ -153,12 +167,20 @@
         {% for volunteer in task.approved_volunteers %}
         <div class="flex items-center justify-between gap-3 bg-lm-soft dark:bg-dm-nav rounded-lg px-3 py-2">
           <span class="text-sm text-lm-text dark:text-dm-text truncate min-w-0 max-w-xs block" title="{{ volunteer.user.first_name }} {{ volunteer.user.last_name }} ({{ volunteer.user.username }})">{{ volunteer.user.first_name }} {{ volunteer.user.last_name }} ({{ volunteer.user.username }})</span>
-          <form method="post" action="{% url 'admin_assign_volunteer' task.id %}" class="inline flex-shrink-0">
-            {% csrf_token %}
-            <input type="hidden" name="volunteer_id" value="{{ volunteer.id }}">
-            <input type="hidden" name="action" value="unassign">
-            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors">{% trans "Remove" %}</button>
-          </form>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            {% if can_message_this_task %}
+            <a href="{% url 'volunteer_email_compose' task.id volunteer.id %}"
+               class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors whitespace-nowrap">
+              <span aria-hidden="true">✉</span> {% trans "Email" %}
+            </a>
+            {% endif %}
+            <form method="post" action="{% url 'admin_assign_volunteer' task.id %}" class="inline flex-shrink-0">
+              {% csrf_token %}
+              <input type="hidden" name="volunteer_id" value="{{ volunteer.id }}">
+              <input type="hidden" name="action" value="unassign">
+              <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors">{% trans "Remove" %}</button>
+            </form>
+          </div>
         </div>
         {% endfor %}
       </div>

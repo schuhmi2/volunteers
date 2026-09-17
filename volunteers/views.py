@@ -5,13 +5,15 @@ import datetime as _dt
 from .models import Volunteer, VolunteerTask, VolunteerTalk, TaskCategory, TaskTemplate, Task, Track, \
     Talk, Edition, EmailConfirmation, LabelPrintLog, RunnerDeployment, TaskAttendance, \
     CURRENT_PRIVACY_POLICY_VERSION
-from .forms import EditProfileForm, SignupForm, EventSignupForm, EmailChangeForm, ResendActivationForm
+from .forms import EditProfileForm, SignupForm, EventSignupForm, EmailChangeForm, ResendActivationForm, \
+    ComposeInfoEmailForm
 from .runner_deployments import (
     approve_runner_deployment,
     complete_runner_deployment,
     deny_runner_deployment,
     request_runner_deployment,
 )
+from .communications import audience_for_category, audience_for_edition, audience_for_task, send_info_email
 
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
@@ -45,11 +47,15 @@ from .permissions import (
     can_approve_task,
     can_manage_task,
     can_manage_task_attendance,
+    can_message_category,
+    can_message_edition,
+    can_message_task,
     can_view_template_schedule,
     has_permission,
     has_responsible_templates,
     is_task_responsible,
     log_operational_action,
+    messageable_categories,
     permission_required,
 )
 
@@ -117,6 +123,7 @@ def task_detailed(request, task_id):
     # "current-edition tasks visible only to self + admin" rule.
     can_view_volunteer_names = can_manage_task(request.user, task)
     context['can_view_volunteer_names'] = can_view_volunteer_names
+    context['can_message_this_task'] = can_message_task(request.user, task)
     # Let the volunteer know their own signup status for this task.
     context['own_signup_status'] = None
     if request.user.is_authenticated:
@@ -262,6 +269,9 @@ def category_schedule_list(request):
     context = {'categories': SortedDict.fromkeys(categories, [])}
     for category in context['categories']:
         context['categories'][category] = templates.filter(category=category)
+    context['messageable_category_ids'] = set(
+        messageable_categories(request.user).values_list('id', flat=True)
+    )
     return render(request, 'volunteers/category_schedule_list.html', context)
 
 
@@ -317,6 +327,254 @@ def task_schedule_csv(request, template_id):
         row = [''] * 11
         writer.writerow(row)
     return response
+
+
+def _handle_compose_request(request, recipients, skipped, on_send):
+    """Shared preview -> confirm -> send flow for the informational email compose views.
+
+    Populates request._compose_form and request._compose_preview for the caller to
+    render the initial/preview form. Returns an HttpResponse once the message has
+    actually been sent (or None while still composing/previewing).
+    """
+    form = ComposeInfoEmailForm(request.POST or None)
+    action = request.POST.get('action') if request.method == 'POST' else None
+    request._compose_form = form
+    request._compose_preview = False
+
+    if action == 'send' and form.is_valid():
+        sent, _skipped_on_send = send_info_email(
+            form.cleaned_data['subject'],
+            form.cleaned_data['message'],
+            recipients,
+        )
+        return on_send(sent, form)
+
+    if action == 'preview' and form.is_valid():
+        request._compose_preview = True
+
+    return None
+
+
+@login_required
+def communications_dashboard(request):
+    """Entry point listing tasks/categories the user may send informational email to."""
+    edition = Edition.get_current()
+    templates = TaskTemplate.objects.filter(category__active=True)
+    if not has_permission(request.user, 'send_mass_mail'):
+        templates = templates.filter(
+            Q(primary=request.user) | Q(secondary=request.user)
+        )
+    can_message_this_edition = can_message_edition(request.user)
+    if not templates.exists() and not can_message_this_edition:
+        raise PermissionDenied
+
+    tasks = Task.objects.none()
+    if edition:
+        tasks = (
+            Task.objects.filter(template__in=templates, edition=edition)
+            .select_related('template')
+            .order_by('date', 'start_time', 'name')
+        )
+    context = {
+        'edition': edition,
+        'categories': messageable_categories(request.user),
+        'tasks': tasks,
+        'can_message_this_edition': can_message_this_edition,
+    }
+    return render(request, 'volunteers/communication_dashboard.html', context)
+
+
+@login_required
+def edition_email_compose(request):
+    """Compose/preview/send an informational email to everyone signed up for the current edition."""
+    if not can_message_edition(request.user):
+        raise PermissionDenied
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('communications_dashboard')
+
+    include_pending = request.POST.get('include_pending') == 'on'
+    audience = list(audience_for_edition(edition, include_pending=include_pending))
+    skipped = [v for v in audience if not v.user.email]
+    recipients = [v for v in audience if v.user.email]
+
+    def on_send(sent, form):
+        log_operational_action(
+            request,
+            edition,
+            f'Sent informational email "{form.cleaned_data["subject"]}" to {sent} volunteer(s) for edition {edition.pk}',
+        )
+        messages.success(
+            request,
+            _('Email sent to %(sent)d volunteer(s). %(skipped)d skipped (no email on file).') % {
+                'sent': sent,
+                'skipped': len(skipped),
+            },
+        )
+        return redirect('communications_dashboard')
+
+    result = _handle_compose_request(request, recipients, skipped, on_send)
+    if result is not None:
+        return result
+
+    context = {
+        'audience_label': _('all volunteers — %(edition)s') % {'edition': edition.name},
+        'audience_type': 'edition',
+        'edition': edition,
+        'recipients': recipients,
+        'skipped': skipped,
+        'include_pending': include_pending,
+        'form': request._compose_form,
+        'preview': request._compose_preview,
+        'action_url': reverse('edition_email_compose'),
+        'cancel_url': reverse('communications_dashboard'),
+    }
+    return render(request, 'volunteers/communication_compose.html', context)
+
+
+@login_required
+def task_email_compose(request, task_id):
+    """Compose/preview/send an informational email to a task's signed-up volunteers."""
+    task = get_object_or_404(Task, id=task_id)
+    if not can_message_task(request.user, task):
+        raise PermissionDenied
+
+    include_pending = request.POST.get('include_pending') == 'on'
+    audience = list(audience_for_task(task, include_pending=include_pending))
+    skipped = [v for v in audience if not v.user.email]
+    recipients = [v for v in audience if v.user.email]
+
+    def on_send(sent, form):
+        log_operational_action(
+            request,
+            task,
+            f'Sent informational email "{form.cleaned_data["subject"]}" to {sent} volunteer(s) for task {task.pk}',
+        )
+        messages.success(
+            request,
+            _('Email sent to %(sent)d volunteer(s). %(skipped)d skipped (no email on file).') % {
+                'sent': sent,
+                'skipped': len(skipped),
+            },
+        )
+        return redirect('task_detailed', task_id=task.id)
+
+    result = _handle_compose_request(request, recipients, skipped, on_send)
+    if result is not None:
+        return result
+
+    context = {
+        'audience_label': task.name,
+        'audience_type': 'task',
+        'task': task,
+        'recipients': recipients,
+        'skipped': skipped,
+        'include_pending': include_pending,
+        'form': request._compose_form,
+        'preview': request._compose_preview,
+        'action_url': reverse('task_email_compose', args=[task.id]),
+        'cancel_url': reverse('task_detailed', args=[task.id]),
+    }
+    return render(request, 'volunteers/communication_compose.html', context)
+
+
+@login_required
+def category_email_compose(request, category_id):
+    """Compose/preview/send an informational email to a category's signed-up volunteers."""
+    category = get_object_or_404(TaskCategory, id=category_id)
+    if not can_message_category(request.user, category):
+        raise PermissionDenied
+    edition = Edition.get_current()
+    if not edition:
+        messages.error(request, _('No current edition found.'))
+        return redirect('communications_dashboard')
+
+    include_pending = request.POST.get('include_pending') == 'on'
+    audience = list(audience_for_category(category, edition, include_pending=include_pending))
+    skipped = [v for v in audience if not v.user.email]
+    recipients = [v for v in audience if v.user.email]
+
+    def on_send(sent, form):
+        log_operational_action(
+            request,
+            category,
+            f'Sent informational email "{form.cleaned_data["subject"]}" to {sent} volunteer(s) for category {category.pk}',
+        )
+        messages.success(
+            request,
+            _('Email sent to %(sent)d volunteer(s). %(skipped)d skipped (no email on file).') % {
+                'sent': sent,
+                'skipped': len(skipped),
+            },
+        )
+        return redirect('communications_dashboard')
+
+    result = _handle_compose_request(request, recipients, skipped, on_send)
+    if result is not None:
+        return result
+
+    context = {
+        'audience_label': category.name,
+        'audience_type': 'category',
+        'category': category,
+        'recipients': recipients,
+        'skipped': skipped,
+        'include_pending': include_pending,
+        'form': request._compose_form,
+        'preview': request._compose_preview,
+        'action_url': reverse('category_email_compose', args=[category.id]),
+        'cancel_url': reverse('communications_dashboard'),
+    }
+    return render(request, 'volunteers/communication_compose.html', context)
+
+
+@login_required
+def volunteer_email_compose(request, task_id, volunteer_id):
+    """Compose/preview/send a one-off informational email to a single volunteer assigned to this task."""
+    task = get_object_or_404(Task, id=task_id)
+    if not can_message_task(request.user, task):
+        raise PermissionDenied
+    volunteer = get_object_or_404(
+        Volunteer.objects.select_related('user'),
+        id=volunteer_id,
+        volunteertask__task=task,
+        volunteertask__status__in=('approved', 'pending'),
+    )
+    recipients = [volunteer] if volunteer.user.email else []
+    skipped = [] if volunteer.user.email else [volunteer]
+
+    def on_send(sent, form):
+        log_operational_action(
+            request,
+            task,
+            f'Sent informational email "{form.cleaned_data["subject"]}" to '
+            f'{volunteer.user.username} for task {task.pk}',
+        )
+        if sent:
+            messages.success(request, _('Email sent to %s.') % volunteer.user.get_full_name())
+        else:
+            messages.error(request, _('This volunteer has no email on file; nothing was sent.'))
+        return redirect('task_detailed', task_id=task.id)
+
+    result = _handle_compose_request(request, recipients, skipped, on_send)
+    if result is not None:
+        return result
+
+    context = {
+        'audience_label': volunteer.user.get_full_name() or volunteer.user.username,
+        'audience_type': 'volunteer',
+        'task': task,
+        'volunteer': volunteer,
+        'recipients': recipients,
+        'skipped': skipped,
+        'include_pending': None,
+        'form': request._compose_form,
+        'preview': request._compose_preview,
+        'action_url': reverse('volunteer_email_compose', args=[task.id, volunteer.id]),
+        'cancel_url': reverse('task_detailed', args=[task.id]),
+    }
+    return render(request, 'volunteers/communication_compose.html', context)
 
 
 @login_required

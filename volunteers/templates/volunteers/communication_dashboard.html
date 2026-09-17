@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Communications" %} — FOSDEM Volunteers{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <h1 class="text-3xl font-bold text-lm-text dark:text-dm-text">{% trans "Communications" %}</h1>
+  <p class="text-sm text-lm-subtle dark:text-dm-muted max-w-2xl">
+    {% trans "Send an informational email to volunteers signed up for a task or a whole task category. Each volunteer receives their own message — no addresses are shared." %}
+  </p>
+
+  {% if can_message_this_edition %}
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6 flex items-center justify-between gap-3">
+    <div>
+      <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text">{% trans "Whole edition" %}</h2>
+      <p class="text-sm text-lm-subtle dark:text-dm-muted">{% trans "Email everyone signed up for the current edition." %}</p>
+    </div>
+    <a href="{% url 'edition_email_compose' %}"
+       class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm whitespace-nowrap">
+      <span aria-hidden="true">✉</span> {% trans "Email all volunteers" %}
+    </a>
+  </div>
+  {% endif %}
+
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-3">{% trans "Task categories" %}</h2>
+    {% if categories %}
+    <div class="divide-y divide-lm-hair dark:divide-gray-700">
+      {% for category in categories %}
+      <div class="flex items-center justify-between gap-3 py-3">
+        <span class="font-medium text-lm-text dark:text-dm-text truncate">{{ category.name }}</span>
+        <a href="{% url 'category_email_compose' category.id %}"
+           class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors whitespace-nowrap flex-shrink-0">
+          <span aria-hidden="true">✉</span> {% trans "Email" %}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-lm-subtle dark:text-dm-muted">{% trans "No categories available." %}</p>
+    {% endif %}
+  </div>
+
+  <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold text-lm-text dark:text-dm-text mb-3">{% trans "Tasks (current edition)" %}</h2>
+    {% if tasks %}
+    <div class="divide-y divide-lm-hair dark:divide-gray-700">
+      {% for task in tasks %}
+      <div class="flex items-center justify-between gap-3 py-3">
+        <div class="min-w-0">
+          <a href="{% url 'task_detailed' task.id %}" class="font-medium text-lm-text dark:text-dm-text hover:underline truncate block">{{ task.name }}</a>
+          <p class="text-xs text-lm-subtle dark:text-dm-muted">{{ task.date|date:"l" }}, {{ task.start_time|time:"H:i" }}–{{ task.end_time|time:"H:i" }}</p>
+        </div>
+        <a href="{% url 'task_email_compose' task.id %}"
+           class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors whitespace-nowrap flex-shrink-0">
+          <span aria-hidden="true">✉</span> {% trans "Email" %}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-lm-subtle dark:text-dm-muted">{% trans "No tasks found for the current edition." %}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

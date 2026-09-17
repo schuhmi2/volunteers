@@ -6,7 +6,7 @@ import datetime
 from unittest.mock import patch
 
 from django.contrib.admin.models import LogEntry
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group, Permission, User
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
@@ -1069,6 +1069,246 @@ class OperationalPermissionsTestCase(TestCase):
 
         with self.assertRaises(ValidationError):
             template.full_clean()
+
+
+class CommunicationsComposeTestCase(TestCase):
+    def setUp(self):
+        today = datetime.date.today()
+        self.primary = self.create_staff_user('comms-primary')
+        self.other_lead = self.create_staff_user('comms-other-lead')
+        self.admin = self.create_staff_user('comms-admin')
+        self.admin.user_permissions.add(
+            Permission.objects.get(codename='send_mass_mail')
+        )
+        self.coordinator = self.create_staff_user('comms-coordinator')
+        Group.objects.get(name='Coordinator').user_set.add(self.coordinator)
+        self.edition = Edition.objects.create(
+            name='Comms edition',
+            start_date=today,
+            end_date=today + datetime.timedelta(days=1),
+            visible_from=today - datetime.timedelta(days=1),
+            visible_until=today + datetime.timedelta(days=2),
+        )
+        self.category = TaskCategory.objects.create(
+            name='Comms category',
+            description='Comms category',
+        )
+        self.template = TaskTemplate.objects.create(
+            name='Owned comms template',
+            description='Owned comms template',
+            category=self.category,
+            primary=self.primary,
+        )
+        self.other_template = TaskTemplate.objects.create(
+            name='Other comms template',
+            description='Other comms template',
+            category=self.category,
+            primary=self.other_lead,
+        )
+        self.task = self.create_task(self.template, 'Owned comms task')
+        self.other_task = self.create_task(self.other_template, 'Other comms task')
+
+        self.approved_volunteer = self.create_volunteer('comms-approved', 'approved@example.com')
+        self.pending_volunteer = self.create_volunteer('comms-pending', 'pending@example.com')
+        self.no_email_volunteer = self.create_volunteer('comms-noemail', '')
+
+        VolunteerTask.objects.create(volunteer=self.approved_volunteer, task=self.task, status='approved')
+        VolunteerTask.objects.create(volunteer=self.pending_volunteer, task=self.task, status='pending')
+        VolunteerTask.objects.create(volunteer=self.no_email_volunteer, task=self.task, status='approved')
+
+        self.other_task_volunteer = self.create_volunteer('comms-other-task', 'other-task@example.com')
+        VolunteerTask.objects.create(volunteer=self.other_task_volunteer, task=self.other_task, status='approved')
+
+    def create_staff_user(self, username):
+        user = User.objects.create_user(
+            username=username,
+            email=f'{username}@example.com',
+            password='password',
+            is_staff=True,
+        )
+        Volunteer.objects.create(
+            user=user,
+            email_confirmed=True,
+            privacy_policy_accepted_at=timezone.now(),
+            privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+        )
+        return user
+
+    def create_volunteer(self, username, email):
+        user = User.objects.create_user(
+            username=username,
+            first_name=username,
+            email=email,
+            password='password',
+        )
+        return Volunteer.objects.create(
+            user=user,
+            email_confirmed=True,
+            privacy_policy_accepted_at=timezone.now(),
+            privacy_policy_version=CURRENT_PRIVACY_POLICY_VERSION,
+        )
+
+    def create_task(self, template, name):
+        return Task.objects.create(
+            name=name,
+            counter='1',
+            description=name,
+            location='K building',
+            date=self.edition.start_date,
+            start_time=datetime.time(10),
+            end_time=datetime.time(11),
+            nbr_volunteers=1,
+            nbr_volunteers_min=1,
+            nbr_volunteers_max=3,
+            edition=self.edition,
+            template=template,
+        )
+
+    def test_task_owner_can_compose_and_send_to_approved_volunteers(self):
+        self.client.force_login(self.primary)
+
+        response = self.client.post(
+            reverse('task_email_compose', args=[self.task.id]),
+            {'action': 'send', 'subject': 'Task info', 'message': 'Body text'},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['approved@example.com'])
+        self.assertEqual(mail.outbox[0].subject, 'Task info')
+
+    def test_include_pending_expands_audience(self):
+        self.client.force_login(self.primary)
+
+        self.client.post(
+            reverse('task_email_compose', args=[self.task.id]),
+            {
+                'action': 'send',
+                'subject': 'Task info',
+                'message': 'Body text',
+                'include_pending': 'on',
+            },
+        )
+
+        recipients = {message.to[0] for message in mail.outbox}
+        self.assertEqual(recipients, {'approved@example.com', 'pending@example.com'})
+
+    def test_each_recipient_gets_a_separate_email(self):
+        self.client.force_login(self.primary)
+
+        self.client.post(
+            reverse('task_email_compose', args=[self.task.id]),
+            {
+                'action': 'send',
+                'subject': 'Task info',
+                'message': 'Body text',
+                'include_pending': 'on',
+            },
+        )
+
+        for message in mail.outbox:
+            self.assertEqual(len(message.to), 1)
+
+    def test_non_owner_cannot_compose_for_task(self):
+        self.client.force_login(self.other_lead)
+
+        response = self.client.get(reverse('task_email_compose', args=[self.task.id]))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_permission_can_compose_for_any_task(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse('task_email_compose', args=[self.task.id]))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_category_compose_dedupes_across_tasks(self):
+        second_task = self.create_task(self.template, 'Second comms task')
+        VolunteerTask.objects.create(volunteer=self.approved_volunteer, task=second_task, status='approved')
+        self.client.force_login(self.primary)
+
+        self.client.post(
+            reverse('category_email_compose', args=[self.category.id]),
+            {'action': 'send', 'subject': 'Category info', 'message': 'Body text'},
+        )
+
+        self.assertEqual(len(mail.outbox), 2)
+        recipients = {message.to[0] for message in mail.outbox}
+        self.assertEqual(recipients, {'approved@example.com', 'other-task@example.com'})
+
+    def test_non_owner_cannot_compose_for_category(self):
+        third_lead = self.create_staff_user('comms-third-lead')
+        self.client.force_login(third_lead)
+
+        response = self.client.get(reverse('category_email_compose', args=[self.category.id]))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_volunteer_compose_sends_single_email(self):
+        self.client.force_login(self.primary)
+
+        response = self.client.post(
+            reverse('volunteer_email_compose', args=[self.task.id, self.approved_volunteer.id]),
+            {'action': 'send', 'subject': 'Hello', 'message': 'Body text'},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['approved@example.com'])
+
+    def test_volunteer_compose_rejects_volunteer_from_other_task(self):
+        outside_volunteer = self.create_volunteer('comms-outside', 'outside@example.com')
+        self.client.force_login(self.primary)
+
+        response = self.client.get(
+            reverse('volunteer_email_compose', args=[self.task.id, outside_volunteer.id])
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_no_email_volunteer_is_skipped(self):
+        self.client.force_login(self.primary)
+
+        response = self.client.get(reverse('task_email_compose', args=[self.task.id]))
+
+        self.assertContains(response, 'skipped')
+
+    def test_coordinator_can_email_whole_edition(self):
+        self.client.force_login(self.coordinator)
+
+        self.client.post(
+            reverse('edition_email_compose'),
+            {'action': 'send', 'subject': 'Edition info', 'message': 'Body text'},
+        )
+
+        recipients = {message.to[0] for message in mail.outbox}
+        self.assertEqual(recipients, {'approved@example.com', 'other-task@example.com'})
+
+    def test_admin_can_email_whole_edition(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse('edition_email_compose'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_task_owner_without_broader_role_cannot_email_edition(self):
+        self.client.force_login(self.primary)
+
+        response = self.client.get(reverse('edition_email_compose'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_edition_compose_button_visible_only_to_authorized_users(self):
+        self.client.force_login(self.coordinator)
+        coordinator_response = self.client.get(reverse('communications_dashboard'))
+        self.assertContains(coordinator_response, 'Email all volunteers')
+
+        self.client.force_login(self.primary)
+        owner_response = self.client.get(reverse('communications_dashboard'))
+        self.assertNotContains(owner_response, 'Email all volunteers')
 
 
 class ActivationHardeningTestCase(TestCase):

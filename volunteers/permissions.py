@@ -77,6 +77,40 @@ def can_view_template_schedule(user, template):
     )
 
 
+def can_message_task(user, task):
+    return has_permission(user, 'send_mass_mail') or is_task_responsible(user, task)
+
+
+def can_message_category(user, category):
+    if has_permission(user, 'send_mass_mail'):
+        return True
+    if not user.is_authenticated or not user.is_active or not user.is_staff:
+        return False
+    return TaskTemplate.objects.filter(category=category).filter(
+        Q(primary=user) | Q(secondary=user)
+    ).exists()
+
+
+def can_message_edition(user):
+    """Coordinators and superusers may email everyone signed up for the current edition."""
+    return has_permission(user, 'send_mass_mail') or has_permission(user, 'manage_approvals')
+
+
+def messageable_categories(user):
+    """Task categories this user may compose an informational email to."""
+    from .models import TaskCategory
+    if has_permission(user, 'send_mass_mail'):
+        return TaskCategory.objects.filter(active=True)
+    if not user.is_authenticated or not user.is_active or not user.is_staff:
+        return TaskCategory.objects.none()
+    return TaskCategory.objects.filter(
+        active=True,
+        tasktemplate__in=TaskTemplate.objects.filter(
+            Q(primary=user) | Q(secondary=user)
+        ),
+    ).distinct()
+
+
 def permission_required(codename):
     def decorator(view_func):
         @wraps(view_func)

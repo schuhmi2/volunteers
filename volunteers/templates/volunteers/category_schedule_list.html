@@ -10,7 +10,15 @@
 
   {% for category, templates in categories.items %}
   <div class="bg-lm-bg dark:bg-dm-soft rounded-xl shadow p-6">
-    <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text mb-3">{{ category.name }}</h2>
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <h2 class="text-xl font-semibold text-lm-text dark:text-dm-text">{{ category.name }}</h2>
+      {% if category.id in messageable_category_ids %}
+      <a href="{% url 'category_email_compose' category.id %}"
+         class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm whitespace-nowrap">
+        <span aria-hidden="true">✉</span> {% trans "Email this category" %}
+      </a>
+      {% endif %}
+    </div>
     <ul class="space-y-2">
       {% for template in templates %}
       <li>

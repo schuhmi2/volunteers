@@ -179,9 +179,9 @@
     <div class="divide-y divide-lm-hair dark:divide-gray-700">
       {% for runner_vt in available_runners %}
       <div class="flex items-center justify-between gap-3 py-2 flex-wrap">
-        <div class="min-w-0">
-          <span class="font-medium text-lm-text dark:text-dm-text">{{ runner_vt.volunteer.user.first_name }} {{ runner_vt.volunteer.user.last_name }}</span>
-          <span class="text-xs text-lm-subtle dark:text-dm-muted">({{ runner_vt.volunteer.user.username }})</span>
+        <div class="min-w-0 max-w-full break-words">
+          <span class="font-medium text-lm-text dark:text-dm-text">{{ runner_vt.volunteer.user.first_name|truncatechars:30 }} {{ runner_vt.volunteer.user.last_name|truncatechars:30 }}</span>
+          <span class="text-xs text-lm-subtle dark:text-dm-muted">({{ runner_vt.volunteer.user.username|truncatechars:30 }})</span>
           <span class="text-xs text-lm-subtle dark:text-dm-muted"> &middot; {% trans "Runner" %} {{ runner_vt.task.start_time|time:"H:i" }}–{{ runner_vt.task.end_time|time:"H:i" }}</span>
         </div>
         <form method="post" action="{% url 'transfer_runner' %}" class="inline">
@@ -209,9 +209,9 @@
       <div class="flex-1 min-w-[200px]">
         <label for="backup-volunteer-select" class="block text-sm font-medium text-lm-muted dark:text-dm-text mb-1">{% trans "Select volunteer" %}</label>
         <select name="volunteer_id" id="backup-volunteer-select"
-                class="w-full rounded-lg border border-gray-300 dark:border-dm-border bg-lm-bg dark:bg-dm-nav px-3 py-2 text-sm text-lm-text dark:text-dm-text focus:ring-2 focus:ring-fosdem">
+                class="w-full max-w-full rounded-lg border border-gray-300 dark:border-dm-border bg-lm-bg dark:bg-dm-nav px-3 py-2 text-sm text-lm-text dark:text-dm-text focus:ring-2 focus:ring-fosdem truncate">
           {% for vol in all_volunteers %}
-          <option value="{{ vol.id }}">{{ vol.user.first_name }} {{ vol.user.last_name }} ({{ vol.user.username }})</option>
+          <option value="{{ vol.id }}">{{ vol.user.first_name|truncatechars:30 }} {{ vol.user.last_name|truncatechars:30 }} ({{ vol.user.username|truncatechars:30 }})</option>
           {% endfor %}
         </select>
       </div>
